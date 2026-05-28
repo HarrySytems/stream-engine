@@ -50,9 +50,12 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
 
     if (Hls.isSupported()) {
       const hls = new Hls({
-        maxMaxBufferLength: 10,
+        maxBufferLength: 30, // Aumentar buffer a 30 segundos
+        maxMaxBufferLength: 60, // Buffer máximo de 60 segundos para evitar cortes
         enableWorker: true,
-        lowLatencyMode: true,
+        lowLatencyMode: false, // Desactivar modo de baja latencia para permitir mayor almacenamiento en caché
+        progressive: true,
+        liveSyncDurationCount: 5 // Sincronización más tolerante con el directo
       });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
