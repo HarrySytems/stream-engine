@@ -1,0 +1,33 @@
+name: Actualizar Canales
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Se ejecuta cada 10 minutos
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Ejecutar script
+        run: |
+          pip install requests
+          python python/scraper.py
+
+      - name: Guardar cambios
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add canales.json
+          git commit -m 'Canales actualizados'
+          git push
