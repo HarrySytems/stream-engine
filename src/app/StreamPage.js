@@ -3,54 +3,43 @@
 import { useState, useEffect, useRef } from 'react';
 import Hls from 'hls.js';
 
-export default function StreamPage({ initialCanales }) {
-  // Filtrar canales válidos
+export default function StreamPage({ initialCanales, liveAgenda }) {
+  // Canales 24/7
   const [canales] = useState(() => {
     return (initialCanales || []).filter(canal => 
       canal.url && (canal.url.startsWith('http://') || canal.url.startsWith('https://'))
     );
   });
 
-  const [activeCanal, setActiveCanal] = useState(null);
+  // Agenda en vivo real desde Futbol Libre
+  const [agenda] = useState(liveAgenda || []);
+
+  // Estados de navegación
+  const [activeMatch, setActiveMatch] = useState(null); // Partido seleccionado de la agenda
+  const [activeEmbed, setActiveEmbed] = useState(null); // Opción de transmisión seleccionada del partido
+  const [activeCanal, setActiveCanal] = useState(null); // Canal 24/7 seleccionado
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [currentDateStr, setCurrentDateStr] = useState('');
+  
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
-  // Generar la fecha de hoy formateada en español
+  // Generar fecha actual formateada
   useEffect(() => {
     const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const hoy = new Date().toLocaleDateString('es-ES', opciones);
     setCurrentDateStr(hoy.charAt(0).toUpperCase() + hoy.slice(1));
   }, []);
 
-  // Agenda de partidos/eventos para el día de hoy
-  // Asociaremos estos eventos a canales que tienes en tu JSON
-  const [agenda] = useState([
-    { hora: '12:00', deporte: '⚽', evento: 'Champions League: Real Madrid vs Bayern Múnich', canalBusqueda: 'ESPN' },
-    { hora: '13:30', deporte: '🎾', evento: 'Roland Garros: Carlos Alcaraz vs Novak Djokovic', canalBusqueda: 'Golf' }, // usando Golf o similar de respaldo
-    { hora: '15:00', deporte: '⚽', evento: 'Premier League: Manchester City vs Arsenal', canalBusqueda: 'Fox Sports 1' },
-    { hora: '16:15', deporte: '⚽', evento: 'La Liga: Barcelona vs Atlético de Madrid', canalBusqueda: 'LaLiga' },
-    { hora: '18:00', deporte: '⚽', evento: 'Copa Libertadores: River Plate vs Palmeiras', canalBusqueda: 'DirecTV' },
-    { hora: '19:30', deporte: '🏀', evento: 'NBA Playoff: Los Angeles Lakers vs Golden State Warriors', canalBusqueda: 'NBA' },
-    { hora: '20:00', deporte: '⚽', evento: 'Copa Sudamericana: Boca Juniors vs Independiente del Valle', canalBusqueda: 'Uruguay' },
-    { hora: '21:30', deporte: '🥊', evento: 'Combate Estelar: Canelo Álvarez vs Jaime Munguía', canalBusqueda: 'DAZN' }
-  ]);
-
-  // Buscar un canal real del JSON basado en la búsqueda del evento de la agenda
-  const obtenerCanalParaEvento = (busqueda) => {
-    const encontrado = canales.find(c => c.nombre.toLowerCase().includes(busqueda.toLowerCase()));
-    return encontrado || canales[0]; // Retorna el primero si no encuentra coincidencia exacta
-  };
-
-  // Filtrar la lista de canales para el buscador manual de la barra superior
+  // Filtrar canales 24/7
   const filteredCanales = canales.filter(canal =>
     canal.nombre.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Administrar la reproducción de video
+  // Efecto para inicializar el reproductor HLS personalizado (para canales 24/7)
   useEffect(() => {
-    if (!activeCanal || !videoRef.current) return;
+    if (!activeCanal || activeMatch || !videoRef.current) return;
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -100,9 +89,50 @@ export default function StreamPage({ initialCanales }) {
         hlsRef.current = null;
       }
     };
-  }, [activeCanal]);
+  }, [activeCanal, activeMatch]);
 
-  const isHttp = activeCanal?.url.startsWith('http://');
+  // Decodificar el URL del iframe de Fútbol Libre (Base64)
+  const obtenerUrlIframeDecodificada = (embedIframe) => {
+    if (!embedIframe) return '';
+    try {
+      const parts = embedIframe.split('?r=');
+      if (parts.length > 1) {
+        const b64 = parts[1];
+        // Decodificar Base64 en el navegador usando atob
+        return atob(b64);
+      }
+      return embedIframe;
+    } catch (e) {
+      console.error("Error decodificando iframe:", e);
+      return '';
+    }
+  };
+
+  // Cuando se selecciona un partido, cargar por defecto su primera opción de transmisión
+  const seleccionarPartido = (partido) => {
+    setActiveCanal(null); // Desactivar canal 24/7 si estaba activo
+    setActiveMatch(partido);
+    
+    const embeds = partido.attributes?.embeds?.data || [];
+    if (embeds.length > 0) {
+      setActiveEmbed(embeds[0]);
+    } else {
+      setActiveEmbed(null);
+    }
+  };
+
+  // Cuando se selecciona un canal 24/7
+  const seleccionarCanal247 = (canal) => {
+    setActiveMatch(null); // Desactivar partido de la agenda
+    setActiveEmbed(null);
+    setActiveCanal(canal);
+  };
+
+  const limpiarSeleccion = () => {
+    setActiveMatch(null);
+    setActiveEmbed(null);
+    setActiveCanal(null);
+  };
 
   return (
     <div style={{
@@ -113,7 +143,7 @@ export default function StreamPage({ initialCanales }) {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* HEADER ESTILO FÚTBOL LIBRE (Premium Oscuro) */}
+      {/* HEADER ESTILO FÚTBOL LIBRE (Premium Oscuro con bordes verdes) */}
       <header style={{
         backgroundColor: '#0d0d0d',
         borderBottom: '2px solid #00ff41',
@@ -133,7 +163,7 @@ export default function StreamPage({ initialCanales }) {
         }}>
           {/* Logo */}
           <div 
-            onClick={() => setActiveCanal(null)} 
+            onClick={limpiarSeleccion} 
             style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
           >
             <span style={{ fontSize: '24px' }}>⚽</span>
@@ -144,7 +174,7 @@ export default function StreamPage({ initialCanales }) {
               letterSpacing: '1px',
               textTransform: 'uppercase'
             }}>
-              Fútbol Libre <span style={{ color: '#fff', fontSize: '14px' }}>Clone</span>
+              Fútbol Libre <span style={{ color: '#fff', fontSize: '14px' }}>En Vivo</span>
             </span>
           </div>
 
@@ -167,7 +197,7 @@ export default function StreamPage({ initialCanales }) {
           />
         </div>
 
-        {/* Canales de acceso rápido (Barra superior) */}
+        {/* Barra superior de accesos directos a canales principales */}
         <div style={{
           display: 'flex',
           gap: '10px',
@@ -175,12 +205,12 @@ export default function StreamPage({ initialCanales }) {
           paddingBottom: '5px',
           whiteSpace: 'nowrap'
         }} className="scroll-horizontal">
-          {['ESPN', 'Fox Sports', 'DirecTV', 'LaLiga', 'DAZN', 'Tigo Sports'].map((nombreCanal, idx) => (
+          {['ESPN', 'Fox Sports', 'DirecTV', 'LaLiga', 'Win Sports', 'Tigo Sports', 'Latina'].map((nombreCanal, idx) => (
             <button
               key={idx}
               onClick={() => {
-                const canal = obtenerCanalParaEvento(nombreCanal);
-                setActiveCanal(canal);
+                const encontrado = canales.find(c => c.nombre.toLowerCase().includes(nombreCanal.toLowerCase()));
+                if (encontrado) seleccionarCanal247(encontrado);
               }}
               style={{
                 backgroundColor: '#1b1b1b',
@@ -211,12 +241,12 @@ export default function StreamPage({ initialCanales }) {
       {/* CONTENIDO PRINCIPAL */}
       <main style={{ padding: '20px', flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
         
-        {/* VISTA 1: REPRODUCTOR Y CHAT EN VIVO */}
-        {activeCanal ? (
+        {/* VISTA 1: REPRODUCTOR ACTIVO (Ya sea Partido de Agenda o Canal 24/7) */}
+        {(activeMatch || activeCanal) ? (
           <div>
             {/* Botón para regresar a la agenda */}
             <button
-              onClick={() => setActiveCanal(null)}
+              onClick={limpiarSeleccion}
               style={{
                 backgroundColor: '#111',
                 color: '#00ff41',
@@ -234,12 +264,53 @@ export default function StreamPage({ initialCanales }) {
               ⬅ Volver a la Agenda de Partidos
             </button>
 
+            {/* Selector de opciones de transmisión (sólo para partidos de la agenda) */}
+            {activeMatch && (
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                marginBottom: '15px',
+                flexWrap: 'wrap',
+                backgroundColor: '#121212',
+                padding: '10px 15px',
+                borderRadius: '8px',
+                border: '1px solid #222'
+              }}>
+                <span style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', alignSelf: 'center', marginRight: '5px' }}>
+                  OPCIONES:
+                </span>
+                {(activeMatch.attributes?.embeds?.data || []).map((embed, idx) => {
+                  const isSelected = activeEmbed?.id === embed.id;
+                  return (
+                    <button
+                      key={embed.id}
+                      onClick={() => setActiveEmbed(embed)}
+                      style={{
+                        backgroundColor: isSelected ? '#00ff41' : '#1b1b1b',
+                        color: isSelected ? '#000' : '#fff',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Opción {idx + 1}: {embed.attributes?.embed_name || `Señal ${idx + 1}`}
+                    </button>
+                  );
+                })}
+                {(activeMatch.attributes?.embeds?.data || []).length === 0 && (
+                  <span style={{ color: '#888', fontSize: '13px' }}>No hay señales alternativas disponibles.</span>
+                )}
+              </div>
+            )}
+
             {/* Grid del Video y Chat */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr',
               gap: '20px',
-              // En escritorio cambia a dos columnas
               '@media (min-width: 1024px)': {
                 gridTemplateColumns: '3fr 1.2fr'
               }
@@ -253,28 +324,60 @@ export default function StreamPage({ initialCanales }) {
                   backgroundColor: '#000',
                   borderRadius: '8px',
                   overflow: 'hidden',
-                  border: '1px solid #222'
-                }} className="live-video-player">
-                  <video
-                    ref={videoRef}
-                    controls
-                    playsInline
-                    style={{
+                  border: '1px solid #222',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.8)'
+                }}>
+                  {activeMatch && activeEmbed ? (
+                    // Cargar el reproductor real en vivo de Fútbol Libre por iframe
+                    <iframe
+                      src={obtenerUrlIframeDecodificada(activeEmbed.attributes?.embed_iframe)}
+                      allowFullScreen
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        border: 'none'
+                      }}
+                    />
+                  ) : activeCanal ? (
+                    // Reproductor HLS propio (para canales 24/7)
+                    <video
+                      ref={videoRef}
+                      controls
+                      playsInline
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       width: '100%',
                       height: '100%',
-                      objectFit: 'contain'
-                    }}
-                  />
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      color: '#888'
+                    }}>
+                      Cargando señal de video...
+                    </div>
+                  )}
                 </div>
 
-                {/* Información del Canal Activo */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '5px' }}>
+                {/* Información de lo que se está reproduciendo */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '5px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 style={{ color: '#00ff41', fontSize: '20px', margin: 0, fontWeight: 'bold' }}>
-                      {activeCanal.nombre}
+                      {activeMatch ? activeMatch.attributes?.diary_description.replace('\n', ' ') : activeCanal?.nombre}
                     </h2>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{
@@ -291,7 +394,8 @@ export default function StreamPage({ initialCanales }) {
                     </div>
                   </div>
 
-                  {isHttp && (
+                  {/* Advertencia para HTTP en canales 24/7 */}
+                  {activeCanal?.url.startsWith('http://') && (
                     <div style={{
                       backgroundColor: 'rgba(255, 152, 0, 0.1)',
                       border: '1px solid #ff9800',
@@ -301,13 +405,13 @@ export default function StreamPage({ initialCanales }) {
                       fontSize: '12px',
                       marginTop: '10px'
                     }}>
-                      ⚠️ <strong>Alerta:</strong> Este canal es inseguro (<code>http</code>). Si no carga, dale clic al icono de escudo/candado de tu navegador al lado de la URL y activa "Permitir contenido no seguro" para esta web.
+                      ⚠️ <strong>Alerta:</strong> Este canal es inseguro (<code>http</code>). Si no carga, dale clic al icono de escudo/candado al lado de la barra de direcciones de tu navegador y activa "Permitir contenido no seguro" para esta web.
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Columna del Chat de Chatango */}
+              {/* Columna del Chat (Chatango corregido sin 404) */}
               <div style={{
                 height: '480px',
                 backgroundColor: '#0c0c0c',
@@ -315,7 +419,8 @@ export default function StreamPage({ initialCanales }) {
                 border: '1px solid #222',
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.8)'
               }} className="chat-block">
                 <div style={{
                   padding: '10px 15px',
@@ -325,15 +430,16 @@ export default function StreamPage({ initialCanales }) {
                   fontWeight: 'bold',
                   color: '#00ff41'
                 }}>
-                  💬 CHAT DEL PARTIDO
+                  💬 CHAT EN VIVO
                 </div>
                 <div style={{ flex: 1, position: 'relative' }}>
+                  {/* Se apunta directamente al subdominio del grupo en chatango para evitar el 404 */}
                   <iframe 
-                    src="https://st.chatango.com/g/fg/r_b_c.html?id=streamengine-global&k=00ff41&p=2"
+                    src="https://streamengine-global.chatango.com/"
                     width="100%" 
                     height="100%" 
                     frameBorder="0" 
-                    scrolling="no"
+                    scrolling="yes"
                     style={{ border: 'none', position: 'absolute', top: 0, left: 0 }}
                   />
                 </div>
@@ -343,10 +449,10 @@ export default function StreamPage({ initialCanales }) {
           </div>
         ) : (
           
-          /* VISTA 2: AGENDA ESTILO FÚTBOL LIBRE */
+          /* VISTA 2: AGENDA EN VIVO DE PARTIDOS REALES (ESTILO FÚTBOL LIBRE) */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
             
-            {/* Mensaje de Bienvenida */}
+            {/* Mensaje Informativo */}
             <div style={{
               backgroundColor: '#0f0f0f',
               border: '1px solid #1a1a1a',
@@ -357,7 +463,7 @@ export default function StreamPage({ initialCanales }) {
               color: '#bbb',
               textAlign: 'center'
             }}>
-              <strong style={{ color: '#00ff41' }}>Fútbol Libre</strong> ofrece transmisiones deportivas en vivo online de distintas ligas de fútbol y disciplinas. Haz clic en cualquiera de los partidos de la agenda para cargarlo en el reproductor interactivo con chat.
+              <strong style={{ color: '#00ff41' }}>Fútbol Libre En Vivo</strong> organiza la agenda de los partidos de hoy en tiempo real. Selecciona cualquier evento de la lista para cargarlo con sus múltiples opciones de transmisión y chat.
             </div>
 
             {/* Agenda del día */}
@@ -367,7 +473,7 @@ export default function StreamPage({ initialCanales }) {
               borderRadius: '8px',
               overflow: 'hidden'
             }}>
-              {/* Barra verde de la agenda */}
+              {/* Encabezado Verde de la Agenda */}
               <div style={{
                 backgroundColor: '#006622',
                 padding: '12px 15px',
@@ -378,73 +484,91 @@ export default function StreamPage({ initialCanales }) {
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <span>📅 Agenda de Eventos</span>
+                <span>📅 Agenda de Partidos en Tiempo Real</span>
                 <span style={{ fontSize: '13px', opacity: 0.9 }}>{currentDateStr}</span>
               </div>
 
-              {/* Lista de partidos */}
+              {/* Lista de partidos en tiempo real */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {agenda.map((partido, index) => (
-                  <div
-                    key={index}
-                    onClick={() => {
-                      const canal = obtenerCanalParaEvento(partido.canalBusqueda);
-                      setActiveCanal(canal);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '12px 15px',
-                      borderBottom: index < agenda.length - 1 ? '1px solid #1a1a1a' : 'none',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s',
-                      gap: '15px'
-                    }}
-                    className="agenda-row"
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#151515'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    {/* Hora */}
-                    <span style={{
-                      fontWeight: 'bold',
-                      color: '#00ff41',
-                      fontSize: '14px',
-                      minWidth: '50px'
-                    }}>
-                      {partido.hora}
-                    </span>
+                {agenda.map((partido) => {
+                  const horaLimpia = partido.attributes?.diary_hour 
+                    ? partido.attributes.diary_hour.substring(0, 5) 
+                    : 'En Vivo';
+                    
+                  // Reemplazar saltos de línea de la descripción
+                  const descripcion = partido.attributes?.diary_description
+                    ? partido.attributes.diary_description.replace('\n', ' - ')
+                    : 'Evento Deportivo';
 
-                    {/* Icono de deporte */}
-                    <span style={{ fontSize: '18px' }}>{partido.deporte}</span>
+                  return (
+                    <div
+                      key={partido.id}
+                      onClick={() => seleccionarPartido(partido)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '12px 15px',
+                        borderBottom: '1px solid #1a1a1a',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                        gap: '15px'
+                      }}
+                      className="agenda-row"
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#151515'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      {/* Hora */}
+                      <span style={{
+                        fontWeight: 'bold',
+                        color: '#00ff41',
+                        fontSize: '14px',
+                        minWidth: '55px'
+                      }}>
+                        {horaLimpia}
+                      </span>
 
-                    {/* Evento */}
-                    <span style={{
-                      fontSize: '14px',
-                      flex: 1,
-                      fontWeight: '500',
-                      color: '#eee'
-                    }}>
-                      {partido.evento}
-                    </span>
+                      {/* Icono de deporte según título */}
+                      <span style={{ fontSize: '18px' }}>
+                        {descripcion.toLowerCase().includes('tenis') || descripcion.toLowerCase().includes('garros') ? '🎾' :
+                         descripcion.toLowerCase().includes('nba') || descripcion.toLowerCase().includes('basket') ? '🏀' :
+                         descripcion.toLowerCase().includes('combate') || descripcion.toLowerCase().includes('ufc') ? '🥊' : '⚽'}
+                      </span>
 
-                    {/* Botón Ver */}
-                    <span style={{
-                      fontSize: '12px',
-                      backgroundColor: 'rgba(0, 255, 65, 0.1)',
-                      border: '1px solid #00ff41',
-                      color: '#00ff41',
-                      padding: '4px 10px',
-                      borderRadius: '4px',
-                      fontWeight: 'bold'
-                    }}>
-                      VER TRANSMISIÓN
-                    </span>
+                      {/* Evento */}
+                      <span style={{
+                        fontSize: '14px',
+                        flex: 1,
+                        fontWeight: '500',
+                        color: '#eee'
+                      }}>
+                        {descripcion}
+                      </span>
+
+                      {/* Botón Ver */}
+                      <span style={{
+                        fontSize: '12px',
+                        backgroundColor: 'rgba(0, 255, 65, 0.1)',
+                        border: '1px solid #00ff41',
+                        color: '#00ff41',
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        fontWeight: 'bold'
+                      }}>
+                        VER TRANSMISIÓN
+                      </span>
+                    </div>
+                  );
+                })}
+                
+                {agenda.length === 0 && (
+                  <div style={{ padding: '30px', textAlign: 'center', color: '#888' }}>
+                    No hay partidos programados en la agenda para hoy en este momento.
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
-            {/* Listado Completo de Canales por si quieren ver la señal fija */}
+            {/* Listado de Canales 24/7 Deportivos */}
             <div>
               <h3 style={{
                 fontSize: '18px',
@@ -462,10 +586,10 @@ export default function StreamPage({ initialCanales }) {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
                 gap: '12px'
               }}>
-                {filteredCanales.slice(0, 40).map((canal, idx) => (
+                {filteredCanales.slice(0, 36).map((canal, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveCanal(canal)}
+                    onClick={() => seleccionarCanal247(canal)}
                     style={{
                       padding: '12px 10px',
                       backgroundColor: '#111',
@@ -473,13 +597,14 @@ export default function StreamPage({ initialCanales }) {
                       borderRadius: '6px',
                       color: '#ccc',
                       fontWeight: 'bold',
-                      fontSize: '13px',
+                      fontSize: '12px',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px'
+                      gap: '8px',
+                      position: 'relative'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = '#00ff41';
@@ -490,6 +615,20 @@ export default function StreamPage({ initialCanales }) {
                       e.currentTarget.style.color = '#ccc';
                     }}
                   >
+                    {/* Badge HTTP/HTTPS */}
+                    <span style={{
+                      position: 'absolute',
+                      top: '2px',
+                      right: '2px',
+                      fontSize: '7px',
+                      padding: '1px 3px',
+                      borderRadius: '2px',
+                      backgroundColor: canal.url.startsWith('https://') ? '#143621' : '#5c3a21',
+                      color: canal.url.startsWith('https://') ? '#81c784' : '#ffb74d'
+                    }}>
+                      {canal.url.startsWith('https://') ? '✓' : '⚠️'}
+                    </span>
+
                     ⚽ {canal.nombre.replace('(720p)', '').replace('(1080p)', '').trim()}
                   </button>
                 ))}
