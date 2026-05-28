@@ -11,7 +11,7 @@ export default function Home() {
     <main style={{ padding: '20px', textAlign: 'center', backgroundColor: '#0f0f0f', color: 'white', minHeight: '100vh' }}>
       <h1>Streaming en Vivo</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', marginTop: '20px' }}>
-        {canales.map((canal: any, index: number) => (
+        {canales.map((canal, index) => (
           <a 
             key={index} 
             href={canal.url} 
