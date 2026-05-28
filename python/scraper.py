@@ -88,32 +88,43 @@ def categorizar_canal(nombre, url, fuente_categoria):
     return "TDT / General"
 
 def check_stream_url(url):
-    """Verifica el enlace de streaming, lo actualiza a HTTPS de ser posible, y descarta HTTP no seguros.
+    """Verifica el enlace de streaming, lo actualiza a HTTPS de ser posible, 
+    y descarta los que no son HTTPS o no soportan CORS en el navegador.
     Retorna (alive, final_url)."""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
+    # Función interna para comprobar validez e inspeccionar CORS
+    def verify(test_url):
+        try:
+            res = requests.get(test_url, headers=headers, timeout=2.0, stream=True)
+            if res.status_code in [200, 301, 302]:
+                # Verificar si el servidor retorna el header Access-Control-Allow-Origin
+                cors = res.headers.get('Access-Control-Allow-Origin', '')
+                if not cors:
+                    for k, v in res.headers.items():
+                        if k.lower() == 'access-control-allow-origin':
+                            cors = v
+                            break
+                # Para reproducirse en el navegador sin CORS, debe tener CORS habilitado (o ser un proxy)
+                if cors == '*' or cors or 'cors-proxy' in test_url:
+                    return True
+        except Exception:
+            pass
+        return False
+
     # Intentar primero forzar HTTPS si es HTTP original
     if url.startswith('http://'):
         https_url = url.replace('http://', 'https://', 1)
-        try:
-            response = requests.get(https_url, headers=headers, timeout=2.0, stream=True)
-            if response.status_code in [200, 301, 302]:
-                return True, https_url
-        except Exception:
-            pass
+        if verify(https_url):
+            return True, https_url
 
-    # Verificar la URL original
-    try:
-        response = requests.get(url, headers=headers, timeout=2.0, stream=True)
-        if response.status_code in [200, 301, 302]:
-            # Solo permitir enlaces HTTPS seguros para evitar bloqueo de contenido mixto en producción
-            if url.startswith('https://'):
-                return True, url
-    except Exception:
-        pass
-        
+    # Verificar la URL original (solo si es HTTPS, para evitar Mixed Content)
+    if url.startswith('https://'):
+        if verify(url):
+            return True, url
+            
     return False, url
 
 def procesar_m3u_text(text, fuente_categoria):
