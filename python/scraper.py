@@ -2,23 +2,90 @@ import requests
 import json
 import os
 import glob
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Lista de fuentes públicas de IPTV agrupadas por categoría
+# Límite de canales verificados activos por categoría
+MAX_CANALES_POR_CATEGORIA = 150
+
+# Listas de fuentes agrupadas
 SOURCES = {
-    "Deportes": "https://iptv-org.github.io/iptv/categories/sports.m3u",
-    "España": "https://www.tdtchannels.com/lists/tv.m3u8",
-    "Argentina": "https://iptv-org.github.io/iptv/countries/ar.m3u",
-    "Colombia": "https://iptv-org.github.io/iptv/countries/co.m3u",
-    "Chile": "https://iptv-org.github.io/iptv/countries/cl.m3u",
-    "México": "https://iptv-org.github.io/iptv/countries/mx.m3u",
-    "Bolivia": "https://iptv-org.github.io/iptv/countries/bo.m3u",
-    "Latino": "https://iptv-org.github.io/iptv/languages/spa.m3u",
-    "Adultos (18+)": "https://iptv-org.github.io/iptv/index.nsfw.m3u"
+    "Deportes": [
+        "https://iptv-org.github.io/iptv/categories/sports.m3u"
+    ],
+    "España": [
+        "https://www.tdtchannels.com/lists/tv.m3u8",
+        "https://pastebin.com/raw/JLQbVRet",
+        "https://pastebin.com/raw/0C5utBqQ",
+        "https://dl.dropbox.com/s/65ywdvzey1b2nkb/1.m3u",
+        "https://dl.dropbox.com/s/3dxq5j99l4pch7p/2.m3u",
+        "https://dl.dropbox.com/s/pt68czo1e9wknye/4.m3u"
+    ],
+    "Argentina": ["https://iptv-org.github.io/iptv/countries/ar.m3u"],
+    "Colombia": ["https://iptv-org.github.io/iptv/countries/co.m3u"],
+    "Chile": ["https://iptv-org.github.io/iptv/countries/cl.m3u"],
+    "México": ["https://iptv-org.github.io/iptv/countries/mx.m3u"],
+    "Bolivia": ["https://iptv-org.github.io/iptv/countries/bo.m3u"],
+    "Latino": [
+        "https://iptv-org.github.io/iptv/languages/spa.m3u",
+        "http://bit.ly/List11A23adFluxs"
+    ],
+    "Adultos (18+)": ["https://iptv-org.github.io/iptv/index.nsfw.m3u"]
 }
 
-# Límite de canales por categoría para evitar lentitud en la web
-MAX_CANALES_POR_CATEGORIA = 60
+def categorizar_canal(nombre, url, fuente_categoria):
+    """Clasifica dinámicamente un canal basándose en su nombre y url"""
+    nombre_lower = nombre.lower()
+    
+    if fuente_categoria == "Adultos (18+)" or "nsfw" in url or "xx" in nombre_lower or "adult" in nombre_lower:
+        return "Adultos (18+)"
+        
+    # Deportes
+    deportes_kw = [
+        "deportes", "sport", "espn", "fox", "dazn", "laliga", "combate", "ufc", "win sports", 
+        "tigo sports", "directv sports", "dsports", "bein", "fútbol", "futbol", "golf", 
+        "tennis", "tenis", "nba", "f1", "motogp", "racing", "hockey", "billiards", "action sports",
+        "xtra", "arena", "stadium", "cctv-5", "cctv5", "liga", "copa", "boxeo", "wwe", "ufc"
+    ]
+    if any(kw in nombre_lower for kw in deportes_kw):
+        return "Deportes"
+        
+    # Infantil
+    infantil_kw = [
+        "infantil", "kids", "disney", "cartoon", "nickelodeon", "clan", "peque", "boing", 
+        "baby", "discovery kids", "panda", "nick jr", "toongoggles", "discovery family"
+    ]
+    if any(kw in nombre_lower for kw in infantil_kw):
+        return "Infantil"
+        
+    # Cine y Series
+    cine_kw = [
+        "cine", "pelicula", "movie", "estrenos", "accion", "comedy", "comedia", "drama", 
+        "hbo", "starx", "star channel", "tnt series", "axn", "fox channel", "warner", 
+        "universal", "cinema", "amc", "paramount", "series", "cinecanal", "golden", "multiplex",
+        "estreno", "syfy", "space", "tcm", "filmin", "studio universal", "a&e"
+    ]
+    if any(kw in nombre_lower for kw in cine_kw):
+        return "Cine"
+        
+    # Noticias
+    noticias_kw = [
+        "noticias", "news", "24h", "cnn", "euronews", "dw", "al jazeera", "telesur", 
+        "france 24", "cctv", "prensa", "reuters", "bloomberg", "cnbc", "bbc world"
+    ]
+    if any(kw in nombre_lower for kw in noticias_kw):
+        return "Noticias"
+        
+    # Música
+    musica_kw = [
+        "musica", "music", "mtv", "vh1", "trace", "farra", "rock", "beats", "pop", 
+        "concert", "cantantes", "radio", "urban", "hits"
+    ]
+    if any(kw in nombre_lower for kw in musica_kw):
+        return "Música"
+        
+    # Por defecto, TDT / General
+    return "TDT / General"
 
 def is_link_alive(url):
     """Verifica de forma rápida si un enlace de streaming responde correctamente"""
@@ -26,13 +93,12 @@ def is_link_alive(url):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
-        # stream=True descarga solo las cabeceras (headers) para máxima velocidad
-        response = requests.get(url, headers=headers, timeout=3, stream=True)
+        response = requests.get(url, headers=headers, timeout=2.5, stream=True)
         return response.status_code in [200, 301, 302]
     except Exception:
         return False
 
-def procesar_m3u_text(text, categoria):
+def procesar_m3u_text(text, fuente_categoria):
     """Parsea el texto de una lista M3U y extrae sus canales"""
     channels = []
     lines = text.splitlines()
@@ -48,63 +114,39 @@ def procesar_m3u_text(text, categoria):
                 nombre = parts[-1].strip()
         elif not line.startswith("#"):
             if nombre and (line.startswith("http://") or line.startswith("https://")):
+                cat = categorizar_canal(nombre, line, fuente_categoria)
                 channels.append({
                     "nombre": nombre,
                     "url": line,
-                    "categoria": categoria
+                    "categoria": cat
                 })
                 nombre = None
     return channels
 
 def generar_canales():
-    canales_agrupados = {}
+    todos_los_canales = []
     
     # 1. PROCESAR FUENTES ONLINE
-    for categoria, url_fuente in SOURCES.items():
-        try:
-            print(f"Descargando fuente: {categoria} ({url_fuente})")
-            response = requests.get(url_fuente, timeout=20)
-            if response.status_code != 200:
-                print(f"Error {response.status_code} al descargar de {url_fuente}")
-                continue
-                
-            canales_categoria = procesar_m3u_text(response.text, categoria)
-            print(f"Encontrados {len(canales_categoria)} canales potenciales en {categoria}")
-            
-            # Verificar canales en paralelo
-            print(f"Verificando enlaces activos para {categoria}...")
-            working_channels = []
-            
-            # Usar ThreadPoolExecutor para verificar enlaces de forma concurrente
-            with ThreadPoolExecutor(max_workers=20) as executor:
-                # Mapear URLs a futures
-                future_to_channel = {
-                    executor.submit(is_link_alive, ch["url"]): ch 
-                    for ch in canales_categoria[:200]  # Limitar a los primeros 200 para no saturar la verificación
-                }
-                
-                for future in as_completed(future_to_channel):
-                    ch = future_to_channel[future]
-                    try:
-                        alive = future.result()
-                        if alive:
-                            working_channels.append(ch)
-                            if len(working_channels) >= MAX_CANALES_POR_CATEGORIA:
-                                break
-                    except Exception as e:
-                        print(f"Error al verificar {ch['nombre']}: {e}")
-            
-            canales_agrupados[categoria] = working_channels
-            print(f"Completado {categoria}: {len(working_channels)} canales verificados activos.")
-            
-        except Exception as e:
-            print(f"Error procesando fuente {categoria}: {e}")
+    for fuente_categoria, urls in SOURCES.items():
+        for url_fuente in urls:
+            try:
+                print(f"Descargando fuente: {fuente_categoria} ({url_fuente})")
+                headers = {'User-Agent': 'Mozilla/5.0'}
+                response = requests.get(url_fuente, headers=headers, timeout=25)
+                if response.status_code != 200:
+                    print(f"Error {response.status_code} al descargar de {url_fuente}")
+                    continue
+                    
+                canales_extraidos = procesar_m3u_text(response.text, fuente_categoria)
+                print(f"Encontrados {len(canales_extraidos)} canales en esta fuente.")
+                todos_los_canales.extend(canales_extraidos)
+            except Exception as e:
+                print(f"Error procesando fuente {url_fuente}: {e}")
 
     # 2. PROCESAR FUENTES LOCALES (Archivos .m3u en carpeta python)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     local_files = glob.glob(os.path.join(dir_path, "*.m3u"))
     
-    local_channels = []
     for file_path in local_files:
         try:
             nombre_archivo = os.path.basename(file_path)
@@ -113,44 +155,74 @@ def generar_canales():
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
             
-            channels = procesar_m3u_text(content, "Deportes")
-            local_channels.extend(channels)
+            canales_locales = procesar_m3u_text(content, "Deportes")
+            print(f"Encontrados {len(canales_locales)} canales locales.")
+            todos_los_canales.extend(canales_locales)
         except Exception as e:
             print(f"Error procesando archivo local {file_path}: {e}")
-            
-    if local_channels:
-        print(f"Verificando {len(local_channels)} canales locales...")
-        working_locals = []
-        with ThreadPoolExecutor(max_workers=20) as executor:
-            future_to_local = {executor.submit(is_link_alive, ch["url"]): ch for ch in local_channels[:150]}
-            for future in as_completed(future_to_local):
-                ch = future_to_local[future]
-                if future.result():
-                    working_locals.append(ch)
-                    if len(working_locals) >= MAX_CANALES_POR_CATEGORIA:
-                        break
-        
-        # Combinar canales locales verificados en la categoría Deportes
-        if "Deportes" not in canales_agrupados:
-            canales_agrupados["Deportes"] = []
-        
-        # Evitar duplicados por URL
-        urls_existentes = {c["url"] for c in canales_agrupados["Deportes"]}
-        for ch in working_locals:
-            if ch["url"] not in urls_existentes:
-                canales_agrupados["Deportes"].append(ch)
-                urls_existentes.add(ch["url"])
 
-    # Aplanar el diccionario de categorías a una lista única para guardar en canales.json
-    lista_final = []
-    for categoria, canales in canales_agrupados.items():
-        lista_final.extend(canales)
+    # Evitar duplicados por URL de streaming
+    canales_unicos = []
+    urls_vistas = set()
+    for ch in todos_los_canales:
+        url = ch["url"]
+        # Filtrar descargas directas de archivos no de streaming
+        if url.endswith(".png") or url.endswith(".jpg") or "wiseplay" in url:
+            continue
+        if url not in urls_vistas:
+            canales_unicos.append(ch)
+            urls_vistas.add(url)
+            
+    print(f"Total canales únicos extraídos: {len(canales_unicos)}")
+    
+    # Agrupar por categoría final
+    canales_por_categoria = {}
+    for ch in canales_unicos:
+        cat = ch["categoria"]
+        if cat not in canales_por_categoria:
+            canales_por_categoria[cat] = []
+        canales_por_categoria[cat].append(ch)
+        
+    # Verificar y filtrar canales en paralelo por categoría
+    canales_verificados_finales = []
+    
+    for cat, lista in canales_por_categoria.items():
+        print(f"\nVerificando enlaces activos para la categoría: {cat} (Total candidatos: {len(lista)})")
+        working_channels = []
+        
+        # Limitar candidatos a verificar para acelerar el proceso
+        candidatos = lista[:300]
+        
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            future_to_channel = {
+                executor.submit(is_link_alive, ch["url"]): ch 
+                for ch in candidatos
+            }
+            
+            for future in as_completed(future_to_channel):
+                ch = future_to_channel[future]
+                try:
+                    alive = future.result()
+                    if alive:
+                        working_channels.append(ch)
+                        # Mostrar progreso en consola
+                        if len(working_channels) % 10 == 0:
+                            print(f"  {len(working_channels)} canales activos verificados en {cat}...")
+                        if len(working_channels) >= MAX_CANALES_POR_CATEGORIA:
+                            break
+                except Exception as e:
+                    pass
+                    
+        print(f"Finalizado {cat}: {len(working_channels)} canales verificados y activos de {len(candidatos)} probados.")
+        canales_verificados_finales.extend(working_channels)
 
     try:
         # Guardar en canales.json en la raíz del proyecto
-        with open('canales.json', 'w', encoding='utf-8') as f:
-            json.dump(lista_final, f, ensure_ascii=False, indent=4)
-        print(f"Éxito total: Se han verificado y guardado {len(lista_final)} canales en canales.json.")
+        root_path = os.path.dirname(dir_path)
+        dest_file = os.path.join(root_path, 'canales.json')
+        with open(dest_file, 'w', encoding='utf-8') as f:
+            json.dump(canales_verificados_finales, f, ensure_ascii=False, indent=4)
+        print(f"\nÉxito total: Se han guardado {len(canales_verificados_finales)} canales verificados activos en {dest_file}.")
     except Exception as e:
         print(f"Error al escribir canales.json: {e}")
 

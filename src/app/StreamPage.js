@@ -22,11 +22,16 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentDateStr, setCurrentDateStr] = useState('');
   const [playerKey, setPlayerKey] = useState(0); // Para forzar la recarga del reproductor
+
+  // Nuevos estados para el reproductor unificado
+  const [streamUrl, setStreamUrl] = useState(null);
+  const [playerMode, setPlayerMode] = useState(null); // 'video' | 'iframe'
+  const [isLoadingStream, setIsLoadingStream] = useState(false);
   
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
-  // Generar fecha actual formateada
+  // Generar fecha actual formateada sin emojis
   useEffect(() => {
     const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const hoy = new Date().toLocaleDateString('es-ES', opciones);
@@ -35,8 +40,8 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
 
   const [selectedCategory, setSelectedCategory] = useState('Deportes');
 
-  // Categorías de canales para el selector
-  const categorias = ['Deportes', 'España', 'Argentina', 'Colombia', 'Chile', 'México', 'Bolivia', 'Latino', 'Adultos (18+)', 'Todos'];
+  // Categorías de canales para el selector (sin emojis y estructurado profesionalmente)
+  const categorias = ['Deportes', 'Infantil', 'Cine', 'TDT / General', 'Noticias', 'Música', 'Adultos (18+)', 'Todos'];
 
   // Filtrar canales 24/7 por búsqueda y categoría
   const filteredCanales = canales.filter(canal => {
@@ -46,32 +51,80 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
     return matchesSearch && matchesCategory;
   });
 
-  // Efecto para inicializar el reproductor HLS personalizado (para canales 24/7)
+  // Resolutor dinámico de URLs de transmisión (Directo o Iframe de respaldo)
   useEffect(() => {
-    if (!activeCanal || activeMatch || !videoRef.current) return;
+    if (activeCanal) {
+      setStreamUrl(activeCanal.url);
+      setPlayerMode('video');
+      setIsLoadingStream(false);
+    } else if (activeEmbed) {
+      const decodedUrl = obtenerUrlIframeDecodificada(activeEmbed.attributes?.embed_iframe);
+      if (!decodedUrl) {
+        setPlayerMode('iframe');
+        setStreamUrl(null);
+        setIsLoadingStream(false);
+        return;
+      }
+
+      setIsLoadingStream(true);
+      setStreamUrl(null);
+      setPlayerMode(null);
+
+      // Consulta al endpoint API local para extraer el .m3u8 directo
+      fetch(`/api/stream-url?url=${encodeURIComponent(decodedUrl)}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Error al decodificar stream directo');
+          return res.json();
+        })
+        .then(data => {
+          if (data.playbackURL) {
+            setStreamUrl(data.playbackURL);
+            setPlayerMode('video');
+          } else {
+            throw new Error('No playbackURL in response');
+          }
+        })
+        .catch(err => {
+          console.warn("Fallo el stream directo, activando iframe de respaldo:", err);
+          setPlayerMode('iframe');
+          setStreamUrl(null);
+        })
+        .finally(() => {
+          setIsLoadingStream(false);
+        });
+    } else {
+      setStreamUrl(null);
+      setPlayerMode(null);
+      setIsLoadingStream(false);
+    }
+  }, [activeCanal, activeEmbed, playerKey]);
+
+  // Inicialización del reproductor HLS nativo
+  useEffect(() => {
+    if (playerMode !== 'video' || !streamUrl || !videoRef.current) return;
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
     }
 
     const video = videoRef.current;
-    const streamUrl = activeCanal.url;
+    const streamUrlToLoad = streamUrl;
 
     if (Hls.isSupported()) {
       const hls = new Hls({
-        maxBufferLength: 20, // Buffer de 20 segundos
-        maxMaxBufferLength: 45, // Buffer máximo de 45 segundos
+        maxBufferLength: 25, // Buffer más holgado de 25s para evitar congelamientos
+        maxMaxBufferLength: 50,
         enableWorker: true,
-        lowLatencyMode: false, // Desactivar modo de baja latencia para permitir mayor almacenamiento en caché
-        capLevelToPlayerSize: true, // Auto-escalar calidad según tamaño del reproductor para no sobrecargar
-        liveSyncDurationCount: 3, // Sincronización más estable para directos
-        maxBufferSize: 30 * 1024 * 1024 // Limitar memoria a 30MB para evitar que se congele el navegador
+        lowLatencyMode: false, // Desactivar latencia ultra baja para dar estabilidad al buffer
+        capLevelToPlayerSize: true, // Optimizar descarga al tamaño del reproductor
+        liveSyncDurationCount: 3,
+        maxBufferSize: 40 * 1024 * 1024 // 40MB para buffering en RAM
       });
       hlsRef.current = hls;
-      hls.loadSource(streamUrl);
+      hls.loadSource(streamUrlToLoad);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(err => console.log("Auto-play blocked: ", err));
+        video.play().catch(err => console.log("Auto-play bloqueado por el navegador: ", err));
       });
 
       let networkRetryCount = 0;
@@ -81,26 +134,26 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              if (networkRetryCount < 3) {
+              if (networkRetryCount < 4) {
                 networkRetryCount++;
-                console.warn(`Error de red, reintentando (${networkRetryCount}/3)...`);
+                console.warn(`Reintentando conexión de red (${networkRetryCount}/4)...`);
                 setTimeout(() => hls.startLoad(), 2000);
               } else {
-                console.error("Máximo de reintentos de red alcanzado. Intentando recargar manifest...");
+                console.error("Límite de reintentos alcanzado. Reiniciando manifiesto...");
                 networkRetryCount = 0;
                 setTimeout(() => {
-                  hls.loadSource(streamUrl);
+                  hls.loadSource(streamUrlToLoad);
                   hls.startLoad();
-                }, 4000);
+                }, 3000);
               }
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              if (mediaRetryCount < 3) {
+              if (mediaRetryCount < 4) {
                 mediaRetryCount++;
-                console.warn(`Error de medios, intentando recuperar (${mediaRetryCount}/3)...`);
+                console.warn(`Recuperando error de medios (${mediaRetryCount}/4)...`);
                 hls.recoverMediaError();
               } else {
-                console.error("Fallo al recuperar medios. Intercambiando códec de audio...");
+                console.error("Fallo crítico de medios. Intercambiando códecs de audio...");
                 mediaRetryCount = 0;
                 hls.swapAudioCodec();
                 hls.recoverMediaError();
@@ -113,9 +166,9 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
         }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = streamUrl;
+      video.src = streamUrlToLoad;
       video.addEventListener('loadedmetadata', () => {
-        video.play().catch(err => console.log("Auto-play blocked: ", err));
+        video.play().catch(err => console.log("Auto-play bloqueado: ", err));
       });
     }
 
@@ -125,7 +178,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
         hlsRef.current = null;
       }
     };
-  }, [activeCanal, activeMatch, playerKey]);
+  }, [streamUrl, playerMode, playerKey]);
 
   // Decodificar el URL del iframe de Fútbol Libre (Base64)
   const obtenerUrlIframeDecodificada = (embedIframe) => {
@@ -134,7 +187,6 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
       const parts = embedIframe.split('?r=');
       if (parts.length > 1) {
         const b64 = parts[1];
-        // Decodificar Base64 en el navegador usando atob
         return atob(b64);
       }
       return embedIframe;
@@ -173,15 +225,15 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#0a0a0a',
+      backgroundColor: '#070707',
       color: '#fff',
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* HEADER ESTILO FÚTBOL LIBRE (Premium Oscuro con bordes verdes) */}
+      {/* HEADER ESTILO FÚTBOL LIBRE (Premium Oscuro con bordes verdes, sin emojis) */}
       <header style={{
-        backgroundColor: '#0d0d0d',
+        backgroundColor: '#0a0a0a',
         borderBottom: '2px solid #00ff41',
         padding: '10px 20px',
         position: 'sticky',
@@ -202,7 +254,6 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
             onClick={limpiarSeleccion} 
             style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
           >
-            <span>📺</span>
             <span style={{
               fontSize: '22px',
               fontWeight: 'bold',
@@ -210,21 +261,21 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
               letterSpacing: '1px',
               textTransform: 'uppercase'
             }}>
-              TV FREE <span style={{ color: '#fff', fontSize: '14px' }}>En Vivo</span>
+              TV FREE <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'normal' }}>En Vivo</span>
             </span>
           </div>
 
           {/* Buscador */}
           <input
             type="text"
-            placeholder="Buscar canal de TV..."
+            placeholder="Buscar canal..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               padding: '8px 15px',
               borderRadius: '6px',
-              border: '1px solid #333',
-              backgroundColor: '#151515',
+              border: '1px solid #222',
+              backgroundColor: '#111',
               color: '#fff',
               outline: 'none',
               fontSize: '13px',
@@ -249,8 +300,8 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 if (encontrado) seleccionarCanal247(encontrado);
               }}
               style={{
-                backgroundColor: '#1b1b1b',
-                border: '1px solid #333',
+                backgroundColor: '#111',
+                border: '1px solid #222',
                 color: '#fff',
                 padding: '6px 12px',
                 borderRadius: '4px',
@@ -264,11 +315,11 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 e.currentTarget.style.color = '#00ff41';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#333';
+                e.currentTarget.style.borderColor = '#222';
                 e.currentTarget.style.color = '#fff';
               }}
             >
-              📺 {nombreCanal}
+              {nombreCanal}
             </button>
           ))}
         </div>
@@ -277,10 +328,10 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
       {/* CONTENIDO PRINCIPAL */}
       <main style={{ padding: '20px', flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
         
-        {/* VISTA 1: REPRODUCTOR ACTIVO (Ya sea Partido de Agenda o Canal 24/7) */}
+        {/* VISTA 1: REPRODUCTOR ACTIVO */}
         {(activeMatch || activeCanal) ? (
           <div>
-            {/* Botón para regresar a la agenda y recargar */}
+            {/* Botones de acción */}
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -292,7 +343,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
               <button
                 onClick={limpiarSeleccion}
                 style={{
-                  backgroundColor: '#111',
+                  backgroundColor: '#0a0a0a',
                   color: '#00ff41',
                   border: '1px solid #00ff41',
                   padding: '8px 16px',
@@ -304,7 +355,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                   gap: '8px'
                 }}
               >
-                ⬅ Volver a la Agenda de Partidos
+                Volver a la agenda
               </button>
 
               <button
@@ -326,7 +377,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               >
-                🔄 ¿Se trabó la señal? Recargar Canal
+                Recargar transmisión
               </button>
             </div>
 
@@ -337,12 +388,12 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 gap: '10px',
                 marginBottom: '15px',
                 flexWrap: 'wrap',
-                backgroundColor: '#121212',
+                backgroundColor: '#0c0c0c',
                 padding: '10px 15px',
                 borderRadius: '8px',
-                border: '1px solid #222'
+                border: '1px solid #1a1a1a'
               }}>
-                <span style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', alignSelf: 'center', marginRight: '5px' }}>
+                <span style={{ color: '#888', fontSize: '13px', fontWeight: 'bold', alignSelf: 'center', marginRight: '5px' }}>
                   OPCIONES:
                 </span>
                 {(activeMatch.attributes?.embeds?.data || []).map((embed, idx) => {
@@ -352,7 +403,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                       key={embed.id}
                       onClick={() => setActiveEmbed(embed)}
                       style={{
-                        backgroundColor: isSelected ? '#00ff41' : '#1b1b1b',
+                        backgroundColor: isSelected ? '#00ff41' : '#151515',
                         color: isSelected ? '#000' : '#fff',
                         border: 'none',
                         padding: '6px 12px',
@@ -367,7 +418,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                   );
                 })}
                 {(activeMatch.attributes?.embeds?.data || []).length === 0 && (
-                  <span style={{ color: '#888', fontSize: '13px' }}>No hay señales alternativas disponibles.</span>
+                  <span style={{ color: '#666', fontSize: '13px' }}>No hay señales alternativas disponibles.</span>
                 )}
                 {(activeMatch.attributes?.embeds?.data || []).length > 1 && (
                   <button
@@ -392,7 +443,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                       marginLeft: 'auto'
                     }}
                   >
-                    👉 Probar Siguiente Señal
+                    Siguiente señal
                   </button>
                 )}
               </div>
@@ -416,11 +467,54 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                   backgroundColor: '#000',
                   borderRadius: '8px',
                   overflow: 'hidden',
-                  border: '1px solid #222',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.8)'
+                  border: '1px solid #1c1c1c',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.9)'
                 }}>
-                  {activeMatch && activeEmbed ? (
-                    // Cargar el reproductor real en vivo de Fútbol Libre por iframe
+                  {isLoadingStream ? (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: '#000',
+                      color: '#00ff41',
+                      gap: '15px'
+                    }}>
+                      <div className="stream-loader" style={{
+                        border: '4px solid #111',
+                        borderTop: '4px solid #00ff41',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      <span style={{ fontSize: '13px', color: '#888' }}>
+                        Analizando señal y bloqueando publicidad...
+                      </span>
+                    </div>
+                  ) : playerMode === 'video' ? (
+                    // Reproductor HLS propio (reproducción limpia y estable)
+                    <video
+                      key={playerKey}
+                      ref={videoRef}
+                      controls
+                      playsInline
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  ) : playerMode === 'iframe' ? (
+                    // Iframe original como respaldo automático
                     <iframe
                       key={playerKey}
                       src={obtenerUrlIframeDecodificada(activeEmbed.attributes?.embed_iframe)}
@@ -436,22 +530,6 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                         border: 'none'
                       }}
                     />
-                  ) : activeCanal ? (
-                    // Reproductor HLS propio (para canales 24/7)
-                    <video
-                      key={playerKey}
-                      ref={videoRef}
-                      controls
-                      playsInline
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain'
-                      }}
-                    />
                   ) : (
                     <div style={{
                       position: 'absolute',
@@ -462,9 +540,9 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                       display: 'flex',
                       justifyContent: 'center',
                       alignItems: 'center',
-                      color: '#888'
+                      color: '#444'
                     }}>
-                      Cargando señal de video...
+                      Cargando señal...
                     </div>
                   )}
                 </div>
@@ -472,7 +550,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 {/* Información de lo que se está reproduciendo */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '5px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ color: '#00ff41', fontSize: '20px', margin: 0, fontWeight: 'bold' }}>
+                    <h2 style={{ color: '#00ff41', fontSize: '18px', margin: 0, fontWeight: 'bold' }}>
                       {activeMatch ? activeMatch.attributes?.diary_description.replace('\n', ' ') : activeCanal?.nombre}
                     </h2>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -493,30 +571,30 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                   {/* Advertencia para HTTP en canales 24/7 */}
                   {activeCanal?.url.startsWith('http://') && (
                     <div style={{
-                      backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                      backgroundColor: 'rgba(255, 152, 0, 0.05)',
                       border: '1px solid #ff9800',
                       borderRadius: '6px',
                       padding: '10px',
-                      color: '#ffb74d',
+                      color: '#ffa726',
                       fontSize: '12px',
                       marginTop: '10px'
                     }}>
-                      ⚠️ <strong>Alerta:</strong> Este canal es inseguro (<code>http</code>). Si no carga, dale clic al icono de escudo/candado al lado de la barra de direcciones de tu navegador y activa "Permitir contenido no seguro" para esta web.
+                      Aviso: Este canal requiere permitir contenido inseguro en tu navegador para reproducirse (HTTP). Si no inicia, habilita "Contenido no seguro" en la configuración de candado del navegador.
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Columna del Chat (MQTT ChatBox) */}
+              {/* Columna del Chat */}
               <div style={{
                 height: '480px',
-                backgroundColor: '#0c0c0c',
+                backgroundColor: '#0a0a0a',
                 borderRadius: '8px',
-                border: '1px solid #222',
+                border: '1px solid #1c1c1c',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.8)'
+                boxShadow: '0 4px 20px rgba(0,0,0,0.9)'
               }} className="chat-block">
                 <ChatBox channelName={activeMatch ? activeMatch.attributes?.diary_description : activeCanal?.nombre} />
               </div>
@@ -525,43 +603,43 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
           </div>
         ) : (
           
-          /* VISTA 2: AGENDA EN VIVO DE PARTIDOS REALES (ESTILO FÚTBOL LIBRE) */
+          /* VISTA 2: AGENDA EN VIVO DE PARTIDOS REALES (ESTILO FÚTBOL LIBRE, SIN EMOJIS) */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
             
             {/* Mensaje Informativo */}
             <div style={{
-              backgroundColor: '#0f0f0f',
+              backgroundColor: '#0a0a0a',
               border: '1px solid #1a1a1a',
               borderRadius: '8px',
               padding: '15px',
-              fontSize: '14px',
+              fontSize: '13px',
               lineHeight: '1.6',
-              color: '#bbb',
+              color: '#888',
               textAlign: 'center'
             }}>
-              <strong style={{ color: '#00ff41' }}>TV FREE En Vivo</strong> organiza la agenda de los partidos de hoy en tiempo real. Selecciona cualquier evento de la lista para cargarlo con sus múltiples opciones de transmisión y chat.
+              <span style={{ color: '#00ff41', fontWeight: 'bold' }}>TV FREE En Vivo</span> - Agenda de eventos deportivos organizada en tiempo real. Selecciona cualquier partido para reproducir.
             </div>
 
             {/* Agenda del día */}
             <div style={{
-              backgroundColor: '#0c0c0c',
-              border: '1px solid #222',
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #1c1c1c',
               borderRadius: '8px',
               overflow: 'hidden'
             }}>
               {/* Encabezado Verde de la Agenda */}
               <div style={{
-                backgroundColor: '#006622',
+                backgroundColor: '#084d1e',
                 padding: '12px 15px',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: 'bold',
                 color: '#fff',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <span>📅 Agenda de Partidos en Tiempo Real</span>
-                <span style={{ fontSize: '13px', opacity: 0.9 }}>{currentDateStr}</span>
+                <span>Agenda de Partidos</span>
+                <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 'normal' }}>{currentDateStr}</span>
               </div>
 
               {/* Lista de partidos en tiempo real */}
@@ -571,7 +649,6 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                     ? partido.attributes.diary_hour.substring(0, 5) 
                     : 'En Vivo';
                     
-                  // Reemplazar saltos de línea de la descripción
                   const descripcion = partido.attributes?.diary_description
                     ? partido.attributes.diary_description.replace('\n', ' - ')
                     : 'Evento Deportivo';
@@ -584,77 +661,70 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                         display: 'flex',
                         alignItems: 'center',
                         padding: '12px 15px',
-                        borderBottom: '1px solid #1a1a1a',
+                        borderBottom: '1px solid #111',
                         cursor: 'pointer',
                         transition: 'background 0.2s',
                         gap: '15px'
                       }}
                       className="agenda-row"
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#151515'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#111'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       {/* Hora */}
                       <span style={{
                         fontWeight: 'bold',
                         color: '#00ff41',
-                        fontSize: '14px',
+                        fontSize: '13px',
                         minWidth: '55px'
                       }}>
                         {horaLimpia}
                       </span>
 
-                      {/* Icono de deporte según título */}
-                      <span style={{ fontSize: '18px' }}>
-                        {descripcion.toLowerCase().includes('tenis') || descripcion.toLowerCase().includes('garros') ? '🎾' :
-                         descripcion.toLowerCase().includes('nba') || descripcion.toLowerCase().includes('basket') ? '🏀' :
-                         descripcion.toLowerCase().includes('combate') || descripcion.toLowerCase().includes('ufc') ? '🥊' : '⚽'}
-                      </span>
-
                       {/* Evento */}
                       <span style={{
-                        fontSize: '14px',
+                        fontSize: '13px',
                         flex: 1,
                         fontWeight: '500',
-                        color: '#eee'
+                        color: '#ddd'
                       }}>
                         {descripcion}
                       </span>
 
                       {/* Botón Ver */}
                       <span style={{
-                        fontSize: '12px',
-                        backgroundColor: 'rgba(0, 255, 65, 0.1)',
+                        fontSize: '11px',
+                        backgroundColor: 'rgba(0, 255, 65, 0.05)',
                         border: '1px solid #00ff41',
                         color: '#00ff41',
                         padding: '4px 10px',
                         borderRadius: '4px',
                         fontWeight: 'bold'
                       }}>
-                        VER TRANSMISIÓN
+                        Ver transmisión
                       </span>
                     </div>
                   );
                 })}
                 
                 {agenda.length === 0 && (
-                  <div style={{ padding: '30px', textAlign: 'center', color: '#888' }}>
-                    No hay partidos programados en la agenda para hoy en este momento.
+                  <div style={{ padding: '30px', textAlign: 'center', color: '#444', fontSize: '13px' }}>
+                    No hay partidos programados para hoy en este momento.
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Listado de Canales 24/7 Deportivos */}
+            {/* Listado de Canales 24/7 */}
             <div>
               <h3 style={{
-                fontSize: '18px',
+                fontSize: '16px',
                 fontWeight: 'bold',
                 marginBottom: '15px',
-                borderBottom: '1px solid #222',
+                borderBottom: '1px solid #1c1c1c',
                 paddingBottom: '8px',
-                color: '#888'
+                color: '#555'
               }}>
-                📺 Señales de TV 24/7 ({filteredCanales.length})
+                Canales 24/7 ({filteredCanales.length})
               </h3>
 
               {/* Categorías de Canales */}
@@ -673,12 +743,12 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                       key={idx}
                       onClick={() => setSelectedCategory(cat)}
                       style={{
-                        backgroundColor: isSelected ? '#00ff41' : '#111',
-                        color: isSelected ? '#000' : '#ccc',
-                        border: '1px solid ' + (isSelected ? '#00ff41' : '#222'),
-                        padding: '8px 16px',
+                        backgroundColor: isSelected ? '#00ff41' : '#0a0a0a',
+                        color: isSelected ? '#000' : '#888',
+                        border: '1px solid ' + (isSelected ? '#00ff41' : '#1c1c1c'),
+                        padding: '6px 14px',
                         borderRadius: '20px',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: 'bold',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
@@ -695,16 +765,16 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
                 gap: '12px'
               }}>
-                {filteredCanales.slice(0, 36).map((canal, idx) => (
+                {filteredCanales.map((canal, idx) => (
                   <button
                     key={idx}
                     onClick={() => seleccionarCanal247(canal)}
                     style={{
                       padding: '12px 10px',
-                      backgroundColor: '#111',
-                      border: '1px solid #222',
+                      backgroundColor: '#0a0a0a',
+                      border: '1px solid #1c1c1c',
                       borderRadius: '6px',
-                      color: '#ccc',
+                      color: '#aaa',
                       fontWeight: 'bold',
                       fontSize: '12px',
                       cursor: 'pointer',
@@ -720,8 +790,8 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                       e.currentTarget.style.color = '#00ff41';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#222';
-                      e.currentTarget.style.color = '#ccc';
+                      e.currentTarget.style.borderColor = '#1c1c1c';
+                      e.currentTarget.style.color = '#aaa';
                     }}
                   >
                     {/* Badge HTTP/HTTPS */}
@@ -732,13 +802,13 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                       fontSize: '7px',
                       padding: '1px 3px',
                       borderRadius: '2px',
-                      backgroundColor: canal.url.startsWith('https://') ? '#143621' : '#5c3a21',
+                      backgroundColor: canal.url.startsWith('https://') ? '#0c2614' : '#332113',
                       color: canal.url.startsWith('https://') ? '#81c784' : '#ffb74d'
                     }}>
-                      {canal.url.startsWith('https://') ? '✓' : '⚠️'}
+                      {canal.url.startsWith('https://') ? 'Seguro' : 'HTTP'}
                     </span>
 
-                    ⚽ {canal.nombre.replace('(720p)', '').replace('(1080p)', '').trim()}
+                    {canal.nombre.replace('(720p)', '').replace('(1080p)', '').replace('(1080i)', '').replace('[Not 24/7]', '').trim()}
                   </button>
                 ))}
               </div>
@@ -750,18 +820,11 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
 
       {/* ESTILOS CSS GLOBALES */}
       <style jsx global>{`
-        /* Ocultar barra de tiempo del reproductor de video para simular TV EN VIVO */
-        .live-video-player video::-webkit-media-controls-timeline,
-        .live-video-player video::-webkit-media-controls-time-remaining-display,
-        .live-video-player video::-webkit-media-controls-current-time-display {
-          display: none !important;
-        }
-
         .scroll-horizontal::-webkit-scrollbar {
           height: 4px;
         }
         .scroll-horizontal::-webkit-scrollbar-thumb {
-          background-color: #333;
+          background-color: #222;
           border-radius: 4px;
         }
         
@@ -769,6 +832,11 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
           0% { opacity: 0.4; }
           50% { opacity: 1; }
           100% { opacity: 0.4; }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
 
         @media (min-width: 1024px) {
@@ -785,7 +853,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
   );
 }
 
-// Componente de Chat en Vivo usando Paho MQTT sobre WebSockets de forma gratuita y efímera
+// Componente de Chat en Vivo usando Paho MQTT de forma limpia e impersonal (sin emojis)
 function ChatBox({ channelName }) {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -796,7 +864,7 @@ function ChatBox({ channelName }) {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    const defaultNick = 'Invitado_' + Math.floor(1000 + Math.random() * 9000);
+    const defaultNick = 'Usuario_' + Math.floor(1000 + Math.random() * 9000);
     setNickname(defaultNick);
   }, []);
 
@@ -830,7 +898,7 @@ function ChatBox({ channelName }) {
         client.onConnectionLost = (responseObject) => {
           setIsConnected(false);
           if (responseObject.errorCode !== 0) {
-            console.log("Conexión perdida con el chat:" + responseObject.errorMessage);
+            console.log("Conexión perdida con el chat: " + responseObject.errorMessage);
           }
         };
 
@@ -878,7 +946,7 @@ function ChatBox({ channelName }) {
     if (!inputText.trim() || !clientRef.current || !isConnected) return;
 
     const messageData = {
-      sender: nickname || 'Invitado',
+      sender: nickname || 'Usuario',
       text: inputText.trim(),
       timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
     };
@@ -891,71 +959,71 @@ function ChatBox({ channelName }) {
       clientRef.current.send(message);
       setInputText('');
     } catch (err) {
-      console.error("Error al enviar:", err);
+      console.error("Error al enviar mensaje:", err);
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0c0c0c', color: '#fff' }}>
-      <div style={{ padding: '10px 15px', backgroundColor: '#121212', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#00ff41' }}>💬 CHAT EN VIVO</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#070707', color: '#fff' }}>
+      <div style={{ padding: '10px 15px', backgroundColor: '#0c0c0c', borderBottom: '1px solid #1c1c1c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#00ff41' }}>Chat en vivo</span>
         <span style={{ fontSize: '10px', color: isConnected ? '#00ff41' : '#ff3b30' }}>
-          {isConnected ? '● Conectado' : '○ Desconectado'}
+          {isConnected ? 'Conectado' : 'Desconectado'}
         </span>
       </div>
 
       {!isJoined ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', gap: '12px', backgroundColor: '#0a0a0a' }}>
-          <span style={{ color: '#888', fontSize: '12px', textAlign: 'center', maxWidth: '80%' }}>
-            Ingresa tu alias para chatear en tiempo real. Sin contraseñas ni registros. Los mensajes son efímeros.
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', gap: '12px', backgroundColor: '#070707' }}>
+          <span style={{ color: '#555', fontSize: '12px', textAlign: 'center', maxWidth: '80%' }}>
+            Ingresa tu alias para comenzar a chatear. Los mensajes son temporales.
           </span>
           <input
             type="text"
-            placeholder="Nickname..."
+            placeholder="Nombre de usuario..."
             value={nickname}
             onChange={(e) => setNickname(e.target.value.substring(0, 15))}
-            style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #222', backgroundColor: '#151515', color: '#fff', outline: 'none', textAlign: 'center', width: '80%', fontSize: '13px' }}
+            style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #1c1c1c', backgroundColor: '#0c0c0c', color: '#fff', outline: 'none', textAlign: 'center', width: '80%', fontSize: '13px' }}
           />
           <button
             onClick={() => nickname.trim() && setIsJoined(true)}
             style={{ backgroundColor: '#00ff41', color: '#000', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', width: '80%', fontSize: '13px' }}
           >
-            Entrar a Comentar
+            Entrar al chat
           </button>
         </div>
       ) : (
         <>
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {messages.length === 0 ? (
-              <div style={{ color: '#444', textAlign: 'center', marginTop: '20px', fontSize: '12px' }}>
-                No hay comentarios aún. ¡Sé el primero!
+              <div style={{ color: '#333', textAlign: 'center', marginTop: '20px', fontSize: '12px' }}>
+                No hay comentarios en este canal.
               </div>
             ) : (
               messages.map((msg, index) => (
-                <div key={index} style={{ backgroundColor: msg.sender === nickname ? 'rgba(0,255,65,0.06)' : '#111', padding: '6px 10px', borderRadius: '6px', border: '1px solid ' + (msg.sender === nickname ? '#1b4a24' : '#1c1c1c') }}>
+                <div key={index} style={{ backgroundColor: msg.sender === nickname ? 'rgba(0,255,65,0.03)' : '#0c0c0c', padding: '6px 10px', borderRadius: '6px', border: '1px solid ' + (msg.sender === nickname ? '#0f3b18' : '#141414') }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
                     <span style={{ fontWeight: 'bold', color: msg.sender === nickname ? '#00ff41' : '#2196f3' }}>{msg.sender}</span>
-                    <span style={{ color: '#555' }}>{msg.timestamp}</span>
+                    <span style={{ color: '#444' }}>{msg.timestamp}</span>
                   </div>
-                  <div style={{ color: '#ddd', fontSize: '13px', wordBreak: 'break-all' }}>{msg.text}</div>
+                  <div style={{ color: '#ccc', fontSize: '12px', wordBreak: 'break-all' }}>{msg.text}</div>
                 </div>
               ))
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSendMessage} style={{ padding: '8px', borderTop: '1px solid #222', display: 'flex', gap: '6px', backgroundColor: '#121212' }}>
+          <form onSubmit={handleSendMessage} style={{ padding: '8px', borderTop: '1px solid #1c1c1c', display: 'flex', gap: '6px', backgroundColor: '#0a0a0a' }}>
             <input
               type="text"
-              placeholder="Escribe un comentario..."
+              placeholder="Escribe un mensaje..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value.substring(0, 100))}
-              style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #222', backgroundColor: '#181818', color: '#fff', outline: 'none', fontSize: '13px' }}
+              style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #1c1c1c', backgroundColor: '#070707', color: '#fff', outline: 'none', fontSize: '13px' }}
             />
             <button
               type="submit"
               disabled={!isConnected}
-              style={{ backgroundColor: isConnected ? '#00ff41' : '#333', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: isConnected ? 'pointer' : 'default', fontSize: '13px' }}
+              style={{ backgroundColor: isConnected ? '#00ff41' : '#222', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: isConnected ? 'pointer' : 'default', fontSize: '13px' }}
             >
               Enviar
             </button>
