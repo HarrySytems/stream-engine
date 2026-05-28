@@ -329,7 +329,7 @@ export default function StreamPage({ initialCanales }) {
                 </div>
                 <div style={{ flex: 1, position: 'relative' }}>
                   <iframe 
-                    src={`https://play.chatango.com/g/flash?gid=streamengine-global&amp;j=1&amp;k=00ff41&amp;p=2`}
+                    src="https://st.chatango.com/g/fg/r_b_c.html?id=streamengine-global&k=00ff41&p=2"
                     width="100%" 
                     height="100%" 
                     frameBorder="0" 
