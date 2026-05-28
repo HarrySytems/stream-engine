@@ -21,6 +21,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [currentDateStr, setCurrentDateStr] = useState('');
+  const [playerKey, setPlayerKey] = useState(0); // Para forzar la recarga del reproductor
   
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
@@ -50,12 +51,13 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
 
     if (Hls.isSupported()) {
       const hls = new Hls({
-        maxBufferLength: 30, // Aumentar buffer a 30 segundos
-        maxMaxBufferLength: 60, // Buffer máximo de 60 segundos para evitar cortes
+        maxBufferLength: 20, // Buffer de 20 segundos
+        maxMaxBufferLength: 45, // Buffer máximo de 45 segundos
         enableWorker: true,
         lowLatencyMode: false, // Desactivar modo de baja latencia para permitir mayor almacenamiento en caché
-        progressive: true,
-        liveSyncDurationCount: 5 // Sincronización más tolerante con el directo
+        capLevelToPlayerSize: true, // Auto-escalar calidad según tamaño del reproductor para no sobrecargar
+        liveSyncDurationCount: 3, // Sincronización más estable para directos
+        maxBufferSize: 30 * 1024 * 1024 // Limitar memoria a 30MB para evitar que se congele el navegador
       });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
@@ -64,14 +66,37 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
         video.play().catch(err => console.log("Auto-play blocked: ", err));
       });
 
+      let networkRetryCount = 0;
+      let mediaRetryCount = 0;
+
       hls.on(Hls.Events.ERROR, function (event, data) {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              hls.startLoad();
+              if (networkRetryCount < 3) {
+                networkRetryCount++;
+                console.warn(`Error de red, reintentando (${networkRetryCount}/3)...`);
+                setTimeout(() => hls.startLoad(), 2000);
+              } else {
+                console.error("Máximo de reintentos de red alcanzado. Intentando recargar manifest...");
+                networkRetryCount = 0;
+                setTimeout(() => {
+                  hls.loadSource(streamUrl);
+                  hls.startLoad();
+                }, 4000);
+              }
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              hls.recoverMediaError();
+              if (mediaRetryCount < 3) {
+                mediaRetryCount++;
+                console.warn(`Error de medios, intentando recuperar (${mediaRetryCount}/3)...`);
+                hls.recoverMediaError();
+              } else {
+                console.error("Fallo al recuperar medios. Intercambiando códec de audio...");
+                mediaRetryCount = 0;
+                hls.swapAudioCodec();
+                hls.recoverMediaError();
+              }
               break;
             default:
               hls.destroy();
@@ -92,7 +117,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
         hlsRef.current = null;
       }
     };
-  }, [activeCanal, activeMatch]);
+  }, [activeCanal, activeMatch, playerKey]);
 
   // Decodificar el URL del iframe de Fútbol Libre (Base64)
   const obtenerUrlIframeDecodificada = (embedIframe) => {
@@ -247,25 +272,55 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
         {/* VISTA 1: REPRODUCTOR ACTIVO (Ya sea Partido de Agenda o Canal 24/7) */}
         {(activeMatch || activeCanal) ? (
           <div>
-            {/* Botón para regresar a la agenda */}
-            <button
-              onClick={limpiarSeleccion}
-              style={{
-                backgroundColor: '#111',
-                color: '#00ff41',
-                border: '1px solid #00ff41',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                marginBottom: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              ⬅ Volver a la Agenda de Partidos
-            </button>
+            {/* Botón para regresar a la agenda y recargar */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: '15px', 
+              flexWrap: 'wrap', 
+              gap: '10px' 
+            }}>
+              <button
+                onClick={limpiarSeleccion}
+                style={{
+                  backgroundColor: '#111',
+                  color: '#00ff41',
+                  border: '1px solid #00ff41',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                ⬅ Volver a la Agenda de Partidos
+              </button>
+
+              <button
+                onClick={() => setPlayerKey(prev => prev + 1)}
+                style={{
+                  backgroundColor: '#ff3b30',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 2px 8px rgba(255, 59, 48, 0.4)',
+                  transition: 'opacity 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                🔄 ¿Se trabó la señal? Recargar Canal
+              </button>
+            </div>
 
             {/* Selector de opciones de transmisión (sólo para partidos de la agenda) */}
             {activeMatch && (
@@ -333,8 +388,11 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                   {activeMatch && activeEmbed ? (
                     // Cargar el reproductor real en vivo de Fútbol Libre por iframe
                     <iframe
+                      key={playerKey}
                       src={obtenerUrlIframeDecodificada(activeEmbed.attributes?.embed_iframe)}
                       allowFullScreen
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
                       style={{
                         position: 'absolute',
                         top: 0,
@@ -347,6 +405,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                   ) : activeCanal ? (
                     // Reproductor HLS propio (para canales 24/7)
                     <video
+                      key={playerKey}
                       ref={videoRef}
                       controls
                       playsInline
@@ -436,9 +495,9 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                   💬 CHAT EN VIVO
                 </div>
                 <div style={{ flex: 1, position: 'relative' }}>
-                  {/* Se apunta directamente al subdominio del grupo en chatango para evitar el 404 */}
+                  {/* Se apunta directamente al subdominio del grupo en chatango con ?js para forzar la interfaz HTML5 sin pedir registro obligatorio */}
                   <iframe 
-                    src="https://streamengine-global.chatango.com/"
+                    src="https://streamengine-global.chatango.com/?js"
                     width="100%" 
                     height="100%" 
                     frameBorder="0" 
