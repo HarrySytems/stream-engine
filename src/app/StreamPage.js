@@ -4,8 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import Hls from 'hls.js';
 
 export default function StreamPage({ initialCanales }) {
-  const [canales, setCanales] = useState(initialCanales || []);
-  const [activeCanal, setActiveCanal] = useState(initialCanales?.[0] || null);
+  // Filtrar canales válidos (que comiencen con http o https)
+  const [canales, setCanales] = useState(() => {
+    return (initialCanales || []).filter(canal => 
+      canal.url && (canal.url.startsWith('http://') || canal.url.startsWith('https://'))
+    );
+  });
+  
+  const [activeCanal, setActiveCanal] = useState(canales[0] || null);
   const [searchQuery, setSearchQuery] = useState('');
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
@@ -18,7 +24,6 @@ export default function StreamPage({ initialCanales }) {
   useEffect(() => {
     if (!activeCanal || !videoRef.current) return;
 
-    // Destruir la instancia anterior de HLS si existe
     if (hlsRef.current) {
       hlsRef.current.destroy();
     }
@@ -43,11 +48,11 @@ export default function StreamPage({ initialCanales }) {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              console.log("fatal network error encountered, try to recover");
+              console.log("fatal network error, trying to recover");
               hls.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              console.log("fatal media error encountered, try to recover");
+              console.log("fatal media error, trying to recover");
               hls.recoverMediaError();
               break;
             default:
@@ -58,7 +63,6 @@ export default function StreamPage({ initialCanales }) {
         }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Soporte nativo de HLS (Safari/iOS)
       video.src = streamUrl;
       video.addEventListener('loadedmetadata', () => {
         video.play().catch(err => console.log("Auto-play blocked or error: ", err));
@@ -73,14 +77,15 @@ export default function StreamPage({ initialCanales }) {
     };
   }, [activeCanal]);
 
-  // Si no hay canales, mostrar cargando
   if (!activeCanal) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0a0a0a', color: '#00ff41' }}>
-        <h2>Cargando canales...</h2>
+        <h2>No hay canales disponibles en la lista...</h2>
       </div>
     );
   }
+
+  const isActiveUrlHttp = activeCanal.url.startsWith('http://');
 
   return (
     <div style={{
@@ -155,7 +160,6 @@ export default function StreamPage({ initialCanales }) {
           display: 'grid',
           gridTemplateColumns: '1fr',
           gap: '20px',
-          // En escritorio (min-width: 1024px) cambia a 2 columnas
           '@media (min-width: 1024px)': {
             gridTemplateColumns: '3fr 1.2fr'
           }
@@ -190,36 +194,61 @@ export default function StreamPage({ initialCanales }) {
             {/* Info del canal actual */}
             <div style={{
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              flexDirection: 'column',
+              gap: '8px',
               padding: '10px 5px'
             }}>
-              <div>
-                <span style={{
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  color: '#888',
-                  letterSpacing: '1.5px',
-                  fontWeight: 'bold'
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span style={{
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    color: '#888',
+                    letterSpacing: '1.5px',
+                    fontWeight: 'bold'
+                  }}>
+                    Reproduciendo Ahora:
+                  </span>
+                  <h2 style={{ fontSize: '22px', margin: '4px 0 0 0', color: '#00ff41', fontWeight: 'bold' }}>
+                    {activeCanal.nombre}
+                  </h2>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: '#ff3b30',
+                    display: 'inline-block',
+                    animation: 'pulse 1.5s infinite'
+                  }} />
+                  <span style={{ fontSize: '12px', color: '#888', fontWeight: '500' }}>EN VIVO</span>
+                </div>
+              </div>
+
+              {/* Advertencia de contenido mixto si el enlace es HTTP inseguro */}
+              {isActiveUrlHttp && (
+                <div style={{
+                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                  border: '1px solid #ff9800',
+                  borderRadius: '6px',
+                  padding: '10px 15px',
+                  marginTop: '10px',
+                  color: '#ffb74d',
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
                 }}>
-                  Reproduciendo Ahora:
-                </span>
-                <h2 style={{ fontSize: '22px', margin: '4px 0 0 0', color: '#00ff41', fontWeight: 'bold' }}>
-                  {activeCanal.nombre}
-                </h2>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: '#ff3b30',
-                  display: 'inline-block',
-                  animation: 'pulse 1.5s infinite'
-                }} />
-                <span style={{ fontSize: '12px', color: '#888', fontWeight: '500' }}>EN VIVO</span>
-              </div>
+                  <span>⚠️</span>
+                  <div>
+                    <strong>Alerta de Bloqueo:</strong> Este canal usa una dirección insegura (<code>http://</code>). 
+                    Como Vercel usa HTTPS seguro, tu navegador bloqueará la transmisión por seguridad (Mixed Content). 
+                    Prueba a buscar canales con direcciones seguras (<code>https://</code>) o desactiva temporalmente el bloqueo de contenido no seguro en tu navegador para este sitio.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -249,7 +278,6 @@ export default function StreamPage({ initialCanales }) {
             </div>
             
             <div style={{ flex: 1, position: 'relative', width: '100%', height: '100%' }}>
-              {/* Usamos un Chatango global para mantener a todos los usuarios juntos */}
               <iframe 
                 src="https://play.chatango.com/g/flash?gid=streamengine-global&amp;j=1&amp;k=00ff41&amp;p=2"
                 width="100%" 
@@ -282,19 +310,19 @@ export default function StreamPage({ initialCanales }) {
           }}>
             {filteredCanales.map((canal, index) => {
               const isActive = canal.url === activeCanal.url;
+              const isHttp = canal.url.startsWith('http://');
               return (
                 <button
                   key={index}
                   onClick={() => setActiveCanal(canal)}
                   style={{
-                    padding: '15px',
+                    padding: '15px 10px',
                     backgroundColor: isActive ? 'rgba(0, 255, 65, 0.1)' : '#0f0f0f',
                     border: isActive ? '1px solid #00ff41' : '1px solid #222',
                     borderRadius: '8px',
                     color: isActive ? '#00ff41' : '#ccc',
                     fontWeight: 'bold',
-                    fontSize: '14px',
-                    textAlign: 'center',
+                    fontSize: '13px',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     outline: 'none',
@@ -302,8 +330,10 @@ export default function StreamPage({ initialCanales }) {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '6px',
-                    boxShadow: isActive ? '0 0 10px rgba(0, 255, 65, 0.2)' : 'none'
+                    gap: '8px',
+                    boxShadow: isActive ? '0 0 10px rgba(0, 255, 65, 0.2)' : 'none',
+                    minHeight: '80px',
+                    position: 'relative'
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -318,15 +348,32 @@ export default function StreamPage({ initialCanales }) {
                     }
                   }}
                 >
-                  <span style={{ fontSize: '16px' }}>📺</span>
+                  {/* Pequeño tag indicando si es HTTPS o HTTP */}
                   <span style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    fontSize: '9px',
+                    padding: '2px 4px',
+                    borderRadius: '4px',
+                    backgroundColor: isHttp ? '#5c3a21' : '#143621',
+                    color: isHttp ? '#ffb74d' : '#81c784'
+                  }}>
+                    {isHttp ? 'HTTP' : 'HTTPS'}
+                  </span>
+
+                  <span style={{ fontSize: '18px', marginTop: '5px' }}>📺</span>
+                  <div style={{
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    width: '100%'
+                    width: '100%',
+                    color: isActive ? '#00ff41' : '#ccc',
+                    display: 'block',
+                    textAlign: 'center'
                   }}>
                     {canal.nombre}
-                  </span>
+                  </div>
                 </button>
               );
             })}
