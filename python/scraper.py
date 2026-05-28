@@ -87,16 +87,34 @@ def categorizar_canal(nombre, url, fuente_categoria):
     # Por defecto, TDT / General
     return "TDT / General"
 
-def is_link_alive(url):
-    """Verifica de forma rápida si un enlace de streaming responde correctamente"""
+def check_stream_url(url):
+    """Verifica el enlace de streaming, lo actualiza a HTTPS de ser posible, y descarta HTTP no seguros.
+    Retorna (alive, final_url)."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    # Intentar primero forzar HTTPS si es HTTP original
+    if url.startswith('http://'):
+        https_url = url.replace('http://', 'https://', 1)
+        try:
+            response = requests.get(https_url, headers=headers, timeout=2.0, stream=True)
+            if response.status_code in [200, 301, 302]:
+                return True, https_url
+        except Exception:
+            pass
+
+    # Verificar la URL original
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-        response = requests.get(url, headers=headers, timeout=2.5, stream=True)
-        return response.status_code in [200, 301, 302]
+        response = requests.get(url, headers=headers, timeout=2.0, stream=True)
+        if response.status_code in [200, 301, 302]:
+            # Solo permitir enlaces HTTPS seguros para evitar bloqueo de contenido mixto en producción
+            if url.startswith('https://'):
+                return True, url
     except Exception:
-        return False
+        pass
+        
+    return False, url
 
 def procesar_m3u_text(text, fuente_categoria):
     """Parsea el texto de una lista M3U y extrae sus canales"""
@@ -195,15 +213,16 @@ def generar_canales():
         
         with ThreadPoolExecutor(max_workers=30) as executor:
             future_to_channel = {
-                executor.submit(is_link_alive, ch["url"]): ch 
+                executor.submit(check_stream_url, ch["url"]): ch 
                 for ch in candidatos
             }
             
             for future in as_completed(future_to_channel):
                 ch = future_to_channel[future]
                 try:
-                    alive = future.result()
+                    alive, final_url = future.result()
                     if alive:
+                        ch["url"] = final_url # Actualizar a la versión HTTPS si fue actualizada
                         working_channels.append(ch)
                         # Mostrar progreso en consola
                         if len(working_channels) % 10 == 0:

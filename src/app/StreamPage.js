@@ -132,6 +132,16 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
 
       hls.on(Hls.Events.ERROR, function (event, data) {
         if (data.fatal) {
+          // Si es un error de red y no hay respuesta (código 0, típico bloqueo por CORS en el navegador)
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && data.response && data.response.code === 0) {
+            console.warn("Posible bloqueo de CORS detectado. Cargando iframe de respaldo de forma inmediata.");
+            if (activeEmbed) {
+              setPlayerMode('iframe');
+              setStreamUrl(null);
+              return;
+            }
+          }
+
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
               if (networkRetryCount < 4) {
@@ -139,12 +149,18 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 console.warn(`Reintentando conexión de red (${networkRetryCount}/4)...`);
                 setTimeout(() => hls.startLoad(), 2000);
               } else {
-                console.error("Límite de reintentos alcanzado. Reiniciando manifiesto...");
-                networkRetryCount = 0;
-                setTimeout(() => {
-                  hls.loadSource(streamUrlToLoad);
-                  hls.startLoad();
-                }, 3000);
+                console.error("Límite de reintentos alcanzado.");
+                if (activeEmbed) {
+                  console.warn("Fallo persistente de red en reproductor nativo. Activando iframe de respaldo.");
+                  setPlayerMode('iframe');
+                  setStreamUrl(null);
+                } else {
+                  networkRetryCount = 0;
+                  setTimeout(() => {
+                    hls.loadSource(streamUrlToLoad);
+                    hls.startLoad();
+                  }, 3000);
+                }
               }
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
@@ -153,14 +169,25 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 console.warn(`Recuperando error de medios (${mediaRetryCount}/4)...`);
                 hls.recoverMediaError();
               } else {
-                console.error("Fallo crítico de medios. Intercambiando códecs de audio...");
-                mediaRetryCount = 0;
-                hls.swapAudioCodec();
-                hls.recoverMediaError();
+                console.error("Fallo crítico de medios.");
+                if (activeEmbed) {
+                  console.warn("Cambiando a iframe de respaldo por fallo de medios.");
+                  setPlayerMode('iframe');
+                  setStreamUrl(null);
+                } else {
+                  mediaRetryCount = 0;
+                  hls.swapAudioCodec();
+                  hls.recoverMediaError();
+                }
               }
               break;
             default:
               hls.destroy();
+              if (activeEmbed) {
+                console.warn("Error fatal desconocido. Cambiando a iframe de respaldo.");
+                setPlayerMode('iframe');
+                setStreamUrl(null);
+              }
               break;
           }
         }
