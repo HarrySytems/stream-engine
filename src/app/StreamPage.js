@@ -33,10 +33,18 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
     setCurrentDateStr(hoy.charAt(0).toUpperCase() + hoy.slice(1));
   }, []);
 
-  // Filtrar canales 24/7
-  const filteredCanales = canales.filter(canal =>
-    canal.nombre.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [selectedCategory, setSelectedCategory] = useState('Deportes');
+
+  // Categorías de canales para el selector
+  const categorias = ['Deportes', 'España', 'Argentina', 'Colombia', 'Chile', 'México', 'Bolivia', 'Latino', 'Adultos (18+)', 'Todos'];
+
+  // Filtrar canales 24/7 por búsqueda y categoría
+  const filteredCanales = canales.filter(canal => {
+    const matchesSearch = canal.nombre.toLowerCase().includes(searchQuery.toLowerCase());
+    const canalCat = canal.categoria || 'Deportes';
+    const matchesCategory = selectedCategory === 'Todos' || canalCat === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   // Efecto para inicializar el reproductor HLS personalizado (para canales 24/7)
   useEffect(() => {
@@ -194,7 +202,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
             onClick={limpiarSeleccion} 
             style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
           >
-            <span style={{ fontSize: '24px' }}>⚽</span>
+            <span>📺</span>
             <span style={{
               fontSize: '22px',
               fontWeight: 'bold',
@@ -202,7 +210,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
               letterSpacing: '1px',
               textTransform: 'uppercase'
             }}>
-              Fútbol Libre <span style={{ color: '#fff', fontSize: '14px' }}>En Vivo</span>
+              TV FREE <span style={{ color: '#fff', fontSize: '14px' }}>En Vivo</span>
             </span>
           </div>
 
@@ -361,6 +369,32 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 {(activeMatch.attributes?.embeds?.data || []).length === 0 && (
                   <span style={{ color: '#888', fontSize: '13px' }}>No hay señales alternativas disponibles.</span>
                 )}
+                {(activeMatch.attributes?.embeds?.data || []).length > 1 && (
+                  <button
+                    onClick={() => {
+                      const embeds = activeMatch.attributes?.embeds?.data || [];
+                      const currentIndex = embeds.findIndex(e => e.id === activeEmbed?.id);
+                      const nextIndex = (currentIndex + 1) % embeds.length;
+                      setActiveEmbed(embeds[nextIndex]);
+                    }}
+                    style={{
+                      backgroundColor: '#2196f3',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      marginLeft: 'auto'
+                    }}
+                  >
+                    👉 Probar Siguiente Señal
+                  </button>
+                )}
               </div>
             )}
 
@@ -473,7 +507,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 </div>
               </div>
 
-              {/* Columna del Chat (Chatango corregido sin 404) */}
+              {/* Columna del Chat (MQTT ChatBox) */}
               <div style={{
                 height: '480px',
                 backgroundColor: '#0c0c0c',
@@ -484,27 +518,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 overflow: 'hidden',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.8)'
               }} className="chat-block">
-                <div style={{
-                  padding: '10px 15px',
-                  backgroundColor: '#121212',
-                  borderBottom: '1px solid #222',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  color: '#00ff41'
-                }}>
-                  💬 CHAT EN VIVO
-                </div>
-                <div style={{ flex: 1, position: 'relative' }}>
-                  {/* Se apunta directamente al subdominio del grupo en chatango con ?js para forzar la interfaz HTML5 sin pedir registro obligatorio */}
-                  <iframe 
-                    src="https://streamengine-global.chatango.com/?js"
-                    width="100%" 
-                    height="100%" 
-                    frameBorder="0" 
-                    scrolling="yes"
-                    style={{ border: 'none', position: 'absolute', top: 0, left: 0 }}
-                  />
-                </div>
+                <ChatBox channelName={activeMatch ? activeMatch.attributes?.diary_description : activeCanal?.nombre} />
               </div>
 
             </div>
@@ -525,7 +539,7 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
               color: '#bbb',
               textAlign: 'center'
             }}>
-              <strong style={{ color: '#00ff41' }}>Fútbol Libre En Vivo</strong> organiza la agenda de los partidos de hoy en tiempo real. Selecciona cualquier evento de la lista para cargarlo con sus múltiples opciones de transmisión y chat.
+              <strong style={{ color: '#00ff41' }}>TV FREE En Vivo</strong> organiza la agenda de los partidos de hoy en tiempo real. Selecciona cualquier evento de la lista para cargarlo con sus múltiples opciones de transmisión y chat.
             </div>
 
             {/* Agenda del día */}
@@ -640,8 +654,41 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
                 paddingBottom: '8px',
                 color: '#888'
               }}>
-                📺 Señales Deportivas 24/7 ({filteredCanales.length})
+                📺 Señales de TV 24/7 ({filteredCanales.length})
               </h3>
+
+              {/* Categorías de Canales */}
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                overflowX: 'auto',
+                paddingBottom: '10px',
+                marginBottom: '20px',
+                whiteSpace: 'nowrap'
+              }} className="scroll-horizontal">
+                {categorias.map((cat, idx) => {
+                  const isSelected = selectedCategory === cat;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedCategory(cat)}
+                      style={{
+                        backgroundColor: isSelected ? '#00ff41' : '#111',
+                        color: isSelected ? '#000' : '#ccc',
+                        border: '1px solid ' + (isSelected ? '#00ff41' : '#222'),
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
               
               <div style={{
                 display: 'grid',
@@ -734,6 +781,187 @@ export default function StreamPage({ initialCanales, liveAgenda }) {
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+// Componente de Chat en Vivo usando Paho MQTT sobre WebSockets de forma gratuita y efímera
+function ChatBox({ channelName }) {
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [isJoined, setIsJoined] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const clientRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    const defaultNick = 'Invitado_' + Math.floor(1000 + Math.random() * 9000);
+    setNickname(defaultNick);
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    let active = true;
+    
+    if (!window.Paho) {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js';
+      script.async = true;
+      script.onload = () => {
+        if (active) iniciarConexion();
+      };
+      document.body.appendChild(script);
+    } else {
+      iniciarConexion();
+    }
+
+    function iniciarConexion() {
+      if (!window.Paho || clientRef.current) return;
+
+      try {
+        const clientId = 'tvfree_client_' + Math.random().toString(16).substring(2, 10);
+        const client = new window.Paho.MQTT.Client('broker.hivemq.com', Number(8884), '/mqtt', clientId);
+        clientRef.current = client;
+
+        client.onConnectionLost = (responseObject) => {
+          setIsConnected(false);
+          if (responseObject.errorCode !== 0) {
+            console.log("Conexión perdida con el chat:" + responseObject.errorMessage);
+          }
+        };
+
+        client.onMessageArrived = (message) => {
+          try {
+            const data = JSON.parse(message.payloadString);
+            if (active) {
+              setMessages(prev => [...prev, data]);
+            }
+          } catch (e) {
+            console.error("Error procesando mensaje:", e);
+          }
+        };
+
+        client.connect({
+          onSuccess: () => {
+            setIsConnected(true);
+            const cleanChannel = (channelName || 'general').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+            const topic = `tvfree/chat/${cleanChannel}`;
+            client.subscribe(topic);
+          },
+          useSSL: true,
+          onFailure: (err) => {
+            console.error("Fallo al conectar chat:", err);
+          }
+        });
+      } catch (err) {
+        console.error("Error MQTT:", err);
+      }
+    }
+
+    return () => {
+      active = false;
+      if (clientRef.current) {
+        try {
+          clientRef.current.disconnect();
+        } catch (e) {}
+        clientRef.current = null;
+      }
+    };
+  }, [channelName]);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!inputText.trim() || !clientRef.current || !isConnected) return;
+
+    const messageData = {
+      sender: nickname || 'Invitado',
+      text: inputText.trim(),
+      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    try {
+      const cleanChannel = (channelName || 'general').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+      const topic = `tvfree/chat/${cleanChannel}`;
+      const message = new window.Paho.MQTT.Message(JSON.stringify(messageData));
+      message.destinationName = topic;
+      clientRef.current.send(message);
+      setInputText('');
+    } catch (err) {
+      console.error("Error al enviar:", err);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0c0c0c', color: '#fff' }}>
+      <div style={{ padding: '10px 15px', backgroundColor: '#121212', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#00ff41' }}>💬 CHAT EN VIVO</span>
+        <span style={{ fontSize: '10px', color: isConnected ? '#00ff41' : '#ff3b30' }}>
+          {isConnected ? '● Conectado' : '○ Desconectado'}
+        </span>
+      </div>
+
+      {!isJoined ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', gap: '12px', backgroundColor: '#0a0a0a' }}>
+          <span style={{ color: '#888', fontSize: '12px', textAlign: 'center', maxWidth: '80%' }}>
+            Ingresa tu alias para chatear en tiempo real. Sin contraseñas ni registros. Los mensajes son efímeros.
+          </span>
+          <input
+            type="text"
+            placeholder="Nickname..."
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value.substring(0, 15))}
+            style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #222', backgroundColor: '#151515', color: '#fff', outline: 'none', textAlign: 'center', width: '80%', fontSize: '13px' }}
+          />
+          <button
+            onClick={() => nickname.trim() && setIsJoined(true)}
+            style={{ backgroundColor: '#00ff41', color: '#000', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', width: '80%', fontSize: '13px' }}
+          >
+            Entrar a Comentar
+          </button>
+        </div>
+      ) : (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {messages.length === 0 ? (
+              <div style={{ color: '#444', textAlign: 'center', marginTop: '20px', fontSize: '12px' }}>
+                No hay comentarios aún. ¡Sé el primero!
+              </div>
+            ) : (
+              messages.map((msg, index) => (
+                <div key={index} style={{ backgroundColor: msg.sender === nickname ? 'rgba(0,255,65,0.06)' : '#111', padding: '6px 10px', borderRadius: '6px', border: '1px solid ' + (msg.sender === nickname ? '#1b4a24' : '#1c1c1c') }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
+                    <span style={{ fontWeight: 'bold', color: msg.sender === nickname ? '#00ff41' : '#2196f3' }}>{msg.sender}</span>
+                    <span style={{ color: '#555' }}>{msg.timestamp}</span>
+                  </div>
+                  <div style={{ color: '#ddd', fontSize: '13px', wordBreak: 'break-all' }}>{msg.text}</div>
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form onSubmit={handleSendMessage} style={{ padding: '8px', borderTop: '1px solid #222', display: 'flex', gap: '6px', backgroundColor: '#121212' }}>
+            <input
+              type="text"
+              placeholder="Escribe un comentario..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value.substring(0, 100))}
+              style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #222', backgroundColor: '#181818', color: '#fff', outline: 'none', fontSize: '13px' }}
+            />
+            <button
+              type="submit"
+              disabled={!isConnected}
+              style={{ backgroundColor: isConnected ? '#00ff41' : '#333', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: isConnected ? 'pointer' : 'default', fontSize: '13px' }}
+            >
+              Enviar
+            </button>
+          </form>
+        </>
+      )}
     </div>
   );
 }
