@@ -2,6 +2,55 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+// Helper component for horizontal category carousels
+function CategoryRow({ title, items, onSelect }) {
+  const rowRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (rowRef.current) {
+      const { scrollLeft, clientWidth } = rowRef.current;
+      const scrollTo = direction === 'left' 
+        ? scrollLeft - clientWidth * 0.85 
+        : scrollLeft + clientWidth * 0.85;
+      rowRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
+
+  if (!items || items.length === 0) return null;
+
+  return (
+    <div className="category-row-container">
+      <h2 className="category-row-title">{title}</h2>
+      <div className="category-row-relative">
+        <button className="carousel-nav-btn prev" onClick={() => scroll('left')}>&lsaquo;</button>
+        <div className="category-row-scroll" ref={rowRef}>
+          {items.map((item) => (
+            <div key={item.id} className="carousel-movie-card" onClick={() => onSelect(item)}>
+              <div className="carousel-poster-container">
+                <img 
+                  src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                  alt={item.titulo} 
+                  className="carousel-poster" 
+                  loading="lazy" 
+                />
+                <div className="carousel-play-overlay">
+                  <div className="play-arrow"></div>
+                </div>
+                <span className="carousel-rating">★ {item.valoracion}</span>
+              </div>
+              <div className="carousel-card-info">
+                <span className="carousel-card-title">{item.titulo}</span>
+                <span className="carousel-card-year">{item.año}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button className="carousel-nav-btn next" onClick={() => scroll('right')}>&rsaquo;</button>
+      </div>
+    </div>
+  );
+}
+
 export default function StreamPage({ initialPeliculas }) {
   // Estado para la pantalla de presentación (Splash Screen)
   const [showSplash, setShowSplash] = useState(true);
@@ -14,7 +63,18 @@ export default function StreamPage({ initialPeliculas }) {
   const [activeItem, setActiveItem] = useState(null); // Película o Serie seleccionada
   const [activeServer, setActiveServer] = useState(0); // Servidor seleccionado (0 a 3)
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
+  
+  // Pestaña activa ('inicio', 'peliculas', 'series')
+  const [activeTab, setActiveTab] = useState('inicio');
+
+  // Letra seleccionada para índices A-Z
+  const [selectedLetter, setSelectedLetter] = useState('Todos');
+  const [selectedSeriesLetter, setSelectedSeriesLetter] = useState('Todos');
+
+  // Límites de paginación
+  const [moviesLimit, setMoviesLimit] = useState(32);
+  const [seriesLimit, setSeriesLimit] = useState(32);
+  const [searchLimit, setSearchLimit] = useState(32);
 
   // Estados para Series
   const [season, setSeason] = useState(1);
@@ -88,25 +148,98 @@ export default function StreamPage({ initialPeliculas }) {
     setEpisode(1);
   }, [activeItem]);
 
-  // Categorías del catálogo
-  const categorias = ['Todos', 'Acción', 'Ciencia Ficción', 'Drama', 'Terror', 'Comedia', 'Infantil', 'Series'];
+  // Obtener información real de temporadas y capítulos de TMDB
+  useEffect(() => {
+    if (!activeItem || activeItem.tipo !== 'serie') {
+      setSeasonsInfo([]);
+      return;
+    }
 
-  // Filtrar catálogo por búsqueda y categoría
+    setLoadingSeasons(true);
+    setSeasonsInfo([]); // Limpiar previos
+
+    const tmdbId = activeItem.tmdbId;
+    if (!tmdbId) {
+      setSeasonsInfo([
+        { seasonNumber: 1, episodeCount: 10 },
+        { seasonNumber: 2, episodeCount: 10 }
+      ]);
+      setLoadingSeasons(false);
+      return;
+    }
+
+    fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX`)
+      .then(res => {
+        if (!res.ok) throw new Error("TMDB Error");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.seasons) {
+          const formatted = data.seasons
+            .filter(s => s.season_number > 0)
+            .map(s => ({
+              seasonNumber: s.season_number,
+              episodeCount: s.episode_count || 10,
+              name: s.name || `Temporada ${s.season_number}`
+            }));
+          
+          if (formatted.length > 0) {
+            setSeasonsInfo(formatted);
+            const hasCurrentSeason = formatted.some(s => s.seasonNumber === season);
+            if (!hasCurrentSeason) {
+              setSeason(formatted[0].seasonNumber);
+              setEpisode(1);
+            }
+          } else {
+            throw new Error("No seasons found");
+          }
+        } else {
+          throw new Error("No data");
+        }
+      })
+      .catch(err => {
+        console.warn("Fallo al obtener temporadas de TMDB, usando fallback:", err);
+        const fallback = Array.from({ length: 5 }, (_, i) => ({
+          seasonNumber: i + 1,
+          episodeCount: 15,
+          name: `Temporada ${i + 1}`
+        }));
+        setSeasonsInfo(fallback);
+      })
+      .finally(() => {
+        setLoadingSeasons(false);
+      });
+  }, [activeItem]);
+
+  // Filtrar catálogo por búsqueda
   const filteredItems = peliculas.filter(item => {
     const matchesSearch = item.titulo.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           item.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    let matchesCategory = false;
-    if (selectedCategory === 'Todos') {
-      matchesCategory = true;
-    } else if (selectedCategory === 'Series') {
-      matchesCategory = item.tipo === 'serie';
-    } else {
-      matchesCategory = item.categoria === selectedCategory && item.tipo !== 'serie';
-    }
-    
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
+
+  // Auxiliar para obtener los 15 más valorados
+  const getTop15 = (list) => {
+    return [...list]
+      .sort((a, b) => (parseFloat(b.valoracion) || 0) - (parseFloat(a.valoracion) || 0))
+      .slice(0, 15);
+  };
+
+  // Auxiliar para filtrar por letra de forma insensible a mayúsculas y acentos
+  const filterByLetter = (list, letter) => {
+    if (!letter || letter === 'Todos') return list;
+    if (letter === '#') {
+      return list.filter(item => {
+        const firstChar = item.titulo.charAt(0);
+        return !/[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]/i.test(firstChar);
+      });
+    }
+    return list.filter(item => {
+      const firstChar = item.titulo.charAt(0).toUpperCase();
+      const normalized = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return normalized === letter;
+    });
+  };
 
   // Manejar carga por ID directo
   const handleLoadCustomId = (e) => {
@@ -178,7 +311,7 @@ export default function StreamPage({ initialPeliculas }) {
       <header className="main-header">
         <div className="header-content">
           {/* Logo clickeable para volver a la pantalla de inicio */}
-          <div className="brand-logo" onClick={() => setActiveItem(null)}>
+          <div className="brand-logo" onClick={() => { setActiveItem(null); setSearchQuery(''); setActiveTab('inicio'); }}>
             <svg width="150" height="46" viewBox="0 0 200 60">
               <defs>
                 <linearGradient id="header-cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -195,6 +328,30 @@ export default function StreamPage({ initialPeliculas }) {
               </text>
             </svg>
           </div>
+
+          {/* Pestañas de navegación superiores */}
+          {!activeItem && (
+            <nav className="header-tabs">
+              <button 
+                onClick={() => { setActiveTab('inicio'); setSearchQuery(''); }}
+                className={`header-tab-btn ${activeTab === 'inicio' && searchQuery === '' ? 'active' : ''}`}
+              >
+                Inicio
+              </button>
+              <button 
+                onClick={() => { setActiveTab('peliculas'); setSearchQuery(''); }}
+                className={`header-tab-btn ${activeTab === 'peliculas' && searchQuery === '' ? 'active' : ''}`}
+              >
+                Películas
+              </button>
+              <button 
+                onClick={() => { setActiveTab('series'); setSearchQuery(''); }}
+                className={`header-tab-btn ${activeTab === 'series' && searchQuery === '' ? 'active' : ''}`}
+              >
+                Series
+              </button>
+            </nav>
+          )}
 
           {/* Buscador de catálogo (sólo visible si no estamos en reproducción activa) */}
           {!activeItem && (
@@ -232,47 +389,65 @@ export default function StreamPage({ initialPeliculas }) {
 
             {/* Panel de control de episodios si el contenido es una Serie */}
             {activeItem.tipo === 'serie' && (
-              <div className="series-selector-panel">
-                <div className="selector-group">
-                  <span className="selector-label">Temporada:</span>
-                  <div className="counter-controls">
-                    <button 
-                      onClick={() => setSeason(prev => Math.max(1, prev - 1))}
-                      className="counter-btn"
-                    >
-                      -
-                    </button>
-                    <span className="counter-display">{season}</span>
-                    <button 
-                      onClick={() => setSeason(prev => prev + 1)}
-                      className="counter-btn"
-                    >
-                      +
-                    </button>
+              <div className="series-seasons-episodes-panel">
+                <div className="seasons-tab-container">
+                  <span className="panel-label">Temporadas:</span>
+                  <div className="seasons-tabs">
+                    {loadingSeasons ? (
+                      <span className="loading-text">Cargando temporadas...</span>
+                    ) : seasonsInfo.length > 0 ? (
+                      seasonsInfo.map((s) => (
+                        <button
+                          key={s.seasonNumber}
+                          onClick={() => {
+                            setSeason(s.seasonNumber);
+                            setEpisode(1);
+                          }}
+                          className={`season-tab-btn ${season === s.seasonNumber ? 'active' : ''}`}
+                        >
+                          {s.name}
+                        </button>
+                      ))
+                    ) : (
+                      [1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          onClick={() => {
+                            setSeason(num);
+                            setEpisode(1);
+                          }}
+                          className={`season-tab-btn ${season === num ? 'active' : ''}`}
+                        >
+                          Temp {num}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
 
-                <div className="selector-group">
-                  <span className="selector-label">Episodio:</span>
-                  <div className="counter-controls">
-                    <button 
-                      onClick={() => setEpisode(prev => Math.max(1, prev - 1))}
-                      className="counter-btn"
-                    >
-                      -
-                    </button>
-                    <span className="counter-display">{episode}</span>
-                    <button 
-                      onClick={() => setEpisode(prev => prev + 1)}
-                      className="counter-btn"
-                    >
-                      +
-                    </button>
+                <div className="episodes-grid-container">
+                  <div className="episodes-header">
+                    <span className="panel-label">Episodios:</span>
+                    <span className="episodes-count-info">
+                      Temporada {season} — {
+                        seasonsInfo.find(s => s.seasonNumber === season)?.episodeCount || 15
+                      } capítulos disponibles
+                    </span>
                   </div>
-                </div>
-
-                <div className="selector-info">
-                  Reproduciendo: Temporada {season}, Episodio {episode}
+                  
+                  <div className="episodes-buttons-grid">
+                    {Array.from({ 
+                      length: seasonsInfo.find(s => s.seasonNumber === season)?.episodeCount || 15 
+                    }, (_, i) => i + 1).map((epNum) => (
+                      <button
+                        key={epNum}
+                        onClick={() => setEpisode(epNum)}
+                        className={`episode-btn ${episode === epNum ? 'active' : ''}`}
+                      >
+                        Capítulo {epNum}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -377,55 +552,300 @@ export default function StreamPage({ initialPeliculas }) {
           /* VISTA 2: CATÁLOGO PRINCIPAL */
           /* ========================================================================= */
           <div className="catalog-view">
-            {/* Barra de Filtros de Categorías */}
-            <div className="filters-container">
-              {categorias.map((cat, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`filter-btn ${selectedCategory === cat ? 'active' : ''}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            {/* Grid de Tarjetas de Contenido */}
-            <div className="cards-grid">
-              {filteredItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="movie-card"
-                  onClick={() => setActiveItem(item)}
-                >
-                  <div className="poster-container">
-                    <img 
-                      src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                      alt={item.titulo} 
-                      className="movie-poster"
-                      loading="lazy"
-                    />
-                    <div className="card-play-overlay">
-                      <div className="play-arrow"></div>
+            {searchQuery !== '' ? (
+              <div className="search-results-section">
+                <h2 className="section-title">Resultados de búsqueda para: "{searchQuery}"</h2>
+                <div className="cards-grid">
+                  {filteredItems.slice(0, searchLimit).map((item) => (
+                    <div 
+                      key={item.id} 
+                      className="movie-card"
+                      onClick={() => setActiveItem(item)}
+                    >
+                      <div className="poster-container">
+                        <img 
+                          src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                          alt={item.titulo} 
+                          className="movie-poster"
+                          loading="lazy"
+                        />
+                        <div className="card-play-overlay">
+                          <div className="play-arrow"></div>
+                        </div>
+                        <span className="rating-badge">★ {item.valoracion}</span>
+                      </div>
+                      <div className="movie-card-info">
+                        <h3 className="movie-card-title">{item.titulo}</h3>
+                        <div className="movie-card-meta">
+                          <span className="movie-card-year">{item.año}</span>
+                          <span className="movie-card-genre">{item.categoria}</span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="rating-badge">★ {item.valoracion}</span>
+                  ))}
+                </div>
+
+                {filteredItems.length === 0 && (
+                  <div className="no-results">
+                    No se encontraron películas o series con los criterios de búsqueda.
                   </div>
-                  <div className="movie-card-info">
-                    <h3 className="movie-card-title">{item.titulo}</h3>
-                    <div className="movie-card-meta">
-                      <span className="movie-card-year">{item.año}</span>
-                      <span className="movie-card-genre">{item.categoria}</span>
+                )}
+
+                {filteredItems.length > searchLimit && (
+                  <div className="load-more-container">
+                    <button 
+                      onClick={() => setSearchLimit(prev => prev + 32)}
+                      className="load-more-btn"
+                    >
+                      Cargar más
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {activeTab === 'inicio' && (
+                  <div className="tab-inicio-container">
+                    {(() => {
+                      const featured = peliculas.find(p => p.id === 'movie-157336') || peliculas[0];
+                      if (!featured) return null;
+                      return (
+                        <div className="hero-banner" style={{ backgroundImage: `linear-gradient(to bottom, rgba(5,5,8,0.25) 0%, rgba(5,5,8,0.95) 100%), url(${featured.poster || ''})` }}>
+                          <div className="hero-backdrop-glow" style={{ backgroundImage: `url(${featured.poster || ''})` }}></div>
+                          <div className="hero-content-box">
+                            <span className="hero-badge">DESTACADA</span>
+                            <h1 className="hero-title">{featured.titulo}</h1>
+                            <div className="hero-meta">
+                              <span className="hero-rating">★ {featured.valoracion}</span>
+                              <span className="hero-year">{featured.año}</span>
+                              <span className="hero-genre">{featured.categoria}</span>
+                            </div>
+                            <p className="hero-desc">{featured.descripcion}</p>
+                            <button className="hero-play-btn" onClick={() => setActiveItem(featured)}>
+                              Reproducir ahora
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="carruseles-container">
+                      <CategoryRow 
+                        title="Películas de Acción" 
+                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Acción'))} 
+                        onSelect={setActiveItem} 
+                      />
+                      <CategoryRow 
+                        title="Ciencia Ficción" 
+                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Ciencia Ficción'))} 
+                        onSelect={setActiveItem} 
+                      />
+                      <CategoryRow 
+                        title="Terror y Suspenso" 
+                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Terror'))} 
+                        onSelect={setActiveItem} 
+                      />
+                      <CategoryRow 
+                        title="Comedia" 
+                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Comedia'))} 
+                        onSelect={setActiveItem} 
+                      />
+                      <CategoryRow 
+                        title="Drama" 
+                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Drama'))} 
+                        onSelect={setActiveItem} 
+                      />
+                      <CategoryRow 
+                        title="Infantil y Familiar" 
+                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Infantil'))} 
+                        onSelect={setActiveItem} 
+                      />
+                      <CategoryRow 
+                        title="Series de TV más vistas" 
+                        items={getTop15(peliculas.filter(p => p.tipo === 'serie'))} 
+                        onSelect={setActiveItem} 
+                      />
                     </div>
                   </div>
-                </div>
-              ))}
+                )}
 
-              {filteredItems.length === 0 && (
-                <div className="no-results">
-                  No se encontraron películas o series con los criterios de búsqueda.
-                </div>
-              )}
-            </div>
+                {activeTab === 'peliculas' && (
+                  <div className="tab-peliculas-container">
+                    <h2 className="section-title">Películas A-Z</h2>
+                    
+                    <div className="alphabet-bar">
+                      <button 
+                        onClick={() => { setSelectedLetter('Todos'); setMoviesLimit(32); }}
+                        className={`letter-btn ${selectedLetter === 'Todos' ? 'active' : ''}`}
+                      >
+                        Todos
+                      </button>
+                      {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
+                        <button 
+                          key={letter}
+                          onClick={() => { setSelectedLetter(letter); setMoviesLimit(32); }}
+                          className={`letter-btn ${selectedLetter === letter ? 'active' : ''}`}
+                        >
+                          {letter}
+                        </button>
+                      ))}
+                      <button 
+                        onClick={() => { setSelectedLetter('#'); setMoviesLimit(32); }}
+                        className={`letter-btn ${selectedLetter === '#' ? 'active' : ''}`}
+                      >
+                        #
+                      </button>
+                    </div>
+
+                    {(() => {
+                      const allMovies = peliculas.filter(p => p.tipo === 'pelicula');
+                      const sorted = [...allMovies].sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+                      const filtered = filterByLetter(sorted, selectedLetter);
+                      const visible = filtered.slice(0, moviesLimit);
+
+                      return (
+                        <>
+                          <div className="cards-grid">
+                            {visible.map((item) => (
+                              <div 
+                                key={item.id} 
+                                className="movie-card"
+                                onClick={() => setActiveItem(item)}
+                              >
+                                <div className="poster-container">
+                                  <img 
+                                    src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                    alt={item.titulo} 
+                                    className="movie-poster"
+                                    loading="lazy"
+                                  />
+                                  <div className="card-play-overlay">
+                                    <div className="play-arrow"></div>
+                                  </div>
+                                  <span className="rating-badge">★ {item.valoracion}</span>
+                                </div>
+                                <div className="movie-card-info">
+                                  <h3 className="movie-card-title">{item.titulo}</h3>
+                                  <div className="movie-card-meta">
+                                    <span className="movie-card-year">{item.año}</span>
+                                    <span className="movie-card-genre">{item.categoria}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+
+                            {filtered.length === 0 && (
+                              <div className="no-results">
+                                No hay películas que comiencen con la letra seleccionada.
+                              </div>
+                            )}
+                          </div>
+
+                          {filtered.length > moviesLimit && (
+                            <div className="load-more-container">
+                              <button 
+                                onClick={() => setMoviesLimit(prev => prev + 32)}
+                                className="load-more-btn"
+                              >
+                                Cargar más
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {activeTab === 'series' && (
+                  <div className="tab-series-container">
+                    <h2 className="section-title">Series de TV A-Z</h2>
+                    
+                    <div className="alphabet-bar">
+                      <button 
+                        onClick={() => { setSelectedSeriesLetter('Todos'); setSeriesLimit(32); }}
+                        className={`letter-btn ${selectedSeriesLetter === 'Todos' ? 'active' : ''}`}
+                      >
+                        Todos
+                      </button>
+                      {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
+                        <button 
+                          key={letter}
+                          onClick={() => { setSelectedSeriesLetter(letter); setSeriesLimit(32); }}
+                          className={`letter-btn ${selectedSeriesLetter === letter ? 'active' : ''}`}
+                        >
+                          {letter}
+                        </button>
+                      ))}
+                      <button 
+                        onClick={() => { setSelectedSeriesLetter('#'); setSeriesLimit(32); }}
+                        className={`letter-btn ${selectedSeriesLetter === '#' ? 'active' : ''}`}
+                      >
+                        #
+                      </button>
+                    </div>
+
+                    {(() => {
+                      const allSeries = peliculas.filter(p => p.tipo === 'serie');
+                      const sorted = [...allSeries].sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+                      const filtered = filterByLetter(sorted, selectedSeriesLetter);
+                      const visible = filtered.slice(0, seriesLimit);
+
+                      return (
+                        <>
+                          <div className="cards-grid">
+                            {visible.map((item) => (
+                              <div 
+                                key={item.id} 
+                                className="movie-card"
+                                onClick={() => setActiveItem(item)}
+                              >
+                                <div className="poster-container">
+                                  <img 
+                                    src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                    alt={item.titulo} 
+                                    className="movie-poster"
+                                    loading="lazy"
+                                  />
+                                  <div className="card-play-overlay">
+                                    <div className="play-arrow"></div>
+                                  </div>
+                                  <span className="rating-badge">★ {item.valoracion}</span>
+                                </div>
+                                <div className="movie-card-info">
+                                  <h3 className="movie-card-title">{item.titulo}</h3>
+                                  <div className="movie-card-meta">
+                                    <span className="movie-card-year">{item.año}</span>
+                                    <span className="movie-card-genre">{item.categoria}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+
+                            {filtered.length === 0 && (
+                              <div className="no-results">
+                                No hay series que comiencen con la letra seleccionada.
+                              </div>
+                            )}
+                          </div>
+
+                          {filtered.length > seriesLimit && (
+                            <div className="load-more-container">
+                              <button 
+                                onClick={() => setSeriesLimit(prev => prev + 32)}
+                                className="load-more-btn"
+                              >
+                                Cargar más
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </>
+            )}
 
             {/* SECCIÓN DE CARGADOR DIRECTO DE IDs (TMDB / IMDb) */}
             <div className="direct-loader-section">
@@ -1332,6 +1752,533 @@ export default function StreamPage({ initialPeliculas }) {
           margin: 0;
           font-size: 12px;
           color: #4b5563;
+        }
+
+        /* ESTILOS DE REDISEÑO PREMIUM AGREGADOS */
+        
+        /* HEADER TABS */
+        .header-tabs {
+          display: flex;
+          gap: 20px;
+          margin-left: 30px;
+          align-items: center;
+        }
+
+        .header-tab-btn {
+          background: transparent;
+          border: none;
+          color: #a3a3a3;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: color 0.2s, transform 0.2s;
+          padding: 8px 4px;
+          font-family: 'Outfit', sans-serif;
+        }
+
+        .header-tab-btn:hover {
+          color: #ffffff;
+        }
+
+        .header-tab-btn.active {
+          color: #00f5d4;
+          border-bottom: 2px solid #00f5d4;
+        }
+
+        /* HERO BANNER */
+        .hero-banner {
+          position: relative;
+          min-height: 480px;
+          display: flex;
+          align-items: center;
+          padding: 40px 60px;
+          border-radius: 16px;
+          margin-bottom: 40px;
+          overflow: hidden;
+          background-size: cover;
+          background-position: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .hero-backdrop-glow {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-size: cover;
+          background-position: center;
+          filter: blur(80px);
+          opacity: 0.15;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        .hero-content-box {
+          position: relative;
+          z-index: 2;
+          max-width: 600px;
+        }
+
+        .hero-badge {
+          background: linear-gradient(90deg, #00f5d4, #00b8ff);
+          color: #07070c;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 4px 10px;
+          border-radius: 4px;
+          letter-spacing: 1px;
+          display: inline-block;
+          margin-bottom: 15px;
+        }
+
+        .hero-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 42px;
+          font-weight: 900;
+          margin: 0 0 15px 0;
+          color: #ffffff;
+          line-height: 1.1;
+          letter-spacing: -0.5px;
+        }
+
+        .hero-meta {
+          display: flex;
+          gap: 15px;
+          align-items: center;
+          margin-bottom: 20px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .hero-rating {
+          color: #ffb800;
+        }
+
+        .hero-year {
+          color: #9ca3af;
+        }
+
+        .hero-genre {
+          background-color: rgba(255,255,255,0.08);
+          padding: 2px 8px;
+          border-radius: 4px;
+          color: #d1d5db;
+        }
+
+        .hero-desc {
+          color: #d1d5db;
+          font-size: 15px;
+          line-height: 1.6;
+          margin: 0 0 25px 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 4;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .hero-play-btn {
+          background-color: #00f5d4;
+          color: #07070c;
+          border: none;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          padding: 12px 28px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+        }
+
+        .hero-play-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 245, 212, 0.5);
+        }
+
+        /* CATEGORY ROWS & CAROUSELS */
+        .carruseles-container {
+          display: flex;
+          flex-direction: column;
+          gap: 35px;
+          margin-bottom: 50px;
+        }
+
+        .category-row-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          position: relative;
+        }
+
+        .category-row-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 20px;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0;
+          padding-left: 4px;
+        }
+
+        .category-row-relative {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .category-row-scroll {
+          display: flex;
+          gap: 16px;
+          overflow-x: auto;
+          scroll-behavior: smooth;
+          padding: 10px 4px;
+          width: 100%;
+          scrollbar-width: none;
+        }
+
+        .category-row-scroll::-webkit-scrollbar {
+          display: none;
+        }
+
+        .carousel-movie-card {
+          flex: 0 0 160px;
+          cursor: pointer;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .carousel-movie-card:hover {
+          transform: scale(1.06);
+        }
+
+        .carousel-poster-container {
+          position: relative;
+          aspect-ratio: 2/3;
+          border-radius: 10px;
+          overflow: hidden;
+          background-color: #11131e;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.03);
+          margin-bottom: 8px;
+        }
+
+        .carousel-poster {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .carousel-play-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(7, 7, 12, 0.6);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        .carousel-movie-card:hover .carousel-play-overlay {
+          opacity: 1;
+        }
+
+        .carousel-rating {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background-color: rgba(7, 7, 12, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #ffb800;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .carousel-card-info {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          padding: 0 4px;
+        }
+
+        .carousel-card-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #f3f4f6;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .carousel-card-year {
+          font-size: 11px;
+          color: #9ca3af;
+        }
+
+        .carousel-nav-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background-color: rgba(7, 7, 12, 0.85);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: #ffffff;
+          font-size: 24px;
+          font-weight: 300;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          transition: all 0.2s;
+          opacity: 0;
+        }
+
+        .category-row-relative:hover .carousel-nav-btn {
+          opacity: 1;
+        }
+
+        .carousel-nav-btn:hover {
+          background-color: #00f5d4;
+          color: #07070c;
+          border-color: #00f5d4;
+        }
+
+        .carousel-nav-btn.prev {
+          left: -20px;
+        }
+
+        .carousel-nav-btn.next {
+          right: -20px;
+        }
+
+        /* ALPHABET BAR */
+        .alphabet-bar {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          background-color: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.05);
+          padding: 12px;
+          border-radius: 10px;
+          margin-bottom: 30px;
+        }
+
+        .letter-btn {
+          background-color: transparent;
+          border: none;
+          color: #9ca3af;
+          font-size: 13px;
+          font-weight: 700;
+          padding: 6px 10px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.15s;
+          min-width: 32px;
+          text-align: center;
+        }
+
+        .letter-btn:hover {
+          color: #ffffff;
+          background-color: rgba(255,255,255,0.06);
+        }
+
+        .letter-btn.active {
+          background-color: #00f5d4;
+          color: #07070c;
+        }
+
+        /* SEASONS & EPISODES PREMIUM GRID PANEL */
+        .series-seasons-episodes-panel {
+          background-color: #0c0d14;
+          border: 1px solid rgba(255,255,255,0.04);
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 25px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .panel-label {
+          font-family: 'Outfit', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          color: #9ca3af;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .seasons-tab-container {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .seasons-tabs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .season-tab-btn {
+          background-color: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.05);
+          color: #d1d5db;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 8px 16px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .season-tab-btn:hover {
+          color: #ffffff;
+          border-color: rgba(255,255,255,0.15);
+        }
+
+        .season-tab-btn.active {
+          background-color: #00f5d4;
+          border-color: #00f5d4;
+          color: #07070c;
+          font-weight: 700;
+        }
+
+        .episodes-grid-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          border-top: 1px solid rgba(255,255,255,0.04);
+          padding-top: 15px;
+        }
+
+        .episodes-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .episodes-count-info {
+          font-size: 13px;
+          color: #00f5d4;
+          font-weight: 600;
+        }
+
+        .episodes-buttons-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+          gap: 10px;
+        }
+
+        .episode-btn {
+          background-color: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.04);
+          color: #d1d5db;
+          font-size: 12px;
+          font-weight: 600;
+          padding: 10px 6px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .episode-btn:hover {
+          border-color: rgba(0, 245, 212, 0.4);
+          background-color: rgba(0, 245, 212, 0.02);
+          color: #00f5d4;
+        }
+
+        .episode-btn.active {
+          background: linear-gradient(135deg, #00f5d4, #00b8ff);
+          border-color: #00f5d4;
+          color: #07070c;
+          font-weight: 700;
+          box-shadow: 0 4px 12px rgba(0, 245, 212, 0.2);
+        }
+
+        .loading-text {
+          font-size: 13px;
+          color: #9ca3af;
+          font-style: italic;
+        }
+
+        /* PAGINATION & LOAD MORE */
+        .load-more-container {
+          display: flex;
+          justify-content: center;
+          margin-top: 30px;
+          margin-bottom: 20px;
+        }
+
+        .load-more-btn {
+          background-color: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: #ffffff;
+          font-family: 'Outfit', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 12px 32px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .load-more-btn:hover {
+          background-color: #00f5d4;
+          border-color: #00f5d4;
+          color: #07070c;
+          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+        }
+
+        /* SECTION TITLES */
+        .section-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 24px;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0 0 20px 0;
+        }
+
+        @media (max-width: 768px) {
+          .hero-banner {
+            padding: 30px 20px;
+            min-height: 380px;
+          }
+          .hero-title {
+            font-size: 30px;
+          }
+          .hero-desc {
+            font-size: 13px;
+            -webkit-line-clamp: 3;
+          }
+          .header-tabs {
+            margin-left: 15px;
+            gap: 12px;
+          }
+          .header-tab-btn {
+            font-size: 13px;
+          }
+          .episodes-buttons-grid {
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+          }
+          .episode-btn {
+            font-size: 11px;
+            padding: 8px 4px;
+          }
         }
       `}</style>
     </div>
