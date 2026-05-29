@@ -45,28 +45,35 @@ export default function StreamPage({ initialPeliculas }) {
   // Servidores de reproducción disponibles
   const servers = [
     {
-      name: 'Servidor 1 (VidSrc.to)',
+      name: 'Servidor 1 (VidSrc.pm)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.to/embed/movie/${tmdbId}`
-          : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
+          ? `https://vidsrc.pm/embed/movie/${tmdbId}`
+          : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
-      name: 'Servidor 2 (VidSrc.me)',
+      name: 'Servidor 2 (VidSrc.cc)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.me/embed/movie?id=${imdbId || tmdbId}`
-          : `https://vidsrc.me/embed/tv?id=${imdbId || tmdbId}&s=${s}&e=${e}`
+          ? `https://vidsrc.cc/v2/embed/movie/${imdbId || tmdbId}`
+          : `https://vidsrc.cc/v2/embed/tv/${imdbId || tmdbId}/${s}/${e}`
     },
     {
-      name: 'Servidor 3 (Embed.su)',
+      name: 'Servidor 3 (VidSrcme.ru)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrcme.ru/embed/movie?id=${imdbId || tmdbId}`
+          : `https://vidsrcme.ru/embed/tv?id=${imdbId || tmdbId}&s=${s}&e=${e}`
+    },
+    {
+      name: 'Servidor 4 (Embed.su)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://embed.su/embed/movie/${tmdbId}`
           : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
-      name: 'Servidor 4 (SmashyStream)',
+      name: 'Servidor 5 (SmashyStream)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`
