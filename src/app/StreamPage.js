@@ -308,12 +308,11 @@ export default function StreamPage({ initialPeliculas }) {
                     )}
                     allowFullScreen
                     allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                    sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
                     className="player-iframe"
                   />
                 </div>
                 <div className="player-ad-blocker-note">
-                  El reproductor tiene un filtro de seguridad activo que bloquea redireccionamientos y ventanas emergentes automáticamente para garantizar una experiencia limpia.
+                  Recomendamos usar un navegador con bloqueador de publicidad (como uBlock Origin) para evitar anuncios emergentes de los servidores de transmisión externos.
                 </div>
               </div>
 
@@ -340,8 +339,36 @@ export default function StreamPage({ initialPeliculas }) {
                 <ul>
                   <li><strong>Idioma / Subtítulos:</strong> El <strong>Servidor 1 (VidLink)</strong> tiene excelente soporte de multi-idioma. Si la reproducción inicia en inglés, haz clic en el icono de Engranaje (Configuración) o en <strong>"CC" (Subtítulos/Audio)</strong> dentro del reproductor para elegir español (Latino o Castellano).</li>
                   <li><strong>Evitar Cortes (Buffering):</strong> Para evitar cortes o interrupciones, recomendamos alternar entre el <strong>Servidor 1 (VidLink)</strong>, el <strong>Servidor 2 (VidSrc.cc)</strong> y el <strong>Servidor 4 (Embed.su)</strong>. Todos poseen alta velocidad y múltiples fuentes.</li>
-                  <li><strong>Publicidad Externa:</strong> Los servidores de transmisión externos pueden intentar abrir ventanas de publicidad. El reproductor cuenta con protección integrada (sandbox) que bloquea estas ventanas automáticamente para que tu navegación sea limpia.</li>
+                  <li><strong>Publicidad Externa:</strong> Los servidores de transmisión externos pueden intentar abrir ventanas de publicidad. Te recomendamos usar bloqueadores de publicidad en tu navegador para una experiencia limpia.</li>
                 </ul>
+              </div>
+
+              <div className="torrent-download-card">
+                <h3>Descarga Torrent y Servidor Local</h3>
+                <p>
+                  Si prefieres descargar este contenido en alta definición para abrirlo en <strong>qBittorrent</strong>, puedes buscarlo en servidores públicos:
+                </p>
+                <div className="torrent-buttons-row">
+                  <a 
+                    href={`https://yts.mx/browse-movies/${encodeURIComponent(activeItem.titulo)}/all/all/0/latest/0/all`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="torrent-action-btn"
+                  >
+                    Buscar en YTS
+                  </a>
+                  <a 
+                    href={`https://www.google.com/search?q=${encodeURIComponent(activeItem.titulo)}+${activeItem.año}+dual+latino+torrent`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="torrent-action-btn"
+                  >
+                    Buscar Torrent (Latino)
+                  </a>
+                </div>
+                <div className="jellyseerr-note">
+                  <strong>Tip de Servidor Propio:</strong> Para montar un Netflix personal, puedes configurar <strong>Jellyseerr</strong> integrado con <strong>qBittorrent</strong>, Sonarr y Radarr. De esta forma, podrás solicitar cualquier película o serie desde un panel web elegante, qBittorrent la descargará automáticamente y podrás verla en tu red local mediante <strong>Jellyfin</strong> o Plex sin cortes.
+                </div>
               </div>
             </div>
           </div>
@@ -1141,7 +1168,7 @@ export default function StreamPage({ initialPeliculas }) {
 
         @media (min-width: 1024px) {
           .player-details-grid {
-            grid-template-columns: 1.6fr 1fr;
+            grid-template-columns: 1.2fr 1fr 1fr;
           }
         }
 
@@ -1182,6 +1209,69 @@ export default function StreamPage({ initialPeliculas }) {
         }
 
         .playback-tips-card li strong {
+          color: #ffffff;
+        }
+
+        .torrent-download-card {
+          background-color: #0e0f17;
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          border-radius: 12px;
+          padding: 20px 24px;
+        }
+
+        .torrent-download-card h3 {
+          margin: 0 0 10px 0;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          color: #ffffff;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .torrent-download-card p {
+          margin: 0 0 14px 0;
+          font-size: 12px;
+          color: #9ca3af;
+          line-height: 1.6;
+        }
+
+        .torrent-buttons-row {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+
+        .torrent-action-btn {
+          display: inline-block;
+          background-color: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 11px;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          text-decoration: none;
+          text-align: center;
+          flex: 1;
+          transition: all 0.2s ease;
+        }
+
+        .torrent-action-btn:hover {
+          border-color: #00f5d4;
+          color: #00f5d4;
+          background-color: rgba(0, 245, 212, 0.02);
+        }
+
+        .jellyseerr-note {
+          font-size: 11px;
+          color: #6b7280;
+          line-height: 1.5;
+          border-top: 1px solid rgba(255, 255, 255, 0.04);
+          padding-top: 10px;
+        }
+
+        .jellyseerr-note strong {
           color: #ffffff;
         }
 
