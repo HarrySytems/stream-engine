@@ -1,15 +1,5 @@
 [
     {
-        "nombre": "CBS Sports HQ (1080p) [Geo-blocked]",
-        "url": "https://propee33f9c2.airspace-cdn.cbsivideo.com/index.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "CBS Sports Golazo Network (720p)",
-        "url": "https://proped3fhg87.airspace-cdn.cbsivideo.com/golazo-live-dai/master/golazo-live-dai.m3u8",
-        "categoria": "Deportes"
-    },
-    {
         "nombre": "AS3 Sport TV (1080p)",
         "url": "https://streamtv.as3sport.online:3394/hybrid/play.m3u8",
         "categoria": "Deportes"
@@ -20,8 +10,8 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "Fox Deportes (1280p)",
-        "url": "https://cors-proxy.cooks.fyi/http://23.237.104.106:8080/USA_FOX_DEPORTES/index.m3u8",
+        "nombre": "CBS Sports HQ (1080p) [Geo-blocked]",
+        "url": "https://propee33f9c2.airspace-cdn.cbsivideo.com/index.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -30,13 +20,18 @@
         "categoria": "Deportes"
     },
     {
+        "nombre": "Fox Deportes (1280p)",
+        "url": "https://cors-proxy.cooks.fyi/http://23.237.104.106:8080/USA_FOX_DEPORTES/index.m3u8",
+        "categoria": "Deportes"
+    },
+    {
         "nombre": "Fox Sports 1 (1280p)",
         "url": "https://cors-proxy.cooks.fyi/http://190.11.225.124:5000/live/fs1_hd/playlist.m3u8",
         "categoria": "Deportes"
     },
     {
-        "nombre": "30A Golf Kingdom (720p)",
-        "url": "https://30a-tv.com/feeds/vidaa/golf.m3u8",
+        "nombre": "CBS Sports Golazo Network (720p)",
+        "url": "https://proped3fhg87.airspace-cdn.cbsivideo.com/golazo-live-dai/master/golazo-live-dai.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -45,13 +40,8 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "F1 Channel (720p)",
-        "url": "https://jmp2.uk/plu-65c69ee3d77d450008c80438.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Bahrain Sports 1 (720p) [Not 24/7]",
-        "url": "https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8",
+        "nombre": "30A Golf Kingdom (720p)",
+        "url": "https://30a-tv.com/feeds/vidaa/golf.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -60,18 +50,18 @@
         "categoria": "Deportes"
     },
     {
+        "nombre": "Bahrain Sports 1 (720p) [Not 24/7]",
+        "url": "https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "F1 Channel (720p)",
+        "url": "https://jmp2.uk/plu-65c69ee3d77d450008c80438.m3u8",
+        "categoria": "Deportes"
+    },
+    {
         "nombre": "KTV Sport Plus (1080p)",
         "url": "https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "KTV Sport (1080p)",
-        "url": "https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Oman Sports TV (1080p) [Not 24/7]",
-        "url": "https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -90,13 +80,13 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "Premier Sports (1080p)",
-        "url": "https://amg19223-amg19223c3-amgplt0351.playout.now3.amagi.tv/playlist/amg19223-amg19223c3-amgplt0351/playlist.m3u8",
+        "nombre": "KTV Sport (1080p)",
+        "url": "https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8",
         "categoria": "Deportes"
     },
     {
-        "nombre": "KSA Sports 2 (1080p)",
-        "url": "https://aloula-redirect.vercel.app/10/playlist.m3u8",
+        "nombre": "Oman Sports TV (1080p) [Not 24/7]",
+        "url": "https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -105,33 +95,23 @@
         "categoria": "Deportes"
     },
     {
+        "nombre": "KSA Sports 2 (1080p)",
+        "url": "https://aloula-redirect.vercel.app/10/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Premier Sports (1080p)",
+        "url": "https://amg19223-amg19223c3-amgplt0351.playout.now3.amagi.tv/playlist/amg19223-amg19223c3-amgplt0351/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
         "nombre": "Premier Sports 2 (1080p)",
         "url": "https://amg19223-amg19223c4-amgplt0351.playout.now3.amagi.tv/playlist/amg19223-amg19223c4-amgplt0351/playlist.m3u8",
         "categoria": "Deportes"
     },
     {
-        "nombre": "Africa 24 Sport (1080p)",
-        "url": "https://africa24.vedge.infomaniak.com/livecast/ik:africa24sport/manifest.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Futbol (1080p)",
-        "url": "https://live.teleradiocom.tj/8/3m.m3u8",
-        "categoria": "Deportes"
-    },
-    {
         "nombre": "More Than Sports TV (1080p)",
         "url": "https://mts1.iptv-playoutcenter.de/mts/mts-web/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "San Marino RTV Sport (720p)",
-        "url": "https://d2hrvno5bw6tg2.cloudfront.net/smrtv-ch02/smil:ch-02.smil/master.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "NBC Sports Boston (1080p) [Not 24/7]",
-        "url": "https://tvpass.org/live/nbc-sports-boston/hd",
         "categoria": "Deportes"
     },
     {
@@ -145,8 +125,23 @@
         "categoria": "Deportes"
     },
     {
+        "nombre": "NBC Sports Boston (1080p) [Not 24/7]",
+        "url": "https://tvpass.org/live/nbc-sports-boston/hd",
+        "categoria": "Deportes"
+    },
+    {
         "nombre": "NBC Sports Philadelphia (720p) [Not 24/7]",
         "url": "https://tvpass.org/live/nbc-sports-philadelphia/hd",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Africa 24 Sport (1080p)",
+        "url": "https://africa24.vedge.infomaniak.com/livecast/ik:africa24sport/manifest.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "San Marino RTV Sport (720p)",
+        "url": "https://d2hrvno5bw6tg2.cloudfront.net/smrtv-ch02/smil:ch-02.smil/master.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -155,23 +150,18 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "MNB Sport (1080p)",
-        "url": "https://live.mnb.mn/hls/mnb_sport.stream.m3u8",
-        "categoria": "Deportes"
-    },
-    {
         "nombre": "Stadium (720p)",
         "url": "https://wurl120sports.global.transmit.live/hls/679a907dce42a042c23ace37/v1/stadium_gracenote/samsung_us/latest/main/hls/playlist.m3u8",
         "categoria": "Deportes"
     },
     {
-        "nombre": "Sport Italia (1080p)",
-        "url": "https://amg01370-italiansportcom-sportitalia-rakuten-3hmdb.amagi.tv/hls/amagi_hls_data_rakutenAA-sportitalia-rakuten/CDN/master.m3u8",
+        "nombre": "SportsTVPlus (1080p)",
+        "url": "https://d3s7x6kmqcnb6b.cloudfront.net/d/distro001a/NKXQTWMREOB2XFJRLAHO/hls3/now,-1m/m.m3u8?ads.vf=SqsoCl37PjC",
         "categoria": "Deportes"
     },
     {
-        "nombre": "DAZN Combat (1080p)",
-        "url": "https://dazn-combat-rakuten.amagi.tv/hls/amagi_hls_data_rakutenAA-dazn-combat-rakuten/CDN/master.m3u8",
+        "nombre": "Futbol (1080p)",
+        "url": "https://live.teleradiocom.tj/8/3m.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -180,8 +170,23 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "TennisChannel 2 (720p)",
-        "url": "https://jmp2.uk/plu-681109b688b9d85d0938c6ba.m3u8",
+        "nombre": "MNB Sport (1080p)",
+        "url": "https://live.mnb.mn/hls/mnb_sport.stream.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Tigo Sports TV El Salvador (720p) [Geo-blocked]",
+        "url": "https://channel03.tigosports.com.sv/out/v1/31f36d52d558475ca18799d8ca5e4b40/index.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Sky Racing 1 (720p)",
+        "url": "https://636ffd31f0e12.streamlock.net/RacingStream1/RacingStream1/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Sky Racing 2 (720p)",
+        "url": "https://636ffd31f0e12.streamlock.net/RacingStream2/RacingStream2/playlist.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -190,13 +195,33 @@
         "categoria": "Deportes"
     },
     {
+        "nombre": "Tennis Channel (1080p)",
+        "url": "https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg01444-tennischannelth-tennischannelnl-samsungnl/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "TennisChannel 2 (720p)",
+        "url": "https://jmp2.uk/plu-681109b688b9d85d0938c6ba.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "TyC Sports (1080p)",
+        "url": "https://amg26268-amg26268c14-freelivesports-emea-10267.playouts.now.amagi.tv/ts-us-e2-n2/playlist/amg26268-sportsstudio-tycsports-freelivesportsemea/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "TVS Classic Sports (360p)",
+        "url": "https://rpn.bozztv.com/gusa/gusa-tvs/index.m3u8",
+        "categoria": "Deportes"
+    },
+    {
         "nombre": "TVR Sport",
         "url": "https://tvr-sport.lg.mncdn.com/tvrsport/smil:tvrsport.smil/chunklist_b5160000.m3u8",
         "categoria": "Deportes"
     },
     {
-        "nombre": "Tennis Channel (1080p)",
-        "url": "https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg01444-tennischannelth-tennischannelnl-samsungnl/playlist.m3u8",
+        "nombre": "TVS Sports (720p) [Not 24/7]",
+        "url": "https://rpn.bozztv.com/gusa/gusa-tvssports/index.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -210,58 +235,8 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "TVS Classic Sports (360p)",
-        "url": "https://rpn.bozztv.com/gusa/gusa-tvs/index.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "SportsTVPlus (1080p)",
-        "url": "https://d3s7x6kmqcnb6b.cloudfront.net/d/distro001a/NKXQTWMREOB2XFJRLAHO/hls3/now,-1m/m.m3u8?ads.vf=SqsoCl37PjC",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "TVS Sports (720p) [Not 24/7]",
-        "url": "https://rpn.bozztv.com/gusa/gusa-tvssports/index.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "TyC Sports (1080p)",
-        "url": "https://amg26268-amg26268c14-freelivesports-emea-10267.playouts.now.amagi.tv/ts-us-e2-n2/playlist/amg26268-sportsstudio-tycsports-freelivesportsemea/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Sky Racing 1 (720p)",
-        "url": "https://636ffd31f0e12.streamlock.net/RacingStream1/RacingStream1/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
         "nombre": "W14DK-D 14.5 All Sports Television Network",
         "url": "https://2-fss-2.streamhoster.com/pl_118/204972-2205186-1/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Sky Racing 2 (720p)",
-        "url": "https://636ffd31f0e12.streamlock.net/RacingStream2/RacingStream2/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "TR Sport (480p)",
-        "url": "https://livetr.teleromagna.it/mia/live/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Sport Italia IT",
-        "url": "https://origin-001.streamup.eu/sportitalia/sihd_abr2/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Sport Italia",
-        "url": "https://origin-001.streamup.eu/sportitalia/sisolocalcio_abr/playlist.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Portal Foxmix Chile",
-        "url": "https://panel.tvstream.cl:1936/8040/8040/playlist.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -270,8 +245,8 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "Астрахань.Ru Sport (720p)",
-        "url": "https://streaming.astrakhan.ru/astrakhanrusporthd/playlist.m3u8",
+        "nombre": "TR Sport (480p)",
+        "url": "https://livetr.teleromagna.it/mia/live/playlist.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -280,18 +255,28 @@
         "categoria": "Deportes"
     },
     {
-        "nombre": "World of Freesports (1080p)",
-        "url": "https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/hls/amagi_hls_data_rakutenAA-mainstreammediafreesportsintl-rakuten/CDN/master.m3u8",
+        "nombre": "Sport Italia",
+        "url": "https://origin-001.streamup.eu/sportitalia/sisolocalcio_abr/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Sport Italia IT",
+        "url": "https://origin-001.streamup.eu/sportitalia/sihd_abr2/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Астрахань.Ru Sport (720p)",
+        "url": "https://streaming.astrakhan.ru/astrakhanrusporthd/playlist.m3u8",
+        "categoria": "Deportes"
+    },
+    {
+        "nombre": "Portal Foxmix Chile",
+        "url": "https://panel.tvstream.cl:1936/8040/8040/playlist.m3u8",
         "categoria": "Deportes"
     },
     {
         "nombre": "F10 HD [Geo-blocked]",
         "url": "https://tv2.bitstreaming.net:3235/multi_live/play.m3u8",
-        "categoria": "Deportes"
-    },
-    {
-        "nombre": "Extra 86 TV (720p)",
-        "url": "https://samson.streamerr.co:8081/xtelevisionrd/tracks-v1a1/mono.m3u8",
         "categoria": "Deportes"
     },
     {
@@ -305,6 +290,11 @@
         "categoria": "Deportes"
     },
     {
+        "nombre": "Extra 86 TV (720p)",
+        "url": "https://samson.streamerr.co:8081/xtelevisionrd/tracks-v1a1/mono.m3u8",
+        "categoria": "Deportes"
+    },
+    {
         "nombre": "Equidia (1080p)",
         "url": "https://raw.githubusercontent.com/Paradise-91/ParaTV/main/streams/equidia/live2.m3u8",
         "categoria": "TDT / General"
@@ -315,38 +305,18 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Cricket Gold (1080p)",
-        "url": "https://streams2.sofast.tv/ptnr-yupptv/title-cricketgold/v1/master/611d79b11b77e2f571934fd80ca1413453772ac7/b2048bb8-1686-4432-aa50-647245383e0c/manifest.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "ATG Live (720p)",
-        "url": "https://kanal75xto-llhls.akamaized.net/live/Data/atg-kanal-15-02a-rr/HLS-Legacy-HL/atg-kanal-15-02a-rr.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
         "nombre": "DraftKings Network (1080p)",
         "url": "https://na.linear.zype.com/e0bd0e23-a958-4e43-8164-4f2fef8876a8/fd3614bd-90bf-4530-a277-65ae3a1720c8-zype/live.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Bellator MMA",
-        "url": "https://jmp2.uk/plu-5ebc8688f3697d00072f7cf8.m3u8",
+        "nombre": "Cricket Gold (1080p)",
+        "url": "https://streams2.sofast.tv/ptnr-yupptv/title-cricketgold/v1/master/611d79b11b77e2f571934fd80ca1413453772ac7/b2048bb8-1686-4432-aa50-647245383e0c/manifest.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Alkass SHOOF (1080p)",
-        "url": "https://liveeu-gcp.alkassdigital.net/shooflive/main.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Alkass One (1080p)",
-        "url": "https://liveeu-gcp.alkassdigital.net/alkass1-p/main.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Alkass Two (1080p)",
-        "url": "https://liveeu-gcp.alkassdigital.net/alkass2-p/main.m3u8",
+        "nombre": "FITE 24/7 (1080p)",
+        "url": "https://d3d85c7qkywguj.cloudfront.net/scheduler/scheduleMaster/263.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -355,8 +325,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Alkass Three (1080p)",
-        "url": "https://liveeu-gcp.alkassdigital.net/alkass3-p/main.m3u8",
+        "nombre": "Alkass Two (1080p)",
+        "url": "https://liveeu-gcp.alkassdigital.net/alkass2-p/main.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -365,13 +335,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Alkass SHOOF 2 (1080p)",
-        "url": "https://liveeu-gcp.alkassdigital.net/shooflive2/main.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "FITE 24/7 (1080p)",
-        "url": "https://d3d85c7qkywguj.cloudfront.net/scheduler/scheduleMaster/263.m3u8",
+        "nombre": "Alkass Three (1080p)",
+        "url": "https://liveeu-gcp.alkassdigital.net/alkass3-p/main.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -385,8 +350,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "GEM Fit",
-        "url": "https://ca-rt.onetv.app/gemfit/index-0.m3u8?token=onetv202",
+        "nombre": "ATG Live (720p)",
+        "url": "https://kanal75xto-llhls.akamaized.net/live/Data/atg-kanal-15-02a-rr/HLS-Legacy-HL/atg-kanal-15-02a-rr.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -395,8 +360,18 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Lacrosse TV (720p)",
-        "url": "https://1840769862.rsc.cdn77.org/FTF/LSN_SCTE.m3u8",
+        "nombre": "Game+ (720p)",
+        "url": "https://a-cdn.klowdtv.com/live2/fntsy_720p/playlist.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Bellator MMA",
+        "url": "https://jmp2.uk/plu-5ebc8688f3697d00072f7cf8.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Horse TV (720p)",
+        "url": "https://a-cdn.klowdtv.com/live2/horsetv_720p/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -410,18 +385,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Alkass Six (1080p)",
-        "url": "https://liveeu-gcp.alkassdigital.net/alkass6-p/main.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Gol Classics (1080p)",
-        "url": "https://d71gqtnep83vb.cloudfront.net/gol_classics/gol_classics.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Horse TV (720p)",
-        "url": "https://a-cdn.klowdtv.com/live2/horsetv_720p/playlist.m3u8",
+        "nombre": "Alkass SHOOF (1080p)",
+        "url": "https://liveeu-gcp.alkassdigital.net/shooflive/main.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -430,13 +395,23 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Lucha Libre AAA",
-        "url": "https://jmp2.uk/plu-5c01df1759ee03633e7b272c.m3u8",
+        "nombre": "Alkass Six (1080p)",
+        "url": "https://liveeu-gcp.alkassdigital.net/alkass6-p/main.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Game+ (720p)",
-        "url": "https://a-cdn.klowdtv.com/live2/fntsy_720p/playlist.m3u8",
+        "nombre": "Alkass One (1080p)",
+        "url": "https://liveeu-gcp.alkassdigital.net/alkass1-p/main.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Alkass SHOOF 2 (1080p)",
+        "url": "https://liveeu-gcp.alkassdigital.net/shooflive2/main.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Lacrosse TV (720p)",
+        "url": "https://1840769862.rsc.cdn77.org/FTF/LSN_SCTE.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -450,13 +425,13 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "MMA TV.com (1080p)",
-        "url": "https://streams2.sofast.tv/vglive-sk-462904/playlist.m3u8",
+        "nombre": "Nautical Channel (720p)",
+        "url": "https://a-cdn.klowdtv.com/live2/nautical_720p/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Nautical Channel (720p)",
-        "url": "https://a-cdn.klowdtv.com/live2/nautical_720p/playlist.m3u8",
+        "nombre": "Gol Classics (1080p)",
+        "url": "https://d71gqtnep83vb.cloudfront.net/gol_classics/gol_classics.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -465,18 +440,13 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "MadeinBO TV (1080p)",
-        "url": "https://srvx1.selftv.video/dmchannel/live/playlist.m3u8",
+        "nombre": "MMA TV.com (1080p)",
+        "url": "https://streams2.sofast.tv/vglive-sk-462904/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
         "nombre": "NFL Channel (1080p) [Geo-blocked]",
         "url": "https://pb-we3ltka9xobj6.akamaized.net/master.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Persiana Fight",
-        "url": "https://fighthls.persiana.live/hls/stream.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -490,8 +460,23 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Red Bull TV (1080p)",
-        "url": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
+        "nombre": "MadeinBO TV (1080p)",
+        "url": "https://srvx1.selftv.video/dmchannel/live/playlist.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Lucha Libre AAA",
+        "url": "https://jmp2.uk/plu-5c01df1759ee03633e7b272c.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Persiana Fight",
+        "url": "https://fighthls.persiana.live/hls/stream.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Pac 12 Insider (1080p)",
+        "url": "https://pac12-firetv.amagi.tv/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -500,13 +485,13 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Strongman (720p)",
-        "url": "https://rightsboosterltd-scl-1-eu.rakuten.wurl.tv/playlist.m3u8",
+        "nombre": "PBR RidePass (720p)",
+        "url": "https://jmp2.uk/plu-60d39387706fe50007fda8e8.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "MSG (1080p) [Not 24/7]",
-        "url": "https://tvpass.org/live/msg-madison-square-gardens/hd",
+        "nombre": "Strongman (720p)",
+        "url": "https://rightsboosterltd-scl-1-eu.rakuten.wurl.tv/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -515,18 +500,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "PBR RidePass (720p)",
-        "url": "https://jmp2.uk/plu-60d39387706fe50007fda8e8.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Tour Spot TV (1280p) [Not 24/7]",
-        "url": "https://fox.hostlagarto.com:8081/toursporttv/playlist.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "NFL RedZone (720p) [Not 24/7]",
-        "url": "https://tvpass.org/live/NFLRedZone/hd",
+        "nombre": "Red Bull TV (1080p)",
+        "url": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -535,8 +510,23 @@
         "categoria": "TDT / General"
     },
     {
+        "nombre": "NFL RedZone (720p) [Not 24/7]",
+        "url": "https://tvpass.org/live/NFLRedZone/hd",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "MSG (1080p) [Not 24/7]",
+        "url": "https://tvpass.org/live/msg-madison-square-gardens/hd",
+        "categoria": "TDT / General"
+    },
+    {
         "nombre": "IRIB3",
         "url": "https://ncdn.telewebion.ir/tv3/live/playlist.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Tour Spot TV (1280p) [Not 24/7]",
+        "url": "https://fox.hostlagarto.com:8081/toursporttv/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -550,13 +540,18 @@
         "categoria": "TDT / General"
     },
     {
+        "nombre": "TJK TV (1080p)",
+        "url": "https://tjktv-live.tjk.org/tjktv.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
         "nombre": "TVS Boxing (360p)",
         "url": "https://rpn.bozztv.com/gusa/gusa-tvsboxing/index.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "TVS Turbo (360p)",
-        "url": "https://rpn.bozztv.com/gusa/gusa-tvsturbo/index.m3u8",
+        "nombre": "Teletrak (720p)",
+        "url": "https://unlimited6-cl.dps.live/sportinghd/sportinghd.smil/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -565,18 +560,13 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "TJK TV (1080p)",
-        "url": "https://tjktv-live.tjk.org/tjktv.m3u8",
+        "nombre": "TVS Turbo (360p)",
+        "url": "https://rpn.bozztv.com/gusa/gusa-tvsturbo/index.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "World Poker Tour",
-        "url": "https://jmp2.uk/plu-5ad9b7aae738977e2c312132.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "TSN2 (1080p) [Not 24/7]",
-        "url": "https://tvpass.org/live/tsn2/hd",
+        "nombre": "World Poker Tour (1080p)",
+        "url": "https://amg00477-samsungelectron-worldpokertour-samsunguk-81igb.amagi.tv/playlist/amg00477-samsungelectron-worldpokertour-samsunguk/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -590,23 +580,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "TSN4 (720p) [Not 24/7]",
-        "url": "https://tvpass.org/live/tsn4/hd",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Teletrak (720p)",
-        "url": "https://unlimited6-cl.dps.live/sportinghd/sportinghd.smil/playlist.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "World Poker Tour (1080p)",
-        "url": "https://amg00477-samsungelectron-worldpokertour-samsunguk-81igb.amagi.tv/playlist/amg00477-samsungelectron-worldpokertour-samsunguk/playlist.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "TSN5 (1080p) [Not 24/7]",
-        "url": "https://tvpass.org/live/tsn5/hd",
+        "nombre": "TSN2 (1080p) [Not 24/7]",
+        "url": "https://tvpass.org/live/tsn2/hd",
         "categoria": "TDT / General"
     },
     {
@@ -615,13 +590,13 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "La 2",
-        "url": "https://rtvelivestream.rtve.es/rtvesec/la2/la2_main_dvr.m3u8",
+        "nombre": "TSN4 (720p) [Not 24/7]",
+        "url": "https://tvpass.org/live/tsn4/hd",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "RNE para todos",
-        "url": "https://rtvelivestream.rtve.es/rtvesec/rne/rne_para_todos_main.m3u8",
+        "nombre": "TSN5 (1080p) [Not 24/7]",
+        "url": "https://tvpass.org/live/tsn5/hd",
         "categoria": "TDT / General"
     },
     {
@@ -630,8 +605,28 @@
         "categoria": "TDT / General"
     },
     {
+        "nombre": "RNE para todos",
+        "url": "https://rtvelivestream.rtve.es/rtvesec/rne/rne_para_todos_main.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "La 2",
+        "url": "https://rtvelivestream.rtve.es/rtvesec/la2/la2_main_dvr.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
         "nombre": "La 1",
         "url": "https://ztnr.rtve.es/ztnr/1688877.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Teledeporte GEO",
+        "url": "https://rtvelivestream.rtve.es/rtvesec/tdp/tdp_main.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "World Poker Tour",
+        "url": "https://jmp2.uk/plu-5ad9b7aae738977e2c312132.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -645,18 +640,33 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "El Toro TV",
-        "url": "https://edge-nodo-002.streaming.hitcloser.net/eltorotv-streaming-web/index.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Teledeporte GEO",
-        "url": "https://rtvelivestream.rtve.es/rtvesec/tdp/tdp_main.m3u8",
+        "nombre": "Беларусь 5 Интернет (1080p) [Not 24/7]",
+        "url": "https://edge59.dc.beltelecom.by/ngtrk/smil:belarus5int.smil/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
         "nombre": "TRECE",
         "url": "https://play.cdn.enetres.net/091DB7AFBD77442B9BA2F141DCC182F5021/021/playlist.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "El Toro TV",
+        "url": "https://edge-nodo-002.streaming.hitcloser.net/eltorotv-streaming-web/index.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Матч! Планета (720p)",
+        "url": "https://cdn4.skygo.mn/live/disk1/Match_Planeta/HLSv3-FTA/Match_Planeta.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Varzesh TV",
+        "url": "https://ncdn.telewebion.ir/varzesh/live/playlist.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Беларусь 5 (1080p) [Not 24/7]",
+        "url": "https://ngtrk.dc.beltelecom.by/ngtrk/smil:belarus5.smil/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -670,18 +680,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Varzesh TV",
-        "url": "https://ncdn.telewebion.ir/varzesh/live/playlist.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
         "nombre": "Teledeporte GEO",
         "url": "https://ztnr.rtve.es/ztnr/1712295.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "El Toro TV",
-        "url": "https://streaming-1.eltorotv.com/lb0/eltorotv-streaming-web/index.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -690,18 +690,23 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Real Madrid TV EN",
-        "url": "https://rmtv.akamaized.net/hls/live/2043154/rmtv-en-web/master.m3u8",
+        "nombre": "+24",
+        "url": "https://ztnr.rtve.es/ztnr/6108704.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "+24",
-        "url": "https://ztnr.rtve.es/ztnr/6108720.m3u8",
+        "nombre": "Aragón Deporte",
+        "url": "https://cartv.streaming.aranova.es/hls/live/adeportes_deporte5.m3u8",
         "categoria": "TDT / General"
     },
     {
         "nombre": "Futsalmafer.tv",
         "url": "https://play.agenciastreaming.com:8081/futsalmafertv/index.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Real Madrid TV EN",
+        "url": "https://rmtv.akamaized.net/hls/live/2043154/rmtv-en-web/master.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -715,13 +720,63 @@
         "categoria": "TDT / General"
     },
     {
+        "nombre": "+tdp",
+        "url": "https://ztnr.rtve.es/ztnr/6712453.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "+24",
+        "url": "https://ztnr.rtve.es/ztnr/6108720.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
         "nombre": "+24",
         "url": "https://ztnr.rtve.es/ztnr/6108696.m3u8",
         "categoria": "TDT / General"
     },
     {
+        "nombre": "El Toro TV",
+        "url": "https://streaming-1.eltorotv.com/lb0/eltorotv-streaming-web/index.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Congreso de los Diputados",
+        "url": "https://congresodirecto.akamaized.net/hls/live/2038274/canal1/master.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Congreso de los Diputados",
+        "url": "https://congresodirecto.akamaized.net/hls/live/2038277/canal4/master.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Congreso de los Diputados",
+        "url": "https://congresodirecto.akamaized.net/hls/live/2038275/canal2/master.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Cocina (RTVE)",
+        "url": "https://ztnr.rtve.es/ztnr/16656232.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Congreso de los Diputados",
+        "url": "https://congresodirecto.akamaized.net/hls/live/2038278/canal5/master.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
         "nombre": "+24",
         "url": "https://ztnr.rtve.es/ztnr/6108703.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "La Revuelta (RTVE)",
+        "url": "https://ztnr.rtve.es/ztnr/16464388.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "La promesa (RTVE)",
+        "url": "https://ztnr.rtve.es/ztnr/2472039.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -740,28 +795,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "+tdp",
-        "url": "https://ztnr.rtve.es/ztnr/6712453.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "+24",
-        "url": "https://ztnr.rtve.es/ztnr/6108704.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Cuéntame (RTVE)",
-        "url": "https://ztnr.rtve.es/ztnr/6909843.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "La Revuelta (RTVE)",
-        "url": "https://ztnr.rtve.es/ztnr/16464388.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "La promesa (RTVE)",
-        "url": "https://ztnr.rtve.es/ztnr/2472039.m3u8",
+        "nombre": "Al cielo con ella (RTVE)",
+        "url": "https://ztnr.rtve.es/ztnr/16862827.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -770,33 +805,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Feria del libro (RTVE)",
-        "url": "https://ztnr.rtve.es/ztnr/16541484.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Congreso de los Diputados",
-        "url": "https://congresodirecto.akamaized.net/hls/live/2038274/canal1/master.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Canal Sur Andalucía",
-        "url": "https://live-24-canalsur.interactvty.pro/9bb0f4edcb8946e79f5017ddca6c02b0/26af5488cda642ed2eddd27a6328c93b9c03e9181b9d0a825147a7d978e69202.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
         "nombre": "Canal Sur 2 Accesible",
         "url": "https://cdnlive.codev8.net/rtvalive/smil:channel22.smil/playlist.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Al cielo con ella (RTVE)",
-        "url": "https://ztnr.rtve.es/ztnr/16862827.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Cocina (RTVE)",
-        "url": "https://ztnr.rtve.es/ztnr/16656232.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -805,18 +815,23 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Матч! Планета (720p)",
-        "url": "https://cdn4.skygo.mn/live/disk1/Match_Planeta/HLSv3-FTA/Match_Planeta.m3u8",
+        "nombre": "Canal Sur Andalucía",
+        "url": "https://live-24-canalsur.interactvty.pro/9bb0f4edcb8946e79f5017ddca6c02b0/26af5488cda642ed2eddd27a6328c93b9c03e9181b9d0a825147a7d978e69202.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Congreso de los Diputados",
-        "url": "https://congresodirecto.akamaized.net/hls/live/2038275/canal2/master.m3u8",
+        "nombre": "Feria del libro (RTVE)",
+        "url": "https://ztnr.rtve.es/ztnr/16541484.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Congreso de los Diputados",
-        "url": "https://congresodirecto.akamaized.net/hls/live/2038277/canal4/master.m3u8",
+        "nombre": "Cuéntame (RTVE)",
+        "url": "https://ztnr.rtve.es/ztnr/6909843.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Andalucía Cocina",
+        "url": "https://cloud.fastchannel.es/mic/manifiest/hls/acocina/acocina.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -830,8 +845,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "7TV Andalucía",
-        "url": "https://especial7tv.gestec-video.com/hls/regional.m3u8",
+        "nombre": "7TV Aljarafe",
+        "url": "https://streaming004.gestec-video.com/hls/7TVALJARAFE.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -840,38 +855,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "7TV Aljarafe",
-        "url": "https://streaming004.gestec-video.com/hls/7TVALJARAFE.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
         "nombre": "7TV Arcos",
         "url": "https://streaming004.gestec-video.com/hls/7TVARCOS.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "7TV Almería",
-        "url": "https://streaming004.gestec-video.com/hls/7TVALMERIA.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "7TV Linares",
-        "url": "https://streaming004.gestec-video.com/hls/7TVLINARES.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "7TV Jaén",
-        "url": "https://streaming004.gestec-video.com/hls/7TVJAEN.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "7TV Cádiz",
-        "url": "https://streaming004.gestec-video.com/hls/7TVCADIZ.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "7TV Granada",
-        "url": "https://streaming004.gestec-video.com/hls/7TVGRANADA.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -880,13 +865,28 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "7TV Málaga",
-        "url": "https://streaming004.gestec-video.com/hls/7TVMALAGA.m3u8",
+        "nombre": "7TV Granada",
+        "url": "https://streaming004.gestec-video.com/hls/7TVGRANADA.m3u8",
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Andalucía Cocina",
-        "url": "https://cloud.fastchannel.es/mic/manifiest/hls/acocina/acocina.m3u8",
+        "nombre": "7TV Cádiz",
+        "url": "https://streaming004.gestec-video.com/hls/7TVCADIZ.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "7TV Almería",
+        "url": "https://streaming004.gestec-video.com/hls/7TVALMERIA.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "7TV Jaén",
+        "url": "https://streaming004.gestec-video.com/hls/7TVJAEN.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "7TV Málaga",
+        "url": "https://streaming004.gestec-video.com/hls/7TVMALAGA.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -895,13 +895,23 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "7TV Rota",
-        "url": "https://streaming004.gestec-video.com/hls/7TVROTA.m3u8",
+        "nombre": "7TV Andalucía",
+        "url": "https://especial7tv.gestec-video.com/hls/regional.m3u8",
         "categoria": "TDT / General"
     },
     {
         "nombre": "7TV Jerez",
         "url": "https://streaming004.gestec-video.com/hls/7TVJEREZ.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "7TV Linares",
+        "url": "https://streaming004.gestec-video.com/hls/7TVLINARES.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "7TV Rota",
+        "url": "https://streaming004.gestec-video.com/hls/7TVROTA.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -915,28 +925,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "M95 Marbella",
-        "url": "https://limited2.todostreaming.es/live/m95-livestream.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
         "nombre": "Canal 45 TV",
         "url": "https://nlb1-live.emitstream.com/hls/625csn5et2iszm9oze65/master.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Interalmería TV",
-        "url": "https://interalmeria.tv/directo/live.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Onda Cádiz",
-        "url": "https://ondacadiztv.es:30443/octv/24h/playlist.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Torremolinos TV",
-        "url": "https://cdnlivevlc.codev8.net/canaltorremolinoslive/smil:channel1.smil/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -945,8 +935,23 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Costa Noroeste TV",
-        "url": "https://limited31.todostreaming.es/live/noroestetv-livestream.m3u8",
+        "nombre": "Torremolinos TV",
+        "url": "https://cdnlivevlc.codev8.net/canaltorremolinoslive/smil:channel1.smil/playlist.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Congreso de los Diputados",
+        "url": "https://congresodirecto.akamaized.net/hls/live/2038276/canal3/master.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "M95 Marbella",
+        "url": "https://limited2.todostreaming.es/live/m95-livestream.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Onda Cádiz",
+        "url": "https://ondacadiztv.es:30443/octv/24h/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -955,8 +960,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Canal Málaga",
-        "url": "https://canalmalaga-tv-live.flumotion.com/playlist.m3u8",
+        "nombre": "Interalmería TV",
+        "url": "https://interalmeria.tv/directo/live.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -965,13 +970,23 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Estepona TV",
-        "url": "https://cloudvideo.servers10.com:8081/8022/index.m3u8",
+        "nombre": "Costa Noroeste TV",
+        "url": "https://limited31.todostreaming.es/live/noroestetv-livestream.m3u8",
         "categoria": "TDT / General"
     },
     {
         "nombre": "Sal TV",
         "url": "https://play.agenciastreaming.com:8081/saltv/index.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "Canal Málaga",
+        "url": "https://canalmalaga-tv-live.flumotion.com/playlist.m3u8",
+        "categoria": "TDT / General"
+    },
+    {
+        "nombre": "CanalCosta",
+        "url": "https://5f71743aa95e4.streamlock.net:1936/CanalcostaTV/endirecto/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -985,13 +1000,8 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "CanalCosta",
-        "url": "https://5f71743aa95e4.streamlock.net:1936/CanalcostaTV/endirecto/playlist.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Congreso de los Diputados",
-        "url": "https://congresodirecto.akamaized.net/hls/live/2038276/canal3/master.m3u8",
+        "nombre": "Estepona TV",
+        "url": "https://cloudvideo.servers10.com:8081/8022/index.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -1000,18 +1010,13 @@
         "categoria": "TDT / General"
     },
     {
-        "nombre": "Congreso de los Diputados",
-        "url": "https://congresodirecto.akamaized.net/hls/live/2038278/canal5/master.m3u8",
+        "nombre": "Fuengirola TV",
+        "url": "https://streaming004.gestec-video.com/hls/FTV.m3u8",
         "categoria": "TDT / General"
     },
     {
         "nombre": "Mijas 3.40 TV",
         "url": "https://streaming004.gestec-video.com/hls/MIJAS.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Fuengirola TV",
-        "url": "https://streaming004.gestec-video.com/hls/FTV.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -1022,11 +1027,6 @@
     {
         "nombre": "Diez TV Las Villas",
         "url": "https://streaming.cloud.innovasur.es/mmj2/index.m3u8",
-        "categoria": "TDT / General"
-    },
-    {
-        "nombre": "Беларусь 5 Интернет (1080p) [Not 24/7]",
-        "url": "https://edge59.dc.beltelecom.by/ngtrk/smil:belarus5int.smil/playlist.m3u8",
         "categoria": "TDT / General"
     },
     {
@@ -1045,38 +1045,8 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "CBS News USA EN",
-        "url": "https://cbsn-us.cbsnstream.cbsnews.com/out/v1/55a8648e8f134e82a470f83d562deeca/master.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "GB News Reino Unido EN",
-        "url": "https://amg01076-lightningintern-gbnews-samsunguk-0lu52.amagi.tv/playlist/amg01076-lightningintern-gbnews-samsunguk/playlist.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "Exitosa Noticias Perú",
-        "url": "https://luna-4-video.mediaserver.digital/exitosatv_233b-4b49-a726-5a451262/index.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "Newsmax TV USA EN",
-        "url": "https://nmxlive.akamaized.net/hls/live/529965/Live_1/index.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "24h",
-        "url": "https://ztnr.rtve.es/ztnr/1694255.m3u8",
-        "categoria": "Noticias"
-    },
-    {
         "nombre": "Bloomberg USA EN",
         "url": "https://www.bloomberg.com/media-manifest/streams/us.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "TeleSUR Venezuela",
-        "url": "https://mblesmain01.telesur.ultrabase.net/mbliveMain/hd/playlist.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1086,12 +1056,27 @@
     },
     {
         "nombre": "Newsmax TV USA EN",
+        "url": "https://nmxlive.akamaized.net/hls/live/529965/Live_1/index.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "DW Alemania",
+        "url": "https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "GB News Reino Unido EN",
+        "url": "https://amg01076-lightningintern-gbnews-samsunguk-0lu52.amagi.tv/playlist/amg01076-lightningintern-gbnews-samsunguk/playlist.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "Newsmax TV USA EN",
         "url": "https://nmx1ota.akamaized.net/hls/live/2107010/Live_1/index.m3u8",
         "categoria": "Noticias"
     },
     {
-        "nombre": "Bloomberg Quicktake EN",
-        "url": "https://www.bloomberg.com/media-manifest/streams/qt.m3u8",
+        "nombre": "24h",
+        "url": "https://ztnr.rtve.es/ztnr/1694255.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1100,33 +1085,13 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "DW Espanol (1080p)",
-        "url": "https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/master.m3u8",
+        "nombre": "TeleSUR Venezuela",
+        "url": "https://mblesmain01.telesur.ultrabase.net/mbliveMain/hd/playlist.m3u8",
         "categoria": "Noticias"
     },
     {
-        "nombre": "24h Canarias",
-        "url": "https://ztnr.rtve.es/ztnr/5473142.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "Telesur (480p)",
-        "url": "https://mblesmain01.telesur.ultrabase.net/mbliveMain/480p/playlist.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "France 24 Español (1080p)",
-        "url": "https://live.france24.com/hls/live/2037220-b/F24_ES_HI_HLS/master_5000.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "24h Catalunya",
-        "url": "https://ztnr.rtve.es/ztnr/4952053.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "ABC News Australia EN",
-        "url": "https://abc-news-dmd-streams-1.akamaized.net/out/v1/abc83881886746b0802dc3e7ca2bc792/index.m3u8",
+        "nombre": "AMX Noticias (720p) [Not 24/7]",
+        "url": "https://5e50264bd6766.streamlock.net/mexiquense2/videomexiquense2/playlist.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1135,8 +1100,18 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "Telenews TV",
-        "url": "https://hilandofinotv.essastream.com:3480/live/telenewscanallive.m3u8",
+        "nombre": "Bloomberg USA EN",
+        "url": "https://www.bloomberg.com/media-manifest/streams/us-event.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "CBS News USA EN",
+        "url": "https://cbsn-us.cbsnstream.cbsnews.com/out/v1/55a8648e8f134e82a470f83d562deeca/master.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "Exitosa Noticias Perú",
+        "url": "https://luna-4-video.mediaserver.digital/exitosatv_233b-4b49-a726-5a451262/index.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1145,8 +1120,63 @@
         "categoria": "Noticias"
     },
     {
+        "nombre": "Bloomberg Quicktake EN",
+        "url": "https://www.bloomberg.com/media-manifest/streams/qt.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "DW Espanol (1080p)",
+        "url": "https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/master.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "Noticias 16 (720p) [Not 24/7]",
+        "url": "https://edge.essastream.com/noticias16/playlist.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "WDWL-DT1 (Teleadoración/Enlace PR) (720p) [Not 24/7]",
+        "url": "https://67acccf130420.streamlock.net/enlacepr1/enlacepr1/playlist.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "Telesur (480p)",
+        "url": "https://mblesmain01.telesur.ultrabase.net/mbliveMain/480p/playlist.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "ADN Noticias Mexico",
+        "url": "https://mdstrm.com/live-stream-playlist/60b578b060947317de7b57ac.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "France 24 Español (1080p)",
+        "url": "https://live.france24.com/hls/live/2037220-b/F24_ES_HI_HLS/master_5000.m3u8",
+        "categoria": "Noticias"
+    },
+    {
         "nombre": "Estrella News (1080p)",
         "url": "https://estrella-news-oando.amagi.tv/playlist.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "24h Canarias",
+        "url": "https://ztnr.rtve.es/ztnr/5473142.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "Telenews TV",
+        "url": "https://hilandofinotv.essastream.com:3480/live/telenewscanallive.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "CGTN News China EN",
+        "url": "https://english-livebkali.cgtn.com/live/encgtn.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "ABC News Australia EN",
+        "url": "https://abc-news-dmd-streams-1.akamaized.net/out/v1/abc83881886746b0802dc3e7ca2bc792/index.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1160,6 +1190,11 @@
         "categoria": "Noticias"
     },
     {
+        "nombre": "24h Catalunya",
+        "url": "https://ztnr.rtve.es/ztnr/4952053.m3u8",
+        "categoria": "Noticias"
+    },
+    {
         "nombre": "Almería 24h TV",
         "url": "https://broadcast1.radioponiente.org/almeria24h_aac/index.m3u8",
         "categoria": "Noticias"
@@ -1170,28 +1205,8 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "Bloomberg USA EN",
-        "url": "https://www.bloomberg.com/media-manifest/streams/us-event.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "CGTN News China EN",
-        "url": "https://english-livebkali.cgtn.com/live/encgtn.m3u8",
-        "categoria": "Noticias"
-    },
-    {
         "nombre": "24/7 Canal de Noticias",
         "url": "https://panel.host-live.com:19360/cn247tv/cn247tv.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "Noticias 16 (720p) [Not 24/7]",
-        "url": "https://edge.essastream.com/noticias16/playlist.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "DW Alemania",
-        "url": "https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1200,23 +1215,8 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "ADN Noticias Mexico",
-        "url": "https://mdstrm.com/live-stream-playlist/60b578b060947317de7b57ac.m3u8",
-        "categoria": "Noticias"
-    },
-    {
         "nombre": "Prensa Latina TV (1080p)",
         "url": "https://eu1.servers10.com:8081/8192/index.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "92 News",
-        "url": "https://92news.vdn.dstreamone.net/92newshd/92hd/playlist.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "WDWL-DT1 (Teleadoración/Enlace PR) (720p) [Not 24/7]",
-        "url": "https://67acccf130420.streamlock.net/enlacepr1/enlacepr1/playlist.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1225,13 +1225,13 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "Newsmax TV",
-        "url": "https://nmxlive.akamaized.net/hls/live/529965/Live_1/index.m3u8",
+        "nombre": "92 News",
+        "url": "https://92news.vdn.dstreamone.net/92newshd/92hd/playlist.m3u8",
         "categoria": "Noticias"
     },
     {
-        "nombre": "USA:Newsy",
-        "url": "https://content.uplynk.com/channel/4bb4901b934c4e029fd4c1abfc766c37.m3u8?ad=newsyweb",
+        "nombre": "Newsmax TV",
+        "url": "https://nmxlive.akamaized.net/hls/live/529965/Live_1/index.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1240,8 +1240,8 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "WBZ 4 News (Boston)",
-        "url": "https://cbslocaltv-i.akamaihd.net/hls/live/221461/WBZTV/master.m3u8",
+        "nombre": "USA:Newsy",
+        "url": "https://content.uplynk.com/channel/4bb4901b934c4e029fd4c1abfc766c37.m3u8?ad=newsyweb",
         "categoria": "Noticias"
     },
     {
@@ -1250,8 +1250,8 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "CNBC Arabiya (1080p) ✅",
-        "url": "https://cnbc-live.akamaized.net/cnbc/master.m3u8",
+        "nombre": "WBZ 4 News (Boston)",
+        "url": "https://cbslocaltv-i.akamaihd.net/hls/live/221461/WBZTV/master.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1265,13 +1265,8 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "CNBC Indonesia ✅",
-        "url": "https://live.cnbcindonesia.com/livecnbc/smil:cnbctv.smil/master.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "CNBC Indonesia HD - Opción 2 ✅",
-        "url": "https://live.cnbcindonesia.com/livecnbc/smil:cnbctv.smil/index.m3u8",
+        "nombre": "CNBC Arabiya (1080p) ✅",
+        "url": "https://cnbc-live.akamaized.net/cnbc/master.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1280,18 +1275,13 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "DW Arabic (1080p) ✅",
-        "url": "https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/index.m3u8",
+        "nombre": "CNBC Indonesia HD - Opción 2 ✅",
+        "url": "https://live.cnbcindonesia.com/livecnbc/smil:cnbctv.smil/index.m3u8",
         "categoria": "Noticias"
     },
     {
-        "nombre": "DW English | DE ✅",
-        "url": "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8?PlaylistM3UCL",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "CNN Indonesia DASH ✅",
-        "url": "https://live.cnnindonesia.com/livecnn/smil:cnntv.smil/master.m3u8",
+        "nombre": "CNBC Indonesia ✅",
+        "url": "https://live.cnbcindonesia.com/livecnbc/smil:cnbctv.smil/master.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1300,8 +1290,23 @@
         "categoria": "Noticias"
     },
     {
+        "nombre": "CNN Indonesia DASH ✅",
+        "url": "https://live.cnnindonesia.com/livecnn/smil:cnntv.smil/master.m3u8",
+        "categoria": "Noticias"
+    },
+    {
         "nombre": "CNN Indonesia [1] ✅",
         "url": "https://live.cnnindonesia.com/livecnn/smil:cnntv.smil/index.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "DW Deutsch | DE ✅",
+        "url": "https://dwamdstream106.akamaized.net/hls/live/2017965/dwstream106/index.m3u8?PlaylistM3UCL",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "DW English | DE ✅",
+        "url": "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8?PlaylistM3UCL",
         "categoria": "Noticias"
     },
     {
@@ -1310,8 +1315,8 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "CNN Indonesia HD [2] ✅",
-        "url": "https://live.cnnindonesia.com/livecnn/smil:cnntv.smil/chunklist_w2099542994_b384000_sleng.m3u8",
+        "nombre": "DW (Español) - Opción 2 ✅",
+        "url": "https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/stream04/streamPlaylist.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1320,43 +1325,18 @@
         "categoria": "Noticias"
     },
     {
-        "nombre": "France 24 Arabic (1080p) ✅",
-        "url": "https://live.france24.com/hls/live/2037222-b/F24_AR_HI_HLS/master_5000.m3u8",
-        "categoria": "Noticias"
-    },
-    {
         "nombre": "CNN Indonesia HD [4] ✅",
         "url": "https://live.cnnindonesia.com/livecnn/smil:cnntv.smil/chunklist_w412735966_b384000_sleng.m3u8",
         "categoria": "Noticias"
     },
     {
-        "nombre": "DW (Español) - Opción 2 ✅",
-        "url": "https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/stream04/streamPlaylist.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "France 24\" FAST English ✅",
-        "url": "https://amg00106-amg00106c1-rakuten-uk-4654.playouts.now.amagi.tv/playlist/amg00106-france24fast-france24-rakutenuk/playlist.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "France 24 FAST English - Opción 2 ✅",
-        "url": "https://amg00106-amg00106c1-rakuten-uk-4654.playouts.now.amagi.tv/playlist/amg00106-france24fast-france24-rakutenuk/playlist.m3u8?ads_amagi_channel=938&ads_amznbrmid=&ads_amznregion=&ads_amznslots=&ads_app_bundle=com.rakuten.tv&ads_app_store_url=rakuten.tv&ads_app_version=&ads_brand_name=&ads_content_classification=7&ads_device_lmt=1&ads_device_make=&ads_device_model=&ads_device_type=web&ads_device_year=&ads_env=prod&ads_gam_correlator=&ads_gdpr_consent=&ads_market=es&ads_os_language=&ads_player_height=&ads_player_width=&ads_pod_type=playerpage_midroll&ads_ppid=&ads_rtv_content_id=6311&ads_rtv_content_language=eng&ads_rtvid=271859&ads_streaming_id=ccf3bb1a-ee12-450d-ac67-e339e40335f1&ads_tivo_devcountry=&ads_tivo_devmakedate=&ads_tivo_mvpd=&ads_tivo_platform=&ads_tivo_usid=&ads_tivo_uxloc=&ads_user_type=visitor",
+        "nombre": "CNN Indonesia HD [2] ✅",
+        "url": "https://live.cnnindonesia.com/livecnn/smil:cnntv.smil/chunklist_w2099542994_b384000_sleng.m3u8",
         "categoria": "Noticias"
     },
     {
         "nombre": "CNN Indonesia HD [5] ✅",
         "url": "https://live.cnnindonesia.com/livecnn/smil:cnntv.smil/chunklist_w733133162_b384000_sleng.m3u8",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "DW Deutsch+ | DE - Opción 2 ✅",
-        "url": "https://dwamdstream105.akamaized.net/hls/live/2015531/dwstream105/index.m3u8?PlaylistM3UCL",
-        "categoria": "Noticias"
-    },
-    {
-        "nombre": "TeleSUR English (1080p) [Not 24/7] ✅",
-        "url": "https://github.com/BellezaEmporium/IPTV_Exception/raw/master/channels/ve/telesur_eng.m3u8",
         "categoria": "Noticias"
     },
     {
@@ -1370,18 +1350,43 @@
         "categoria": "Noticias"
     },
     {
+        "nombre": "France 24 FAST English - Opción 2 ✅",
+        "url": "https://amg00106-amg00106c1-rakuten-uk-4654.playouts.now.amagi.tv/playlist/amg00106-france24fast-france24-rakutenuk/playlist.m3u8?ads_amagi_channel=938&ads_amznbrmid=&ads_amznregion=&ads_amznslots=&ads_app_bundle=com.rakuten.tv&ads_app_store_url=rakuten.tv&ads_app_version=&ads_brand_name=&ads_content_classification=7&ads_device_lmt=1&ads_device_make=&ads_device_model=&ads_device_type=web&ads_device_year=&ads_env=prod&ads_gam_correlator=&ads_gdpr_consent=&ads_market=es&ads_os_language=&ads_player_height=&ads_player_width=&ads_pod_type=playerpage_midroll&ads_ppid=&ads_rtv_content_id=6311&ads_rtv_content_language=eng&ads_rtvid=271859&ads_streaming_id=ccf3bb1a-ee12-450d-ac67-e339e40335f1&ads_tivo_devcountry=&ads_tivo_devmakedate=&ads_tivo_mvpd=&ads_tivo_platform=&ads_tivo_usid=&ads_tivo_uxloc=&ads_user_type=visitor",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "France 24\" FAST English ✅",
+        "url": "https://amg00106-amg00106c1-rakuten-uk-4654.playouts.now.amagi.tv/playlist/amg00106-france24fast-france24-rakutenuk/playlist.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "France 24 Arabic (1080p) ✅",
+        "url": "https://live.france24.com/hls/live/2037222-b/F24_AR_HI_HLS/master_5000.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "DW Deutsch+ | DE - Opción 2 ✅",
+        "url": "https://dwamdstream105.akamaized.net/hls/live/2015531/dwstream105/index.m3u8?PlaylistM3UCL",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "DW Arabic (1080p) ✅",
+        "url": "https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/index.m3u8",
+        "categoria": "Noticias"
+    },
+    {
+        "nombre": "TeleSUR English (1080p) [Not 24/7] ✅",
+        "url": "https://github.com/BellezaEmporium/IPTV_Exception/raw/master/channels/ve/telesur_eng.m3u8",
+        "categoria": "Noticias"
+    },
+    {
         "nombre": "RT Noticias",
         "url": "https://rt-esp.servicecdn.ru/dvr/rtesp/playlist.m3u8",
         "categoria": "Noticias"
     },
     {
-        "nombre": "8TV Chiclana",
-        "url": "https://s.emisoras.tv:8081/chiclana/index.m3u8",
-        "categoria": "Infantil"
-    },
-    {
-        "nombre": "Nickelodeon (1080p)",
-        "url": "https://xykt-fix.github.io/iptv/streams/SP57.m3u8",
+        "nombre": "Pequeradio TV",
+        "url": "https://183.bozztv.com/ssh101/ssh101/pequeradiotv/playlist.m3u8",
         "categoria": "Infantil"
     },
     {
@@ -1395,13 +1400,18 @@
         "categoria": "Infantil"
     },
     {
-        "nombre": "Peniel Kids & Young (480p)",
-        "url": "https://s.emisoras.tv:8081/penielkids/index.m3u8",
+        "nombre": "Nickelodeon (1080p)",
+        "url": "https://xykt-fix.github.io/iptv/streams/SP57.m3u8",
         "categoria": "Infantil"
     },
     {
-        "nombre": "Pequeradio TV",
-        "url": "https://183.bozztv.com/ssh101/ssh101/pequeradiotv/playlist.m3u8",
+        "nombre": "8TV Chiclana",
+        "url": "https://s.emisoras.tv:8081/chiclana/index.m3u8",
+        "categoria": "Infantil"
+    },
+    {
+        "nombre": "Peniel Kids & Young (480p)",
+        "url": "https://s.emisoras.tv:8081/penielkids/index.m3u8",
         "categoria": "Infantil"
     },
     {
@@ -1415,8 +1425,8 @@
         "categoria": "Infantil"
     },
     {
-        "nombre": "Clan GEO",
-        "url": "https://ztnr.rtve.es/ztnr/5466990.m3u8",
+        "nombre": "Extrema Kids TV [Not 24/7]",
+        "url": "https://627bb251f23c7.streamlock.net:444/ExtremaKids/ExtremaKids/playlist.m3u8",
         "categoria": "Infantil"
     },
     {
@@ -1425,23 +1435,13 @@
         "categoria": "Infantil"
     },
     {
-        "nombre": "Extrema Kids TV [Not 24/7]",
-        "url": "https://627bb251f23c7.streamlock.net:444/ExtremaKids/ExtremaKids/playlist.m3u8",
-        "categoria": "Infantil"
-    },
-    {
         "nombre": "AR: Ch4teen Kids HD ✅",
         "url": "https://ch14.tv/live/ch4teenkids/playlist.m3u8",
         "categoria": "Infantil"
     },
     {
-        "nombre": "13 Kids (1080p)",
-        "url": "https://origin.dpsgo.com/ssai/event/LhHrVtyeQkKZ-Ye_xEU75g/master.m3u8",
-        "categoria": "Infantil"
-    },
-    {
-        "nombre": "ABC Kids ✅",
-        "url": "https://c.mjh.nz/abc-kids.m3u8",
+        "nombre": "Clan GEO",
+        "url": "https://ztnr.rtve.es/ztnr/5466990.m3u8",
         "categoria": "Infantil"
     },
     {
@@ -1450,13 +1450,18 @@
         "categoria": "Infantil"
     },
     {
+        "nombre": "13 Kids (1080p)",
+        "url": "https://origin.dpsgo.com/ssai/event/LhHrVtyeQkKZ-Ye_xEU75g/master.m3u8",
+        "categoria": "Infantil"
+    },
+    {
         "nombre": "Nickelodeon en español",
         "url": "https://jmp2.uk/plu-5d8d08395f39465da6fb3ec4.m3u8",
         "categoria": "Infantil"
     },
     {
-        "nombre": "Logos TV Kids (720p) [Not 24/7]",
-        "url": "https://streamer1.streamhost.org/salive/logoskidsH/playlist.m3u8",
+        "nombre": "ABC Kids ✅",
+        "url": "https://c.mjh.nz/abc-kids.m3u8",
         "categoria": "Infantil"
     },
     {
@@ -1465,8 +1470,8 @@
         "categoria": "Infantil"
     },
     {
-        "nombre": "Disney Jr. Latin America South",
-        "url": "https://tr.live.clarovtrcdn.vtrplay.com/disneyjrhdchi/vxfmt=dp/playlist.m3u8?device_profile=STB_HLS_VCAS_LIVE_HD",
+        "nombre": "Logos TV Kids (720p) [Not 24/7]",
+        "url": "https://streamer1.streamhost.org/salive/logoskidsH/playlist.m3u8",
         "categoria": "Infantil"
     },
     {
@@ -1475,13 +1480,13 @@
         "categoria": "Infantil"
     },
     {
-        "nombre": "TVG Mira Radio Galega",
-        "url": "https://crtvg-mirarg-schlive.flumotion.cloud/crtvglive/smil:channel1PRG.smil/playlist.m3u8",
-        "categoria": "Música"
+        "nombre": "Disney Jr. Latin America South",
+        "url": "https://tr.live.clarovtrcdn.vtrplay.com/disneyjrhdchi/vxfmt=dp/playlist.m3u8?device_profile=STB_HLS_VCAS_LIVE_HD",
+        "categoria": "Infantil"
     },
     {
-        "nombre": "Radio Italia TV IT",
-        "url": "https://radioitaliatv.akamaized.net/hls/live/2093117/RadioitaliaTV/master.m3u8",
+        "nombre": "TVG Mira Radio Galega",
+        "url": "https://crtvg-mirarg-schlive.flumotion.cloud/crtvglive/smil:channel1PRG.smil/playlist.m3u8",
         "categoria": "Música"
     },
     {
@@ -1490,13 +1495,23 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Radio Realpolitik (720p)",
-        "url": "https://vivo.solumedia.com:19360/realpolitik/realpolitik.m3u8",
+        "nombre": "Azahares Radio Multimedia (720p)",
+        "url": "https://streamyes.alsolnet.com/azaharesfm/live/playlist.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Azahares Radio Multimedia (720p)",
-        "url": "https://streamyes.alsolnet.com/azaharesfm/live/playlist.m3u8",
+        "nombre": "Radio 5",
+        "url": "https://ztnr.rtve.es/ztnr/6982917.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Sublime Gracia TV (720p)",
+        "url": "https://5f700d5b2c46f.streamlock.net/sublime/sublime/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Realpolitik (720p)",
+        "url": "https://vivo.solumedia.com:19360/realpolitik/realpolitik.m3u8",
         "categoria": "Música"
     },
     {
@@ -1510,53 +1525,8 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Radio Sublime Gracia TV (720p)",
-        "url": "https://5f700d5b2c46f.streamlock.net/sublime/sublime/playlist.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "MasMusica FM (720p)",
-        "url": "https://movil.ejeserver.com/live/masmusica.m3u8",
-        "categoria": "Música"
-    },
-    {
         "nombre": "30A Music USA EN",
         "url": "https://30a-tv.com/feeds/ceftech/30atvmusic.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "La Morada Radio TV (720p)",
-        "url": "https://movil.ejeserver.com/live/lamoradatv.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Kpop Mix (720p)",
-        "url": "https://cloud.tvomix.com/KPOPMIX/index.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Popular TV Cantabria",
-        "url": "https://limited12.todostreaming.es/live/ptvcantabria-livestream.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Memorias FM Pop Latino (480p) [Geo-blocked]",
-        "url": "https://video.xtrematv.com:3891/live/memoriaspoplatinolive.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio 3",
-        "url": "https://ztnr.rtve.es/ztnr/6982918.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Urban Mix (720p)",
-        "url": "https://cloud.tvomix.com/URBANMIX/index.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio 5",
-        "url": "https://ztnr.rtve.es/ztnr/6982917.m3u8",
         "categoria": "Música"
     },
     {
@@ -1565,38 +1535,28 @@
         "categoria": "Música"
     },
     {
+        "nombre": "Radio Italia TV IT",
+        "url": "https://radioitaliatv.akamaized.net/hls/live/2093117/RadioitaliaTV/master.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Kpop Mix (720p)",
+        "url": "https://cloud.tvomix.com/KPOPMIX/index.m3u8",
+        "categoria": "Música"
+    },
+    {
         "nombre": "Conciertos Radio 3 (RTVE)",
         "url": "https://ztnr.rtve.es/ztnr/6924117.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Radio Calima TV",
-        "url": "https://nrvideo1.newradio.it:443/calimafm/calimafm/playlist.m3u8",
+        "nombre": "La Morada Radio TV (720p)",
+        "url": "https://movil.ejeserver.com/live/lamoradatv.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Radio Ritmo (1080p) [Not 24/7]",
-        "url": "https://panel.tvstream.cl:1936/8046/8046/playlist.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio Yguazú TV (480p)",
-        "url": "https://live.enhdtv.com:8081/radioiguazutv/index.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Antena Uno RadioVideo (360p)",
-        "url": "https://tvdatta.com:3578/live/antenaunolive.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio Conexion Web TV (720p)",
-        "url": "https://tuvideoonline.com.ar:3391/live/radioconexionlive.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Flex Studio Radio TV [Not 24/7]",
-        "url": "https://live20.bozztv.com/akamaissh101/ssh101/fsradiotv/playlist.m3u8",
+        "nombre": "UMTV (1080p) [Not 24/7]",
+        "url": "https://60417ddeaf0d9.streamlock.net/montemorelos/videomontemorelos/playlist.m3u8",
         "categoria": "Música"
     },
     {
@@ -1605,28 +1565,38 @@
         "categoria": "Música"
     },
     {
-        "nombre": "CromTV (1080p) [Not 24/7]",
-        "url": "https://fox.hostlagarto.com:8081/cromtv/tracks-v1a1/mono.m3u8",
+        "nombre": "Urban Mix (720p)",
+        "url": "https://cloud.tvomix.com/URBANMIX/index.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "GAMTV.cr (720p)",
-        "url": "https://v2.azulstream.com:8081/gamtv/gamtv/index.m3u8",
+        "nombre": "MasMusica FM (720p)",
+        "url": "https://movil.ejeserver.com/live/masmusica.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Caoba TV Radio (720p) [Not 24/7]",
-        "url": "https://host.streamingnation.live:3940/live/caobatvlive.m3u8",
+        "nombre": "Radio Yguazú TV (480p)",
+        "url": "https://live.enhdtv.com:8081/radioiguazutv/index.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Frecuencia Musical TV [Not 24/7]",
-        "url": "https://s2.tvdatta.com:3307/hybrid/play.m3u8",
+        "nombre": "Radio 3",
+        "url": "https://ztnr.rtve.es/ztnr/6982918.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Escúchame Radio TV (720p) [Not 24/7]",
-        "url": "https://stmv1.transmissaodigital.com/pedro9800/pedro9800/playlist.m3u8",
+        "nombre": "Memorias FM Pop Latino (480p) [Geo-blocked]",
+        "url": "https://video.xtrematv.com:3891/live/memoriaspoplatinolive.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Conexion Web TV (720p)",
+        "url": "https://tuvideoonline.com.ar:3391/live/radioconexionlive.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Calima TV",
+        "url": "https://nrvideo1.newradio.it:443/calimafm/calimafm/playlist.m3u8",
         "categoria": "Música"
     },
     {
@@ -1635,23 +1605,8 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Blu Radio (720p)",
-        "url": "https://mdstrm.com/live-stream-playlist/58d1921a72e2b22e2905e493.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Peniel Musical (480p)",
-        "url": "https://s.emisoras.tv:8081/penielmusical/index.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "MTV en español",
-        "url": "https://jmp2.uk/plu-5cf96d351652631e36d4331f.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio 3 (720p)",
-        "url": "https://rtvelivestream.rtve.es/rtvesec/rne/rne3_main.m3u8",
+        "nombre": "Caoba TV Radio (720p) [Not 24/7]",
+        "url": "https://host.streamingnation.live:3940/live/caobatvlive.m3u8",
         "categoria": "Música"
     },
     {
@@ -1660,8 +1615,18 @@
         "categoria": "Música"
     },
     {
-        "nombre": "QMusic Países Bajos NL",
-        "url": "https://stream.qmusic.nl/qmusic/videohls.m3u8",
+        "nombre": "Antena Uno RadioVideo (360p)",
+        "url": "https://tvdatta.com:3578/live/antenaunolive.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "GAMTV.cr (720p)",
+        "url": "https://v2.azulstream.com:8081/gamtv/gamtv/index.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Frecuencia Musical TV [Not 24/7]",
+        "url": "https://s2.tvdatta.com:3307/hybrid/play.m3u8",
         "categoria": "Música"
     },
     {
@@ -1670,8 +1635,13 @@
         "categoria": "Música"
     },
     {
-        "nombre": "La Nueva Radio TV 97.7 (1080p)",
-        "url": "https://sv72.ecuaradiotv.net/lanuevatv/live/playlist.m3u8",
+        "nombre": "Radio 3 (720p)",
+        "url": "https://rtvelivestream.rtve.es/rtvesec/rne/rne3_main.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Blu Radio (720p)",
+        "url": "https://mdstrm.com/live-stream-playlist/58d1921a72e2b22e2905e493.m3u8",
         "categoria": "Música"
     },
     {
@@ -1680,13 +1650,8 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Retro Music TV Chequia EN",
-        "url": "https://stream.mediawork.cz/retrotv/retrotvHQ1/playlist.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Popular TV Murcia (1080p) [Not 24/7]",
-        "url": "https://cloud.fastchannel.es/mic/manifiest/populartvrm.m3u8",
+        "nombre": "Radio Ritmo (1080p) [Not 24/7]",
+        "url": "https://panel.tvstream.cl:1936/8046/8046/playlist.m3u8",
         "categoria": "Música"
     },
     {
@@ -1695,13 +1660,58 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Radio Master (720p)",
-        "url": "https://videoserver.tmcreativos.com:19360/radiomaster/radiomaster.m3u8",
+        "nombre": "CromTV (1080p) [Not 24/7]",
+        "url": "https://fox.hostlagarto.com:8081/cromtv/tracks-v1a1/mono.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Radio Monumental TV (720p) [Not 24/7]",
-        "url": "https://cloud37.ecuatel.com/monumentaltv/live/manifest.m3u8",
+        "nombre": "Escúchame Radio TV (720p) [Not 24/7]",
+        "url": "https://stmv1.transmissaodigital.com/pedro9800/pedro9800/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "RTL Radio Freccia Italia IT",
+        "url": "https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S3160845/0tuSetc8UFkF/playlist_video.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Peniel Musical (480p)",
+        "url": "https://s.emisoras.tv:8081/penielmusical/index.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Retro Music TV Chequia EN",
+        "url": "https://stream.mediawork.cz/retrotv/retrotvHQ1/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "La Nueva Radio TV 97.7 (1080p)",
+        "url": "https://sv72.ecuaradiotv.net/lanuevatv/live/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "QMusic Países Bajos NL",
+        "url": "https://stream.qmusic.nl/qmusic/videohls.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Popu TV (1080p)",
+        "url": "https://copacogen.desdeparaguay.net/universotv/universotv_py_alta/playlist.m3u8?admin=nacion",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio TV Neuquén (720p) [Not 24/7]",
+        "url": "https://media.neuquen.gov.ar/rtn/television/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Popular TV Murcia (1080p) [Not 24/7]",
+        "url": "https://cloud.fastchannel.es/mic/manifiest/populartvrm.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Mel Radio TV (360p)",
+        "url": "https://eu1.servers10.com:8081/8334/index.m3u8",
         "categoria": "Música"
     },
     {
@@ -1715,18 +1725,8 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Mel Radio TV (360p)",
-        "url": "https://eu1.servers10.com:8081/8334/index.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Popu TV (1080p)",
-        "url": "https://copacogen.desdeparaguay.net/universotv/universotv_py_alta/playlist.m3u8?admin=nacion",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio Isla TV (720p)",
-        "url": "https://59a564764e2b6.streamlock.net/palestra/palestra/playlist.m3u8",
+        "nombre": "MTV en español",
+        "url": "https://jmp2.uk/plu-5cf96d351652631e36d4331f.m3u8",
         "categoria": "Música"
     },
     {
@@ -1735,8 +1735,53 @@
         "categoria": "Música"
     },
     {
+        "nombre": "Radio Imagen 105.1 FM (720p) [Not 24/7]",
+        "url": "https://streaming.imagenfm105-1.com/hls/stream.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Master (720p)",
+        "url": "https://videoserver.tmcreativos.com:19360/radiomaster/radiomaster.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Hogar (720p)",
+        "url": "https://www.streaming507.net:19360/videoradiohogar/videoradiohogar.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Ancón (720p)",
+        "url": "https://www.streaming507.net:19360/anconvideo/anconvideo.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Monumental TV (720p) [Not 24/7]",
+        "url": "https://cloud37.ecuatel.com/monumentaltv/live/manifest.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Tropical Tarapoto (480p) [Not 24/7]",
+        "url": "https://videoserver.tmcreativos.com:19360/raditropical/raditropical.m3u8",
+        "categoria": "Música"
+    },
+    {
         "nombre": "SUMtv Latino (1080p)",
         "url": "https://bozztv.com/uni10rtmp/ssstv2-cdn/smil:ssstv2web.smil/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Ideal 104.7 FM (La Esperanza) (720p) [Not 24/7]",
+        "url": "https://www.idealfm104-7.com/hls/0/stream.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio y Televisión Martí (720p)",
+        "url": "https://ocb-ingest.akamaized.net/hls/live/2037032/tvmc01/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "RadioTV Oriente (720p)",
+        "url": "https://live.obslivestream.com/tvoriente/index.m3u8",
         "categoria": "Música"
     },
     {
@@ -1755,63 +1800,8 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Radio Ideal 104.7 FM (La Esperanza) (720p) [Not 24/7]",
-        "url": "https://www.idealfm104-7.com/hls/0/stream.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "TeleRadioNorte (720p)",
-        "url": "https://angelistic.live:3785/live/tvoficiallive.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio Tropical Tarapoto (480p) [Not 24/7]",
-        "url": "https://videoserver.tmcreativos.com:19360/raditropical/raditropical.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio Ancón (720p)",
-        "url": "https://www.streaming507.net:19360/anconvideo/anconvideo.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio Hogar (720p)",
-        "url": "https://www.streaming507.net:19360/videoradiohogar/videoradiohogar.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "RadioTV Oriente (720p)",
-        "url": "https://live.obslivestream.com/tvoriente/index.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio y Televisión Martí (720p)",
-        "url": "https://ocb-ingest.akamaized.net/hls/live/2037032/tvmc01/playlist.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "RadioMensaje TV (720p)",
-        "url": "https://eu1.servers10.com:8081/8230/index.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Totalmusic Dance (720p)",
-        "url": "https://cdn.global.elektamedia.com/live/c7eds/Totalmusic_Dance/SA_LIVE_hls_enc/master.m3u8",
-        "categoria": "Música"
-    },
-    {
         "nombre": "Totalmusic Concerts (720p)",
         "url": "https://cdn.global.elektamedia.com/live/c7eds/Totalmusic_Concerts/SA_LIVE_hls_enc/master.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Totalmusic 2000s (720p)",
-        "url": "https://cdn.global.elektamedia.com/live/c7eds/Totalmusic_00s/SA_LIVE_hls_enc/master.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Turbo Mix Radio TV (360p) [Not 24/7]",
-        "url": "https://7.innovatestream.pe:19360/turbomixoficial/turbomixoficial.m3u8",
         "categoria": "Música"
     },
     {
@@ -1820,8 +1810,18 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Tropical Music TV (720p)",
-        "url": "https://59a564764e2b6.streamlock.net/vallenato/tropical/playlist.m3u8",
+        "nombre": "Totalmusic (1080p)",
+        "url": "https://cdn.global.elektamedia.com/live/c7eds/Totalmusic/SA_LIVE_hls_enc/master.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Totalmusic Dance (720p)",
+        "url": "https://cdn.global.elektamedia.com/live/c7eds/Totalmusic_Dance/SA_LIVE_hls_enc/master.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Totalmusic 2000s (720p)",
+        "url": "https://cdn.global.elektamedia.com/live/c7eds/Totalmusic_00s/SA_LIVE_hls_enc/master.m3u8",
         "categoria": "Música"
     },
     {
@@ -1830,18 +1830,23 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Totalmusic (1080p)",
-        "url": "https://cdn.global.elektamedia.com/live/c7eds/Totalmusic/SA_LIVE_hls_enc/master.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "WWXY-DT3 (Maranatha Radio Ministries) (720p) [Not 24/7]",
-        "url": "https://vip.livecastnet.com:3930/live/maranatharadiolive.m3u8",
-        "categoria": "Música"
-    },
-    {
         "nombre": "Radio TV El Arca del Pacto (1080p)",
         "url": "https://video.wilohosting.com:19360/radiotvelarcadelpacto/radiotvelarcadelpacto.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "RadioMensaje TV (720p)",
+        "url": "https://eu1.servers10.com:8081/8230/index.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Radio Isla TV (720p)",
+        "url": "https://59a564764e2b6.streamlock.net/palestra/palestra/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Turbo Mix Radio TV (360p) [Not 24/7]",
+        "url": "https://7.innovatestream.pe:19360/turbomixoficial/turbomixoficial.m3u8",
         "categoria": "Música"
     },
     {
@@ -1850,13 +1855,18 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Urbano TV (720p)",
-        "url": "https://59ef525c24caa.streamlock.net/tvurbano/tvurbano/playlist.m3u8",
+        "nombre": "UniRadio TV (1080p)",
+        "url": "https://video.hostingcaaguazu.com:19360/uniradiotv/uniradiotv.m3u8",
         "categoria": "Música"
     },
     {
-        "nombre": "Vintage Music (720p)",
-        "url": "https://59ef525c24caa.streamlock.net/vmtv/tvvintage/playlist.m3u8",
+        "nombre": "WWXY-DT3 (Maranatha Radio Ministries) (720p) [Not 24/7]",
+        "url": "https://vip.livecastnet.com:3930/live/maranatharadiolive.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Tropical Music TV (720p)",
+        "url": "https://59a564764e2b6.streamlock.net/vallenato/tropical/playlist.m3u8",
         "categoria": "Música"
     },
     {
@@ -1870,8 +1880,18 @@
         "categoria": "Música"
     },
     {
+        "nombre": "Vintage Music (720p)",
+        "url": "https://59ef525c24caa.streamlock.net/vmtv/tvvintage/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
         "nombre": "RADIOTV:Radio Futuro Tv",
         "url": "https://unlimited6-cl.dps.live/futurotv/futurotv.smil/playlist.m3u8?iptvgratis?chile.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Urbano TV (720p)",
+        "url": "https://59ef525c24caa.streamlock.net/tvurbano/tvurbano/playlist.m3u8",
         "categoria": "Música"
     },
     {
@@ -1880,18 +1900,13 @@
         "categoria": "Música"
     },
     {
-        "nombre": "RTL Radio Freccia Italia IT",
-        "url": "https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S3160845/0tuSetc8UFkF/playlist_video.m3u8",
-        "categoria": "Música"
-    },
-    {
-        "nombre": "Radio Imagen 105.1 FM (720p) [Not 24/7]",
-        "url": "https://streaming.imagenfm105-1.com/hls/stream.m3u8",
-        "categoria": "Música"
-    },
-    {
         "nombre": "MUSICA:Futuro 88.9 (Chile)",
         "url": "https://unlimited6-cl.dps.live/futurotv/futurotv.smil/playlist.m3u8",
+        "categoria": "Música"
+    },
+    {
+        "nombre": "Stingray Urban Beat (1080p) ✅",
+        "url": "https://lotus.stingray.com/manifest/ose-133ads-montreal/samsungtvplus/master.m3u8",
         "categoria": "Música"
     },
     {
@@ -1900,8 +1915,8 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Stingray Urban Beat (1080p) ✅",
-        "url": "https://lotus.stingray.com/manifest/ose-133ads-montreal/samsungtvplus/master.m3u8",
+        "nombre": "UMTV ✅",
+        "url": "https://60417ddeaf0d9.streamlock.net:443/montemorelos/videomontemorelos/playlist.m3u8?PlaylistM3UCL",
         "categoria": "Música"
     },
     {
@@ -1920,68 +1935,13 @@
         "categoria": "Música"
     },
     {
-        "nombre": "Cine terror",
-        "url": "https://jmp2.uk/plu-5d8d180092e97a5e107638d3.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Cinevision Canal 19 (1080p) [Not 24/7]",
-        "url": "https://5790d294af2dc.streamlock.net/tvhdlive/tvhdlive/playlist.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Memorias TV Series (720p) [Geo-blocked]",
-        "url": "https://video.xtrematv.com:3633/live/memoriasserieslive.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Cine comedia",
-        "url": "https://jmp2.uk/plu-5f513564e4622a0007c578c0.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Cine adrenalina",
-        "url": "https://jmp2.uk/plu-5d8d164d92e97a5e107638d2.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Comedy Central en español",
-        "url": "https://jmp2.uk/plu-5cf96dad1652631e36d43320.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Cine Clásico",
-        "url": "https://jmp2.uk/plu-64b9671cdac71b0008f371df.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Cine Premiere",
-        "url": "https://jmp2.uk/plu-5cf968040ab7d8f181e6a68b.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Somos Cine (RTVE)",
-        "url": "https://ztnr.rtve.es/ztnr/6909845.m3u8",
-        "categoria": "Cine"
-    },
-    {
         "nombre": "AMC en Español (720p) [Geo-blocked]",
         "url": "https://pb-fmbyorn1d0n1n.akamaized.net/v1/amc_amcespanol_3/samsungheadend_us/latest/main/hls/playlist.m3u8",
         "categoria": "Cine"
     },
     {
-        "nombre": "Mega Cine TV (1080p)",
-        "url": "https://cnn.hostlagarto.com/megacinetv/playlist.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Golden TV (240p) [Not 24/7]",
-        "url": "https://rpn.bozztv.com/gusa/gusa-goldentv/index.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "MyTime movie network Spain (1080p)",
-        "url": "https://appletree-mytimespain-rakuten.amagi.tv/playlist.m3u8",
+        "nombre": "Cine Sony (720p)",
+        "url": "https://a-cdn.klowdtv.com/live1/cine_720p/playlist.m3u8",
         "categoria": "Cine"
     },
     {
@@ -1990,8 +1950,63 @@
         "categoria": "Cine"
     },
     {
-        "nombre": "13 Teleseries (720p)",
-        "url": "https://origin.dpsgo.com/ssai/event/f4TrySe8SoiGF8Lu3EIq1g/master.m3u8",
+        "nombre": "Memorias TV Series (720p) [Geo-blocked]",
+        "url": "https://video.xtrematv.com:3633/live/memoriasserieslive.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Cine terror",
+        "url": "https://jmp2.uk/plu-5d8d180092e97a5e107638d3.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Comedy Central en español",
+        "url": "https://jmp2.uk/plu-5cf96dad1652631e36d43320.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Golden TV (240p) [Not 24/7]",
+        "url": "https://rpn.bozztv.com/gusa/gusa-goldentv/index.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Cine comedia",
+        "url": "https://jmp2.uk/plu-5f513564e4622a0007c578c0.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Cine Premiere",
+        "url": "https://jmp2.uk/plu-5cf968040ab7d8f181e6a68b.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Cinevision Canal 19 (1080p) [Not 24/7]",
+        "url": "https://5790d294af2dc.streamlock.net/tvhdlive/tvhdlive/playlist.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Mega Cine TV (1080p)",
+        "url": "https://cnn.hostlagarto.com/megacinetv/playlist.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "MyTime movie network Spain (1080p)",
+        "url": "https://appletree-mytimespain-rakuten.amagi.tv/playlist.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Somos Cine (RTVE)",
+        "url": "https://ztnr.rtve.es/ztnr/6909845.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Cine adrenalina",
+        "url": "https://jmp2.uk/plu-5d8d164d92e97a5e107638d2.m3u8",
+        "categoria": "Cine"
+    },
+    {
+        "nombre": "Cine Clásico",
+        "url": "https://jmp2.uk/plu-64b9671cdac71b0008f371df.m3u8",
         "categoria": "Cine"
     },
     {
@@ -2000,8 +2015,8 @@
         "categoria": "Cine"
     },
     {
-        "nombre": "Cine Sony (720p)",
-        "url": "https://a-cdn.klowdtv.com/live1/cine_720p/playlist.m3u8",
+        "nombre": "13 Teleseries (720p)",
+        "url": "https://origin.dpsgo.com/ssai/event/f4TrySe8SoiGF8Lu3EIq1g/master.m3u8",
         "categoria": "Cine"
     },
     {
@@ -2025,6 +2040,11 @@
         "categoria": "Cine"
     },
     {
+        "nombre": "Pixl TV Movie Channel ✅",
+        "url": "https://frndlymsl.akamaized.net/hls/live/2006426/pixlmsl/pixlmsl/playlist.m3u8?hdnts=st=1606053234~exp=3216054041~acl=*~hmac=208d261d9f98d76a5ac30aa2ce51751f88ee50cfc24812b7cbea8b0397489a07",
+        "categoria": "Cine"
+    },
+    {
         "nombre": "Space & Science Now ✅",
         "url": "https://amg00376-magellan-amg00376c14-rakuten-uk-1694.playouts.now.amagi.tv/playlist/amg00376-magellantv-spacesciencenowcauk-rakutenuk/playlist.m3u8",
         "categoria": "Cine"
@@ -2032,11 +2052,6 @@
     {
         "nombre": "Spacetoon Arabic (1080p) ✅",
         "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-spacetoon/d8382fb9ab4b2307058f12c7ea90db54/index.m3u8",
-        "categoria": "Cine"
-    },
-    {
-        "nombre": "Pixl TV Movie Channel ✅",
-        "url": "https://frndlymsl.akamaized.net/hls/live/2006426/pixlmsl/pixlmsl/playlist.m3u8?hdnts=st=1606053234~exp=3216054041~acl=*~hmac=208d261d9f98d76a5ac30aa2ce51751f88ee50cfc24812b7cbea8b0397489a07",
         "categoria": "Cine"
     },
     {
