@@ -323,14 +323,25 @@ export default function StreamPage({ initialPeliculas }) {
               </div>
             </div>
 
-            {/* Sinopsis y detalles debajo del reproductor */}
-            <div className="player-details-card">
-              <h3>Sinopsis</h3>
-              <p>{activeItem.descripcion}</p>
-              <div className="tags-row">
-                <span className="category-tag">{activeItem.categoria}</span>
-                <span className="type-tag">{activeItem.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
-                {activeItem.tmdbId && <span className="id-tag">TMDB ID: {activeItem.tmdbId}</span>}
+            {/* Sinopsis y detalles debajo del reproductor en Grid */}
+            <div className="player-details-grid">
+              <div className="player-details-card">
+                <h3>Sinopsis</h3>
+                <p>{activeItem.descripcion}</p>
+                <div className="tags-row">
+                  <span className="category-tag">{activeItem.categoria}</span>
+                  <span className="type-tag">{activeItem.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
+                  {activeItem.tmdbId && <span className="id-tag">TMDB ID: {activeItem.tmdbId}</span>}
+                </div>
+              </div>
+
+              <div className="playback-tips-card">
+                <h3>Tips de Reproducción y Optimización</h3>
+                <ul>
+                  <li><strong>Idioma / Subtítulos:</strong> Si el audio inicia en inglés, haz clic en el icono de Engranaje (Configuración) o en <strong>"CC" (Subtítulos)</strong> dentro del reproductor para cambiar al español.</li>
+                  <li><strong>Evitar Cortes (Buffering):</strong> Para ver sin interrupciones, recomendamos alternar entre el <strong>Servidor 2 (VidSrc.cc)</strong> y el <strong>Servidor 4 (Embed.su)</strong>. Ambos poseen múltiples pistas de audio y alta velocidad.</li>
+                  <li><strong>Publicidad Externa:</strong> Los servidores externos pueden intentar abrir publicidad. Nuestra protección integrada de iframe (sandbox) los bloquea automáticamente para que no afecten tu navegación.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1122,11 +1133,56 @@ export default function StreamPage({ initialPeliculas }) {
           box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
+        .player-details-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+          .player-details-grid {
+            grid-template-columns: 1.6fr 1fr;
+          }
+        }
+
         .player-details-card {
           background-color: #0e0f17;
           border: 1px solid rgba(255, 255, 255, 0.04);
           border-radius: 12px;
           padding: 20px 24px;
+        }
+
+        .playback-tips-card {
+          background-color: #0e0f17;
+          border: 1px solid rgba(0, 245, 212, 0.12);
+          border-radius: 12px;
+          padding: 20px 24px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .playback-tips-card h3 {
+          margin: 0 0 10px 0;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          color: #00f5d4;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .playback-tips-card ul {
+          margin: 0;
+          padding-left: 18px;
+          font-size: 12px;
+          color: #9ca3af;
+          line-height: 1.6;
+        }
+
+        .playback-tips-card li {
+          margin-bottom: 8px;
+        }
+
+        .playback-tips-card li strong {
+          color: #ffffff;
         }
 
         .player-details-card h3 {
@@ -1201,9 +1257,14 @@ function ChatBox({ channelId, channelTitle }) {
   const [isConnected, setIsConnected] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  // Estados de auto-scroll inteligente
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [showScrollBottomBadge, setShowScrollBottomBadge] = useState(false);
+
   const clientRef = useRef(null);
   const messagesEndRef = useRef(null);
   const emojiPickerRef = useRef(null);
+  const chatMessagesBoxRef = useRef(null); // Ref al contenedor de mensajes
 
   // Emojis estáticos ligeros para la Watch Party
   const emojis = ['😀', '😂', '😍', '😮', '😢', '👍', '👎', '🔥', '👏', '🎉', '❤️', '✨', '🎬', '🍿', '😮‍💨', '🙌'];
@@ -1213,8 +1274,41 @@ function ChatBox({ channelId, channelTitle }) {
     setNickname(defaultNick);
   }, []);
 
+  // Manejar el scroll del usuario para activar/desactivar auto-scroll
+  const handleScroll = () => {
+    const container = chatMessagesBoxRef.current;
+    if (!container) return;
+    
+    // Si la diferencia es menor o igual a 45px, el usuario está al final
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= 45;
+    setShouldAutoScroll(isAtBottom);
+    
+    if (isAtBottom) {
+      setShowScrollBottomBadge(false);
+    }
+  };
+
+  // Forzar scroll al final
+  const handleScrollToBottom = () => {
+    const container = chatMessagesBoxRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+    setShouldAutoScroll(true);
+    setShowScrollBottomBadge(false);
+  };
+
+  // Scroll inteligente cuando llegan nuevos mensajes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = chatMessagesBoxRef.current;
+    if (!container) return;
+
+    if (shouldAutoScroll) {
+      container.scrollTop = container.scrollHeight;
+      setShowScrollBottomBadge(false);
+    } else {
+      setShowScrollBottomBadge(true);
+    }
   }, [messages]);
 
   // Cerrar el selector de emojis si se hace clic fuera del popover
@@ -1355,7 +1449,11 @@ function ChatBox({ channelId, channelTitle }) {
       ) : (
         <>
           {/* Caja de mensajes */}
-          <div className="chat-messages-box">
+          <div 
+            className="chat-messages-box" 
+            ref={chatMessagesBoxRef} 
+            onScroll={handleScroll}
+          >
             {messages.length === 0 ? (
               <div className="chat-empty">
                 Sala vacía. Escribe un mensaje para iniciar la conversación.
@@ -1376,6 +1474,17 @@ function ChatBox({ channelId, channelTitle }) {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Botón flotante indicando nuevos mensajes si el usuario subió el scroll */}
+          {showScrollBottomBadge && (
+            <button 
+              type="button" 
+              onClick={handleScrollToBottom} 
+              className="scroll-bottom-badge"
+            >
+              Nuevos comentarios ↓
+            </button>
+          )}
 
           {/* Formulario de envío con Emoji Picker nativo */}
           <form onSubmit={handleSendMessage} className="chat-form">
@@ -1434,6 +1543,32 @@ function ChatBox({ channelId, channelTitle }) {
           flex-direction: column;
           height: 100%;
           background-color: #07080c;
+          position: relative;
+        }
+
+        .scroll-bottom-badge {
+          position: absolute;
+          bottom: 65px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: #00f5d4;
+          color: #07070c;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 6px 14px;
+          border-radius: 20px;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.4);
+          transition: all 0.2s ease;
+          z-index: 100;
+          border: none;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .scroll-bottom-badge:hover {
+          transform: translateX(-50%) translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 245, 212, 0.6);
         }
 
         .chat-header {
