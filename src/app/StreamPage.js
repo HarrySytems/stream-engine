@@ -45,11 +45,11 @@ export default function StreamPage({ initialPeliculas }) {
   // Servidores de reproducción disponibles
   const servers = [
     {
-      name: 'Servidor 1 (VidSrc.pm)',
+      name: 'Servidor 1 (VidLink - Multi-idioma / Recomendado)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.pm/embed/movie/${tmdbId}`
-          : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
+          ? `https://vidlink.pro/movie/${tmdbId}?primaryColor=00f5d4`
+          : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=00f5d4`
     },
     {
       name: 'Servidor 2 (VidSrc.cc)',
@@ -59,11 +59,11 @@ export default function StreamPage({ initialPeliculas }) {
           : `https://vidsrc.cc/v2/embed/tv/${imdbId || tmdbId}/${s}/${e}`
     },
     {
-      name: 'Servidor 3 (VidSrcme.ru)',
+      name: 'Servidor 3 (VidSrc.pm)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrcme.ru/embed/movie?id=${imdbId || tmdbId}`
-          : `https://vidsrcme.ru/embed/tv?id=${imdbId || tmdbId}&s=${s}&e=${e}`
+          ? `https://vidsrc.pm/embed/movie/${tmdbId}`
+          : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 4 (Embed.su)',
@@ -89,7 +89,7 @@ export default function StreamPage({ initialPeliculas }) {
   }, [activeItem]);
 
   // Categorías del catálogo
-  const categorias = ['Todos', 'Acción', 'Ciencia Ficción', 'Terror', 'Comedia', 'Infantil', 'Series'];
+  const categorias = ['Todos', 'Acción', 'Ciencia Ficción', 'Drama', 'Terror', 'Comedia', 'Infantil', 'Series'];
 
   // Filtrar catálogo por búsqueda y categoría
   const filteredItems = peliculas.filter(item => {
@@ -338,9 +338,9 @@ export default function StreamPage({ initialPeliculas }) {
               <div className="playback-tips-card">
                 <h3>Tips de Reproducción y Optimización</h3>
                 <ul>
-                  <li><strong>Idioma / Subtítulos:</strong> Si el audio inicia en inglés, haz clic en el icono de Engranaje (Configuración) o en <strong>"CC" (Subtítulos)</strong> dentro del reproductor para cambiar al español.</li>
-                  <li><strong>Evitar Cortes (Buffering):</strong> Para ver sin interrupciones, recomendamos alternar entre el <strong>Servidor 2 (VidSrc.cc)</strong> y el <strong>Servidor 4 (Embed.su)</strong>. Ambos poseen múltiples pistas de audio y alta velocidad.</li>
-                  <li><strong>Publicidad Externa:</strong> Los servidores externos pueden intentar abrir publicidad. Nuestra protección integrada de iframe (sandbox) los bloquea automáticamente para que no afecten tu navegación.</li>
+                  <li><strong>Idioma / Subtítulos:</strong> El <strong>Servidor 1 (VidLink)</strong> tiene excelente soporte de multi-idioma. Si la reproducción inicia en inglés, haz clic en el icono de Engranaje (Configuración) o en <strong>"CC" (Subtítulos/Audio)</strong> dentro del reproductor para elegir español (Latino o Castellano).</li>
+                  <li><strong>Evitar Cortes (Buffering):</strong> Para evitar cortes o interrupciones, recomendamos alternar entre el <strong>Servidor 1 (VidLink)</strong>, el <strong>Servidor 2 (VidSrc.cc)</strong> y el <strong>Servidor 4 (Embed.su)</strong>. Todos poseen alta velocidad y múltiples fuentes.</li>
+                  <li><strong>Publicidad Externa:</strong> Los servidores de transmisión externos pueden intentar abrir ventanas de publicidad. El reproductor cuenta con protección integrada (sandbox) que bloquea estas ventanas automáticamente para que tu navegación sea limpia.</li>
                 </ul>
               </div>
             </div>
