@@ -63,6 +63,8 @@ export default function StreamPage({ initialPeliculas }) {
   const [activeItem, setActiveItem] = useState(null); // Película o Serie seleccionada
   const [activeServer, setActiveServer] = useState(0); // Servidor seleccionado (0 a 3)
   const [searchQuery, setSearchQuery] = useState('');
+  const [cuevanaServers, setCuevanaServers] = useState([]);
+  const [loadingCuevana, setLoadingCuevana] = useState(false);
   
   // Pestaña activa ('inicio', 'peliculas', 'series')
   const [activeTab, setActiveTab] = useState('inicio');
@@ -148,7 +150,128 @@ export default function StreamPage({ initialPeliculas }) {
     setActiveServer(0);
     setSeason(1);
     setEpisode(1);
+    setCuevanaServers([]);
   }, [activeItem]);
+
+  // Obtener servidores Latino desde Cuevana.gs a través de nuestro proxy de Next.js
+  useEffect(() => {
+    if (!activeItem) {
+      setCuevanaServers([]);
+      return;
+    }
+
+    setLoadingCuevana(true);
+    setCuevanaServers([]);
+
+    // Helper para extraer el nombre legible del servidor de Cuevana
+    const getServerName = (url) => {
+      try {
+        const urlObj = new URL(url);
+        const server = urlObj.searchParams.get('server');
+        if (server) {
+          return server.charAt(0).toUpperCase() + server.slice(1);
+        }
+      } catch (e) {}
+      return "Online";
+    };
+
+    const cleanTitle = (title) => {
+      return title
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim();
+    };
+
+    const tituloOriginal = activeItem.titulo;
+    const postType = activeItem.tipo === 'serie' ? 'tvshows' : 'movies';
+
+    // 1. Buscar la película o serie en Cuevana
+    fetch(`/api/cuevana?action=search&q=${encodeURIComponent(tituloOriginal)}&postType=${postType}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Search API failed");
+        return res.json();
+      })
+      .then(async (searchData) => {
+        if (searchData.error || !searchData.data || !searchData.data.posts || searchData.data.posts.length === 0) {
+          throw new Error("No posts found in Cuevana");
+        }
+
+        // Buscar coincidencia exacta o cercana en la lista de posts devuelta
+        const posts = searchData.data.posts;
+        const cleanedQuery = cleanTitle(tituloOriginal);
+        
+        let matchedPost = posts.find(p => cleanTitle(p.title).includes(cleanedQuery) || cleanedQuery.includes(cleanTitle(p.title)));
+        if (!matchedPost) {
+          matchedPost = posts[0]; // Fallback al primer resultado
+        }
+
+        const postId = matchedPost._id;
+
+        // 2. Si es una película, obtenemos directamente los reproductores
+        if (activeItem.tipo === 'pelicula') {
+          return fetch(`/api/cuevana?action=player&postId=${postId}`)
+            .then(res => res.json())
+            .then(playerData => {
+              if (playerData.error || !playerData.data || !playerData.data.embeds) {
+                throw new Error("No players returned for movie");
+              }
+              return playerData.data.embeds;
+            });
+        } 
+        
+        // 3. Si es una serie, primero obtenemos el listado de capítulos para encontrar el ID del episodio específico
+        else {
+          return fetch(`/api/cuevana?action=episodes&postId=${postId}`)
+            .then(res => res.json())
+            .then(episodesData => {
+              if (episodesData.error || !episodesData.data || !Array.isArray(episodesData.data)) {
+                throw new Error("No episodes list found for series");
+              }
+
+              // Buscar el episodio correspondiente a la temporada y capítulo actual
+              const matchedEpisode = episodesData.data.find(
+                ep => ep.season_number === season && ep.episode_number === episode
+              );
+
+              if (!matchedEpisode) {
+                throw new Error(`Episode S${season}E${episode} not found in episodes list`);
+              }
+
+              // Llamar al player API usando el ID de la entrada del episodio
+              return fetch(`/api/cuevana?action=player&postId=${matchedEpisode._id}&season=${season}&episode=${episode}`)
+                .then(res => res.json())
+                .then(playerData => {
+                  if (playerData.error || !playerData.data || !playerData.data.embeds) {
+                    throw new Error("No players returned for episode");
+                  }
+                  return playerData.data.embeds;
+                });
+            });
+        }
+      })
+      .then(embeds => {
+        // Mapear los embeds en servidores formateados
+        const formatted = embeds
+          .filter(emb => emb.url)
+          .map(emb => ({
+            name: `Latino - ${getServerName(emb.url)}`,
+            url: emb.url
+          }));
+        
+        if (formatted.length > 0) {
+          setCuevanaServers(formatted);
+          setActiveServer(0); // Seleccionar el primer servidor Latino por defecto
+        }
+      })
+      .catch(err => {
+        console.warn("Fallo al obtener servidores de Cuevana Latino:", err.message);
+      })
+      .finally(() => {
+        setLoadingCuevana(false);
+      });
+  }, [activeItem, season, episode]);
 
   // Obtener información real de temporadas y capítulos de TMDB
   useEffect(() => {
@@ -269,6 +392,16 @@ export default function StreamPage({ initialPeliculas }) {
 
     setActiveItem(customItem);
   };
+
+  // Unificar servidores de Cuevana (Latino) y servidores originales
+  const originalServersList = servers.map((s) => ({
+    name: s.name,
+    url: s.url(activeItem ? activeItem.tmdbId : '', activeItem ? activeItem.imdbId : '', activeItem ? activeItem.tipo : '', season, episode)
+  }));
+
+  const allServers = activeItem 
+    ? [...cuevanaServers, ...originalServersList]
+    : [];
 
   return (
     <div className="app-container">
@@ -458,7 +591,7 @@ export default function StreamPage({ initialPeliculas }) {
             <div className="servers-tab-bar">
               <span className="servers-label">Servidores:</span>
               <div className="servers-list">
-                {servers.map((server, idx) => (
+                {allServers.map((server, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveServer(idx)}
@@ -467,6 +600,7 @@ export default function StreamPage({ initialPeliculas }) {
                     {server.name}
                   </button>
                 ))}
+                {loadingCuevana && <span className="loading-text" style={{ marginLeft: '10px' }}>Buscando fuentes en español Latino...</span>}
               </div>
             </div>
 
@@ -476,13 +610,7 @@ export default function StreamPage({ initialPeliculas }) {
               <div className="player-wrapper">
                 <div className="iframe-aspect-ratio">
                   <iframe
-                    src={servers[activeServer].url(
-                      activeItem.tmdbId, 
-                      activeItem.imdbId, 
-                      activeItem.tipo, 
-                      season, 
-                      episode
-                    )}
+                    src={allServers[activeServer]?.url || ''}
                     allowFullScreen
                     allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                     className="player-iframe"
@@ -499,8 +627,8 @@ export default function StreamPage({ initialPeliculas }) {
               </div>
             </div>
 
-            {/* Sinopsis y detalles debajo del reproductor en Grid */}
-            <div className="player-details-grid">
+            {/* Sinopsis y detalles debajo del reproductor en ancho completo */}
+            <div className="player-details-full">
               <div className="player-details-card">
                 <h3>Sinopsis</h3>
                 <p>{activeItem.descripcion}</p>
@@ -508,43 +636,6 @@ export default function StreamPage({ initialPeliculas }) {
                   <span className="category-tag">{activeItem.categoria}</span>
                   <span className="type-tag">{activeItem.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
                   {activeItem.tmdbId && <span className="id-tag">TMDB ID: {activeItem.tmdbId}</span>}
-                </div>
-              </div>
-
-              <div className="playback-tips-card">
-                <h3>Tips de Reproducción y Optimización</h3>
-                <ul>
-                  <li><strong>Idioma / Subtítulos:</strong> El <strong>Servidor 1 (VidLink)</strong> tiene excelente soporte de multi-idioma. Si la reproducción inicia en inglés, haz clic en el icono de Engranaje (Configuración) o en <strong>"CC" (Subtítulos/Audio)</strong> dentro del reproductor para elegir español (Latino o Castellano).</li>
-                  <li><strong>Evitar Cortes (Buffering):</strong> Para evitar cortes o interrupciones, recomendamos alternar entre el <strong>Servidor 1 (VidLink)</strong>, el <strong>Servidor 2 (VidSrc.cc)</strong> y el <strong>Servidor 4 (Embed.su)</strong>. Todos poseen alta velocidad y múltiples fuentes.</li>
-                  <li><strong>Publicidad Externa:</strong> Los servidores de transmisión externos pueden intentar abrir ventanas de publicidad. Te recomendamos usar bloqueadores de publicidad en tu navegador para una experiencia limpia.</li>
-                </ul>
-              </div>
-
-              <div className="torrent-download-card">
-                <h3>Descarga Torrent y Servidor Local</h3>
-                <p>
-                  Si prefieres descargar este contenido en alta definición para abrirlo en <strong>qBittorrent</strong>, puedes buscarlo en servidores públicos:
-                </p>
-                <div className="torrent-buttons-row">
-                  <a 
-                    href={`https://yts.mx/browse-movies/${encodeURIComponent(activeItem.titulo)}/all/all/0/latest/0/all`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="torrent-action-btn"
-                  >
-                    Buscar en YTS
-                  </a>
-                  <a 
-                    href={`https://www.google.com/search?q=${encodeURIComponent(activeItem.titulo)}+${activeItem.año}+dual+latino+torrent`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="torrent-action-btn"
-                  >
-                    Buscar Torrent (Latino)
-                  </a>
-                </div>
-                <div className="jellyseerr-note">
-                  <strong>Tip de Servidor Propio:</strong> Para montar un Netflix personal, puedes configurar <strong>Jellyseerr</strong> integrado con <strong>qBittorrent</strong>, Sonarr y Radarr. De esta forma, podrás solicitar cualquier película o serie desde un panel web elegante, qBittorrent la descargará automáticamente y podrás verla en tu red local mediante <strong>Jellyfin</strong> o Plex sin cortes.
                 </div>
               </div>
             </div>
@@ -1582,16 +1673,9 @@ export default function StreamPage({ initialPeliculas }) {
           box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
-        .player-details-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 20px;
-        }
-
-        @media (min-width: 1024px) {
-          .player-details-grid {
-            grid-template-columns: 1.2fr 1fr 1fr;
-          }
+        .player-details-full {
+          width: 100%;
+          margin-top: 10px;
         }
 
         .player-details-card {
@@ -1599,102 +1683,6 @@ export default function StreamPage({ initialPeliculas }) {
           border: 1px solid rgba(255, 255, 255, 0.04);
           border-radius: 12px;
           padding: 20px 24px;
-        }
-
-        .playback-tips-card {
-          background-color: #0e0f17;
-          border: 1px solid rgba(0, 245, 212, 0.12);
-          border-radius: 12px;
-          padding: 20px 24px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .playback-tips-card h3 {
-          margin: 0 0 10px 0;
-          font-family: 'Outfit', sans-serif;
-          font-size: 15px;
-          color: #00f5d4;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .playback-tips-card ul {
-          margin: 0;
-          padding-left: 18px;
-          font-size: 12px;
-          color: #9ca3af;
-          line-height: 1.6;
-        }
-
-        .playback-tips-card li {
-          margin-bottom: 8px;
-        }
-
-        .playback-tips-card li strong {
-          color: #ffffff;
-        }
-
-        .torrent-download-card {
-          background-color: #0e0f17;
-          border: 1px solid rgba(255, 255, 255, 0.04);
-          border-radius: 12px;
-          padding: 20px 24px;
-        }
-
-        .torrent-download-card h3 {
-          margin: 0 0 10px 0;
-          font-family: 'Outfit', sans-serif;
-          font-size: 15px;
-          color: #ffffff;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .torrent-download-card p {
-          margin: 0 0 14px 0;
-          font-size: 12px;
-          color: #9ca3af;
-          line-height: 1.6;
-        }
-
-        .torrent-buttons-row {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 14px;
-        }
-
-        .torrent-action-btn {
-          display: inline-block;
-          background-color: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #ffffff;
-          font-weight: 700;
-          font-size: 11px;
-          padding: 8px 12px;
-          border-radius: 6px;
-          cursor: pointer;
-          text-decoration: none;
-          text-align: center;
-          flex: 1;
-          transition: all 0.2s ease;
-        }
-
-        .torrent-action-btn:hover {
-          border-color: #00f5d4;
-          color: #00f5d4;
-          background-color: rgba(0, 245, 212, 0.02);
-        }
-
-        .jellyseerr-note {
-          font-size: 11px;
-          color: #6b7280;
-          line-height: 1.5;
-          border-top: 1px solid rgba(255, 255, 255, 0.04);
-          padding-top: 10px;
-        }
-
-        .jellyseerr-note strong {
-          color: #ffffff;
         }
 
         .player-details-card h3 {
