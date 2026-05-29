@@ -79,6 +79,8 @@ export default function StreamPage({ initialPeliculas }) {
   // Estados para Series
   const [season, setSeason] = useState(1);
   const [episode, setEpisode] = useState(1);
+  const [seasonsInfo, setSeasonsInfo] = useState([]);
+  const [loadingSeasons, setLoadingSeasons] = useState(false);
 
   // Estados para el cargador directo de IDs
   const [customId, setCustomId] = useState('');
