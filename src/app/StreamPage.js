@@ -121,10 +121,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
           if (Hls.isSupported()) {
             const hls = new Hls({
-              maxBufferSize: 30 * 1024 * 1024,
-              maxBufferLength: 30,
+              maxBufferSize: 60 * 1024 * 1024,
+              maxBufferLength: 60,
+              maxMaxBufferLength: 120,
+              liveSyncDurationCount: 6,
               enableWorker: true,
-              lowLatencyMode: true
+              lowLatencyMode: false
             });
             hls.loadSource(streamUrl);
             hls.attachMedia(video);
@@ -1183,7 +1185,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                       }
 
                       return (
-                        <div className="movies-grid">
+                        <div className="cards-grid">
                           {filteredTdtCanales.map((item) => (
                             <div 
                               key={item.id} 
@@ -1242,7 +1244,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                           );
                         }
                         return (
-                          <div className="movies-grid">
+                          <div className="cards-grid">
                             {filteredFreeCanales.map((item) => (
                               <div 
                                 key={item.id} 
@@ -1800,7 +1802,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
         .cards-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          grid-template-columns: repeat(auto-fill, 180px);
+          justify-content: start;
           gap: 24px;
           margin-bottom: 50px;
         }

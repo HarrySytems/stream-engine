@@ -5,8 +5,8 @@ import glob
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Límite de canales verificados activos por categoría
-MAX_CANALES_POR_CATEGORIA = 60
+# Límite de canales verificados activos por categoría para otros países
+MAX_CANALES_POR_CATEGORIA = 150
 
 # Listas de fuentes agrupadas por país/tipo
 SOURCES = {
@@ -14,8 +14,8 @@ SOURCES = {
         "https://iptv-org.github.io/iptv/categories/sports.m3u"
     ],
     "España": [
-        "https://www.tdtchannels.com/lists/tv.m3u8",
-        "https://pastebin.com/raw/JLQbVRet"
+        "https://iptv-org.github.io/iptv/countries/es.m3u",
+        "https://www.tdtchannels.com/lists/tv.m3u8"
     ],
     "Argentina": ["https://iptv-org.github.io/iptv/countries/ar.m3u"],
     "Colombia": ["https://iptv-org.github.io/iptv/countries/co.m3u"],
@@ -23,11 +23,39 @@ SOURCES = {
     "México": ["https://iptv-org.github.io/iptv/countries/mx.m3u"],
     "Bolivia": ["https://iptv-org.github.io/iptv/countries/bo.m3u"],
     "Perú": ["https://iptv-org.github.io/iptv/countries/pe.m3u"],
+    "Uruguay": ["https://iptv-org.github.io/iptv/countries/uy.m3u"],
     "USA": ["https://iptv-org.github.io/iptv/countries/us.m3u"],
     "Cine": [
         "https://iptv-org.github.io/iptv/categories/movies.m3u"
+    ],
+    "Latino": [
+        "https://iptv-org.github.io/iptv/languages/spa.m3u"
     ]
 }
+
+COUNTRY_MAP = {
+    "pe": "Perú",
+    "mx": "México",
+    "cl": "Chile",
+    "co": "Colombia",
+    "es": "España",
+    "ar": "Argentina",
+    "uy": "Uruguay",
+    "bo": "Bolivia",
+    "us": "EE.UU."
+}
+
+# CDNs conocidos de streaming que soportan CORS por defecto en el navegador
+CORS_SUPPORTING_CDNS = [
+    '.cloudfront.net', '.rudo.video', '.rtve.es', '.iblups.com', '.smartbit.co', 
+    '.mediaserver.digital', '.vtrplay.com', '.logicahost.com', '.opencaster.com', 
+    '.streamlock.net', '.cdnz.cl', '.akamai', '.fastly', '.cloudflare', '.google', 
+    '.cdn77.org', '.servers10.com', '.bozztv.com', '.lhdserver.es', '.egostreaming.pe', 
+    '.innovatestream.pe', '.ondadigital.pe', '.obslivestream.com', '.panel.host-live.com', 
+    '.tvdatta.com', '.chasquirouter.com', '.cef-technology.com', '.ecuamedia.net', 
+    '.makrodigital.com', '.dps.live', '.streambrothers.com', 'airspace-cdn', 'qaotic.net',
+    'cooks.fyi'
+]
 
 def categorizar_canal(nombre, url, fuente_categoria):
     """Clasifica dinámicamente un canal basándose en su nombre y url"""
@@ -42,7 +70,7 @@ def categorizar_canal(nombre, url, fuente_categoria):
         "hbo", "starx", "star channel", "tnt series", "axn", "fox channel", "warner", 
         "universal", "cinema", "amc", "paramount", "series", "cinecanal", "golden", "multiplex",
         "estreno", "syfy", "space", "tcm", "filmin", "studio universal", "a&e", "pluto tv cine",
-        "runtime"
+        "runtime", "blockbuster"
     ]
     if fuente_categoria == "Cine" or any(kw in nombre_lower for kw in cine_kw):
         return "Cine"
@@ -89,10 +117,17 @@ def check_stream_url(url):
     y descarta los que no son HTTPS o no soportan CORS en el navegador.
     Retorna (alive, final_url)."""
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Origin': 'https://stream-engine-alpha.vercel.app'
     }
     
     def verify(test_url):
+        # Vercel es estrictamente HTTPS. Bloquear Mixed Content HTTP
+        if not test_url.startswith('https://'):
+            return False
+            
+        has_cdn_support = any(cdn in test_url.lower() for cdn in CORS_SUPPORTING_CDNS)
+            
         try:
             res = requests.get(test_url, headers=headers, timeout=2.0, stream=True)
             if res.status_code in [200, 301, 302]:
@@ -102,30 +137,55 @@ def check_stream_url(url):
                         if k.lower() == 'access-control-allow-origin':
                             cors = v
                             break
-                # Muchos streams no retornan CORS pero funcionan tras un proxy o directo en Hls.js
-                # Sin embargo, filtramos para maximizar la compatibilidad.
-                # Para evitar Mixed Content en Vercel HTTPS, forzar HTTPS es obligatorio
-                return True
+                            
+                if cors == '*' or cors or has_cdn_support:
+                    return True
         except Exception:
             pass
         return False
 
-    # Intentar primero forzar HTTPS si es HTTP original
+    # Intentar primero HTTPS si es HTTP original
     if url.startswith('http://'):
         https_url = url.replace('http://', 'https://', 1)
         if verify(https_url):
             return True, https_url
+        return False, url
 
-    # Verificar la URL original
     if url.startswith('https://'):
         if verify(url):
             return True, url
-            
-    # Fallback para HTTP (pueden no reproducirse por mixed content, pero algunos sí por el reproductor)
-    if url.startswith('http://'):
-        if verify(url):
-            return True, url
 
+    return False, url
+
+def check_stream_url_lenient(url):
+    """Verifica de forma laxa si el enlace responde (acepta HTTP o HTTPS). Retorna (alive, final_url)."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    # Intentar verificar el URL tal cual (HTTP o HTTPS)
+    try:
+        res = requests.get(url, headers=headers, timeout=2.0, stream=True)
+        if res.status_code in [200, 301, 302, 403]:
+            return True, url
+    except Exception:
+        try:
+            res = requests.head(url, headers=headers, timeout=2.0)
+            if res.status_code in [200, 301, 302, 403]:
+                return True, url
+        except Exception:
+            pass
+            
+    # Si es HTTP y falló, intentar con HTTPS por si acaso
+    if url.startswith('http://'):
+        https_url = url.replace('http://', 'https://', 1)
+        try:
+            res = requests.get(https_url, headers=headers, timeout=2.0, stream=True)
+            if res.status_code in [200, 301, 302, 403]:
+                return True, https_url
+        except Exception:
+            pass
+            
     return False, url
 
 def procesar_m3u_text(text, fuente_categoria):
@@ -134,6 +194,8 @@ def procesar_m3u_text(text, fuente_categoria):
     lines = text.splitlines()
     nombre = None
     logo = ""
+    country_code = ""
+    group_title = ""
     
     for line in lines:
         line = line.strip()
@@ -144,6 +206,24 @@ def procesar_m3u_text(text, fuente_categoria):
             logo_match = re.search(r'tvg-logo="([^"]+)"', line)
             logo = logo_match.group(1) if logo_match else ""
             
+            # Parse group-title
+            group_match = re.search(r'group-title="([^"]+)"', line)
+            group_title = group_match.group(1).lower() if group_match else ""
+            
+            # Parse country code
+            country_code = ""
+            country_match = re.search(r'tvg-country="([^"]+)"', line)
+            if country_match:
+                country_code = country_match.group(1).lower()
+            else:
+                # Fallback to tvg-id suffix
+                id_match = re.search(r'tvg-id="([^"]+)"', line)
+                if id_match:
+                    tvg_id = id_match.group(1)
+                    suffix_match = re.search(r'\.([a-zA-Z]{2})@', tvg_id)
+                    if suffix_match:
+                        country_code = suffix_match.group(1).lower()
+            
             parts = line.split(",")
             if parts:
                 nombre = parts[-1].strip()
@@ -153,20 +233,70 @@ def procesar_m3u_text(text, fuente_categoria):
                 
                 # Determine country
                 pais = "Internacional"
-                if fuente_categoria in ["España", "Argentina", "Colombia", "Chile", "México", "Bolivia", "Perú", "USA"]:
+                if fuente_categoria in COUNTRY_MAP.values():
                     pais = fuente_categoria
-                elif "latino" in nombre.lower() or "spa" in line.lower():
+                elif country_code in COUNTRY_MAP:
+                    pais = COUNTRY_MAP[country_code]
+                
+                # Check group-title
+                if pais == "Internacional" and group_title:
+                    for p_clave in ["perú", "colombia", "españa", "argentina", "chile", "méxico", "uruguay", "bolivia", "ee.uu."]:
+                        if p_clave in group_title:
+                            if p_clave == "perú": pais = "Perú"
+                            elif p_clave == "colombia": pais = "Colombia"
+                            elif p_clave == "españa": pais = "España"
+                            elif p_clave == "argentina": pais = "Argentina"
+                            elif p_clave == "chile": pais = "Chile"
+                            elif p_clave == "méxico": pais = "México"
+                            elif p_clave == "uruguay": pais = "Uruguay"
+                            elif p_clave == "bolivia": pais = "Bolivia"
+                            elif p_clave == "ee.uu.": pais = "EE.UU."
+                            break
+                            
+                # Fallback based on name or URL keywords
+                if pais == "Internacional":
+                    name_lower = nombre.lower()
+                    url_lower = line.lower()
+                    
+                    if "peru" in name_lower or "perú" in name_lower or "willax" in name_lower or "latina" in name_lower or "panamericana" in name_lower or "atv" in name_lower or "america tv" in name_lower or "américa tv" in name_lower:
+                        if not any(other in name_lower for other in ["argentina", "andorra", "spain", "españa", "chile", "ecuador", "colombia", "mexico", "méxico"]):
+                            pais = "Perú"
+                    elif "argentina" in name_lower or "telefe" in name_lower or "eltrece" in name_lower:
+                        if not any(other in name_lower for other in ["peru", "perú", "chile", "colombia", "mexico", "méxico"]):
+                            pais = "Argentina"
+                    elif "colombia" in name_lower or "caracol" in name_lower or "rcn" in name_lower:
+                        if not any(other in name_lower for other in ["peru", "perú", "chile", "argentina", "mexico", "méxico"]):
+                            pais = "Colombia"
+                    elif "chile" in name_lower or "chilevision" in name_lower or "mega hd" in name_lower or "mega tv" in name_lower:
+                        if not any(other in name_lower for other in ["peru", "perú", "colombia", "argentina", "mexico", "méxico"]):
+                            pais = "Chile"
+                    elif "mexico" in name_lower or "méxico" in name_lower or "tv azteca" in name_lower or "las estrellas" in name_lower or "canal 5" in name_lower or "amx noticias" in name_lower:
+                        if not any(other in name_lower for other in ["peru", "perú", "chile", "colombia", "argentina"]):
+                            pais = "México"
+                    elif "uruguay" in name_lower:
+                        pais = "Uruguay"
+                    elif "españa" in name_lower or "spain" in name_lower or "rtve" in name_lower or "telecinco" in name_lower or "antena 3" in name_lower or "cuatro" in name_lower or "lasexta" in name_lower:
+                        if not any(other in name_lower for other in ["peru", "perú", "chile", "colombia", "argentina", "mexico", "méxico"]):
+                            pais = "España"
+                    elif "bolivia" in name_lower:
+                        pais = "Bolivia"
+                
+                # Fallback to Latino/spa keywords
+                if pais == "Internacional" and ("latino" in nombre.lower() or "spa" in line.lower() or "/spa/" in line.lower()):
                     pais = "Latino"
                 
+                # Clean up name (avoid weird characters in printing)
+                nombre_clean = nombre.replace("?", "").replace("", "")
+                
                 # Create a unique ID
-                clean_name = nombre.lower()
+                clean_name = nombre_clean.lower()
                 clean_name = re.sub(r'[^a-z0-9]', '-', clean_name)
                 clean_name = re.sub(r'-+', '-', clean_name).strip('-')
                 ch_id = f"canal-{clean_name}"
                 
                 channels.append({
                     "id": ch_id,
-                    "nombre": nombre,
+                    "nombre": nombre_clean,
                     "url": line,
                     "categoria": cat,
                     "pais": pais,
@@ -175,6 +305,7 @@ def procesar_m3u_text(text, fuente_categoria):
                 })
                 nombre = None
                 logo = ""
+                country_code = ""
     return channels
 
 def generar_canales():
@@ -196,6 +327,21 @@ def generar_canales():
                 todos_los_canales.extend(canales_extraidos)
             except Exception as e:
                 print(f"Error procesando fuente {url_fuente}: {e}")
+
+    # 2. PROCESAR FUENTES LOCALES (M3U locales en la carpeta python)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    local_files = glob.glob(os.path.join(dir_path, "*.m3u"))
+    for file_path in local_files:
+        try:
+            nombre_archivo = os.path.basename(file_path)
+            print(f"Procesando archivo local: {nombre_archivo}")
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            canales_locales = procesar_m3u_text(content, "Latino")
+            print(f"Encontrados {len(canales_locales)} canales locales.")
+            todos_los_canales.extend(canales_locales)
+        except Exception as e:
+            print(f"Error procesando archivo local {file_path}: {e}")
 
     # Evitar duplicados por URL de streaming o por ID
     canales_unicos = []
@@ -223,18 +369,48 @@ def generar_canales():
         
     # Verificar y filtrar canales en paralelo por categoría
     canales_verificados_finales = []
+    paises_clave = ["Perú", "México", "Chile", "Colombia", "España", "Argentina", "Uruguay", "Bolivia"]
     
     for cat, lista in canales_por_categoria.items():
         print(f"\nVerificando enlaces activos para la categoría: {cat} (Total candidatos: {len(lista)})")
         working_channels = []
         
-        # Limitar candidatos a verificar para acelerar el proceso
-        candidatos = lista[:180]
+        # Priorizar canales de países clave colocándolos al principio
+        lista_ordenada = sorted(
+            lista,
+            key=lambda ch: ch.get("pais") in paises_clave,
+            reverse=True
+        )
         
-        with ThreadPoolExecutor(max_workers=40) as executor:
+        # Separar canales clave y no clave para procesar
+        canales_clave = [c for c in lista_ordenada if c.get("pais") in paises_clave]
+        canales_no_clave = [c for c in lista_ordenada if c.get("pais") not in paises_clave]
+        
+        # 1. Procesar todos los canales clave verificándolos concurrentemente de forma laxa
+        print(f"  Verificando {len(canales_clave)} canales de países clave...")
+        with ThreadPoolExecutor(max_workers=35) as executor:
+            future_to_channel = {
+                executor.submit(check_stream_url_lenient, ch["url"]): ch 
+                for ch in canales_clave
+            }
+            for future in as_completed(future_to_channel):
+                ch = future_to_channel[future]
+                try:
+                    alive, final_url = future.result()
+                    if alive:
+                        ch["url"] = final_url
+                        working_channels.append(ch)
+                except Exception:
+                    pass
+            
+        # 2. Procesar los canales no clave con verificación concurrente amplia
+        print(f"  Verificando candidatos no clave...")
+        candidatos_no_clave = canales_no_clave[:400]
+        
+        with ThreadPoolExecutor(max_workers=50) as executor:
             future_to_channel = {
                 executor.submit(check_stream_url, ch["url"]): ch 
-                for ch in candidatos
+                for ch in candidatos_no_clave
             }
             
             for future in as_completed(future_to_channel):
@@ -242,21 +418,18 @@ def generar_canales():
                 try:
                     alive, final_url = future.result()
                     if alive:
-                        ch["url"] = final_url # Actualizar a la versión HTTPS si fue posible
-                        working_channels.append(ch)
-                        if len(working_channels) % 10 == 0:
-                            print(f"  {len(working_channels)} canales activos verificados en {cat}...")
-                        if len(working_channels) >= MAX_CANALES_POR_CATEGORIA:
-                            break
+                        ch["url"] = final_url
+                        non_clave_count = sum(1 for w in working_channels if w.get("pais") not in paises_clave)
+                        if non_clave_count < MAX_CANALES_POR_CATEGORIA:
+                            working_channels.append(ch)
                 except Exception as e:
                     pass
                     
-        print(f"Finalizado {cat}: {len(working_channels)} canales verificados de {len(candidatos)} probados.")
+        print(f"Finalizado {cat}: {len(working_channels)} canales guardados.")
         canales_verificados_finales.extend(working_channels)
 
     try:
         # Guardar en canales.json en la raíz del proyecto
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         root_path = os.path.dirname(dir_path)
         dest_file = os.path.join(root_path, 'canales.json')
         with open(dest_file, 'w', encoding='utf-8') as f:
