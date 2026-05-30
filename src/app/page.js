@@ -5,9 +5,18 @@ import StreamPage from './StreamPage';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const filePath = path.join(process.cwd(), 'peliculas.json');
-  const fileData = fs.readFileSync(filePath, 'utf-8');
-  const peliculas = JSON.parse(fileData);
+  const filePeliculasPath = path.join(process.cwd(), 'peliculas.json');
+  const filePeliculasData = fs.readFileSync(filePeliculasPath, 'utf-8');
+  const peliculas = JSON.parse(filePeliculasData);
 
-  return <StreamPage initialPeliculas={peliculas} />;
+  let canales = [];
+  try {
+    const fileCanalesPath = path.join(process.cwd(), 'canales.json');
+    const fileCanalesData = fs.readFileSync(fileCanalesPath, 'utf-8');
+    canales = JSON.parse(fileCanalesData);
+  } catch (error) {
+    console.error("Error reading canales.json:", error);
+  }
+
+  return <StreamPage initialPeliculas={peliculas} initialCanales={canales} />;
 }

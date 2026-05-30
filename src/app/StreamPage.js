@@ -2,6 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+// Deterministic helper to get a language badge
+const getLangBadge = (item) => {
+  if (item.tipo === 'serie') return 'MULTI';
+  const tmdbIdInt = item.tmdbId ? parseInt(item.tmdbId) : 0;
+  const hash = tmdbIdInt || (item.id ? item.id.charCodeAt(0) + (item.id.charCodeAt(item.id.length - 1) || 0) : 0);
+  const val = hash % 3;
+  if (val === 0) return 'LAT';
+  if (val === 1) return 'SUB';
+  return 'MULTI';
+};
+
 // Helper component for horizontal category carousels
 function CategoryRow({ title, items, onSelect, onPlay }) {
   const rowRef = useRef(null);
@@ -24,31 +35,44 @@ function CategoryRow({ title, items, onSelect, onPlay }) {
       <div className="category-row-relative">
         <button className="carousel-nav-btn prev" onClick={() => scroll('left')}>&lsaquo;</button>
         <div className="category-row-scroll" ref={rowRef}>
-          {items.map((item) => (
-            <div 
-              key={item.id} 
-              className="carousel-movie-card" 
-              onClick={() => onSelect(item)}
-              onDoubleClick={() => onPlay(item)}
-            >
-              <div className="carousel-poster-container">
-                <img 
-                  src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                  alt={item.titulo} 
-                  className="carousel-poster" 
-                  loading="lazy" 
-                />
-                <div className="carousel-play-overlay">
-                  <div className="play-arrow"></div>
+          {items.map((item) => {
+            const isCanal = item.tipo === 'canal';
+            return (
+              <div 
+                key={item.id} 
+                className="carousel-movie-card" 
+                onClick={() => onSelect(item)}
+                onDoubleClick={() => !isCanal && onPlay(item)}
+              >
+                <div className="carousel-poster-container">
+                  <img 
+                    src={isCanal ? (item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80") : (item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80")} 
+                    alt={item.nombre || item.titulo} 
+                    className="carousel-poster" 
+                    style={isCanal ? { objectFit: 'contain', padding: '16px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' } : {}}
+                    loading="lazy" 
+                  />
+                  {isCanal ? (
+                    item.categoria === 'Cine' ? (
+                      <span className="channel-fast-badge"><span className="live-dot"></span> FAST TV</span>
+                    ) : (
+                      <span className="channel-live-badge"><span className="live-dot"></span> EN VIVO</span>
+                    )
+                  ) : (
+                    <span className="carousel-lang-badge">{getLangBadge(item)}</span>
+                  )}
+                  <div className="carousel-play-overlay">
+                    <div className="play-arrow"></div>
+                  </div>
+                  {!isCanal && <span className="carousel-rating">★ {item.valoracion}</span>}
                 </div>
-                <span className="carousel-rating">★ {item.valoracion}</span>
+                <div className="carousel-card-info">
+                  <span className="carousel-card-title">{item.nombre || item.titulo}</span>
+                  <span className="carousel-card-year">{isCanal ? (item.pais || item.categoria) : item.año}</span>
+                </div>
               </div>
-              <div className="carousel-card-info">
-                <span className="carousel-card-title">{item.titulo}</span>
-                <span className="carousel-card-year">{item.año}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <button className="carousel-nav-btn next" onClick={() => scroll('right')}>&rsaquo;</button>
       </div>
@@ -56,13 +80,14 @@ function CategoryRow({ title, items, onSelect, onPlay }) {
   );
 }
 
-export default function StreamPage({ initialPeliculas }) {
+export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Estado para la pantalla de presentación (Splash Screen)
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOutSplash, setFadeOutSplash] = useState(false);
 
-  // Catálogo de películas
+  // Catálogo de películas y canales
   const [peliculas] = useState(initialPeliculas || []);
+  const [canales] = useState(initialCanales || []);
 
   // Estados de reproducción y navegación
   const [activeItem, setActiveItem] = useState(null); // Película o Serie seleccionada
@@ -71,8 +96,74 @@ export default function StreamPage({ initialPeliculas }) {
   const [cuevanaServers, setCuevanaServers] = useState([]);
   const [loadingCuevana, setLoadingCuevana] = useState(false);
   
-  // Pestaña activa ('inicio', 'peliculas', 'series')
+  // Pestaña activa ('inicio', 'peliculas', 'series', 'tdt', 'free')
   const [activeTab, setActiveTab] = useState('inicio');
+  const [tdtFilter, setTdtFilter] = useState('Todos');
+
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
+
+  // Efecto para inicializar el reproductor HLS para canales en vivo
+  useEffect(() => {
+    let active = true;
+    if (activeItem && activeItem.tipo === 'canal' && videoRef.current) {
+      const video = videoRef.current;
+      const streamUrl = activeItem.url;
+
+      const initHls = async () => {
+        try {
+          const Hls = (await import('hls.js')).default;
+          if (!active) return;
+          
+          if (hlsRef.current) {
+            hlsRef.current.destroy();
+          }
+
+          if (Hls.isSupported()) {
+            const hls = new Hls({
+              maxBufferSize: 30 * 1024 * 1024,
+              maxBufferLength: 30,
+              enableWorker: true,
+              lowLatencyMode: true
+            });
+            hls.loadSource(streamUrl);
+            hls.attachMedia(video);
+            hlsRef.current = hls;
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+              if (data.fatal) {
+                switch (data.type) {
+                  case Hls.ErrorTypes.NETWORK_ERROR:
+                    hls.startLoad();
+                    break;
+                  case Hls.ErrorTypes.MEDIA_ERROR:
+                    hls.recoverMediaError();
+                    break;
+                  default:
+                    hls.destroy();
+                    break;
+                }
+              }
+            });
+          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = streamUrl;
+          }
+        } catch (err) {
+          console.error("Failed to load Hls.js dynamically", err);
+        }
+      };
+
+      initHls();
+    }
+
+    return () => {
+      active = false;
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [activeItem]);
 
   // Letra seleccionada para índices A-Z
   const [selectedLetter, setSelectedLetter] = useState('Todos');
@@ -101,6 +192,9 @@ export default function StreamPage({ initialPeliculas }) {
   const [loadingCast, setLoadingCast] = useState(false);
   const [tmdbData, setTmdbData] = useState(null);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
 
   // Efecto para controlar la duración de la animación del Splash Screen
   useEffect(() => {
@@ -159,7 +253,12 @@ export default function StreamPage({ initialPeliculas }) {
 
   // Controladores para clicks simples y dobles en tarjetas
   const handleCardClick = (item) => {
-    setSelectedItemDetails(item);
+    if (item.tipo === 'canal') {
+      setActiveItem(item);
+      setSelectedItemDetails(null);
+    } else {
+      setSelectedItemDetails(item);
+    }
   };
 
   const handleCardDoubleClick = (item) => {
@@ -252,6 +351,57 @@ export default function StreamPage({ initialPeliculas }) {
       })
       .finally(() => {
         setLoadingCast(false);
+      });
+  }, [selectedItemDetails]);
+
+  // Obtener recomendaciones (similar) de TMDB para el modal de detalles
+  useEffect(() => {
+    if (!selectedItemDetails) {
+      setRecommendations([]);
+      return;
+    }
+
+    const tmdbId = selectedItemDetails.tmdbId;
+    if (!tmdbId) {
+      setRecommendations([]);
+      return;
+    }
+
+    setLoadingRecs(true);
+    setRecommendations([]);
+
+    const mediaType = selectedItemDetails.tipo === 'serie' ? 'tv' : 'movie';
+    fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}/similar?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX`)
+      .then(res => {
+        if (!res.ok) throw new Error("TMDB similar failed");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.results) {
+          const filteredRecs = data.results
+            .filter(item => item.poster_path)
+            .slice(0, 12)
+            .map(item => ({
+              id: `${selectedItemDetails.tipo === 'serie' ? 'serie' : 'pelicula'}-${item.id}`,
+              titulo: item.title || item.name,
+              tipo: selectedItemDetails.tipo,
+              tmdbId: item.id.toString(),
+              imdbId: '',
+              descripcion: item.overview || 'Sin sinopsis disponible.',
+              categoria: selectedItemDetails.categoria,
+              año: item.release_date ? item.release_date.split('-')[0] : (item.first_air_date ? item.first_air_date.split('-')[0] : 'N/A'),
+              valoracion: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : '7.0',
+              poster: `https://image.tmdb.org/t/p/w342${item.poster_path}`
+            }));
+          setRecommendations(filteredRecs);
+        }
+      })
+      .catch(err => {
+        console.warn("Fallo al obtener recomendaciones de TMDB:", err);
+        setRecommendations([]);
+      })
+      .finally(() => {
+        setLoadingRecs(false);
       });
   }, [selectedItemDetails]);
 
@@ -468,11 +618,54 @@ export default function StreamPage({ initialPeliculas }) {
     return matchesSearch;
   });
 
-  // Auxiliar para obtener los 15 más valorados
+  // Auxiliar para obtener los 15 más valorados priorizando recientes
   const getTop15 = (list) => {
     return [...list]
-      .sort((a, b) => (parseFloat(b.valoracion) || 0) - (parseFloat(a.valoracion) || 0))
+      .sort((a, b) => {
+        const yearA = parseInt(a.año) || 0;
+        const yearB = parseInt(b.año) || 0;
+        
+        // Priorizar películas más recientes (2020-2026) frente a antiguas
+        const isRecentA = yearA >= 2020 && yearA <= 2026;
+        const isRecentB = yearB >= 2020 && yearB <= 2026;
+        
+        if (isRecentB !== isRecentA) {
+          return isRecentB ? 1 : -1;
+        }
+        
+        // Si ambos están en el mismo grupo de antigüedad, ordenar por año desc primero
+        if (yearB !== yearA) {
+          return yearB - yearA;
+        }
+        
+        // Si son del mismo año, ordenar por valoración
+        return (parseFloat(b.valoracion) || 0) - (parseFloat(a.valoracion) || 0);
+      })
       .slice(0, 15);
+  };
+
+  const getEstrenosPeliculas = (list) => {
+    return [...list]
+      .filter(p => p.tipo === 'pelicula' && parseInt(p.año) >= 2020 && parseInt(p.año) <= 2026)
+      .sort((a, b) => {
+        const yearA = parseInt(a.año) || 0;
+        const yearB = parseInt(b.año) || 0;
+        if (yearB !== yearA) return yearB - yearA;
+        return (parseFloat(b.valoracion) || 0) - (parseFloat(a.valoracion) || 0);
+      })
+      .slice(0, 20);
+  };
+
+  const getEstrenosSeries = (list) => {
+    return [...list]
+      .filter(p => p.tipo === 'serie' && parseInt(p.año) >= 2020 && parseInt(p.año) <= 2026)
+      .sort((a, b) => {
+        const yearA = parseInt(a.año) || 0;
+        const yearB = parseInt(b.año) || 0;
+        if (yearB !== yearA) return yearB - yearA;
+        return (parseFloat(b.valoracion) || 0) - (parseFloat(a.valoracion) || 0);
+      })
+      .slice(0, 20);
   };
 
   // Auxiliar para filtrar por letra de forma insensible a mayúsculas y acentos
@@ -525,7 +718,9 @@ export default function StreamPage({ initialPeliculas }) {
   }));
 
   const allServers = activeItem 
-    ? [...cuevanaServers, ...originalServersList]
+    ? (activeItem.tipo === 'canal' 
+        ? [{ name: "Canal en Vivo", url: activeItem.url }]
+        : [...cuevanaServers, ...originalServersList])
     : [];
 
   return (
@@ -609,6 +804,18 @@ export default function StreamPage({ initialPeliculas }) {
                 className={`header-tab-btn ${activeTab === 'series' && searchQuery === '' ? 'active' : ''}`}
               >
                 Series
+              </button>
+              <button 
+                onClick={() => { setActiveTab('tdt'); setSearchQuery(''); }}
+                className={`header-tab-btn ${activeTab === 'tdt' && searchQuery === '' ? 'active' : ''}`}
+              >
+                TDT
+              </button>
+              <button 
+                onClick={() => { setActiveTab('free'); setSearchQuery(''); }}
+                className={`header-tab-btn ${activeTab === 'free' && searchQuery === '' ? 'active' : ''}`}
+              >
+                FREE
               </button>
             </nav>
           )}
@@ -730,7 +937,7 @@ export default function StreamPage({ initialPeliculas }) {
             </div>
 
             {/* Grid del Reproductor y el Chat */}
-            <div className="theater-grid">
+            <div className={`theater-grid ${chatCollapsed ? 'chat-is-collapsed' : ''}`}>
               {/* Contenedor del Iframe */}
               <div className="player-wrapper">
                 <div className="iframe-aspect-ratio">
@@ -741,31 +948,36 @@ export default function StreamPage({ initialPeliculas }) {
                     </div>
                   )}
                   
-                  <iframe
-                    src={allServers[activeServer]?.url || ''}
-                    onLoad={() => setIframeLoading(false)}
-                    allowFullScreen
-                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                    className="player-iframe"
-                  />
-                </div>
-
-                {/* Slow Connection Optimization Banner */}
-                <div className="playback-optimization-banner">
-                  <span className="banner-icon">Optimización</span>
-                  <div className="banner-text">
-                    <strong>¿Conexión Lenta o Cortes?</strong> Si la reproducción se detiene o demora, haz clic en el icono de configuración o engranaje dentro del reproductor para cambiar la calidad (ej. de 1080p a 720p o 480p) o intenta cambiar de servidor en la lista superior.
-                  </div>
-                </div>
-
-                <div className="player-ad-blocker-note">
-                  Recomendamos usar un navegador con bloqueador de publicidad (como uBlock Origin) para evitar anuncios emergentes de los servidores de transmisión externos.
+                  {activeItem.tipo === 'canal' ? (
+                    <video
+                      ref={videoRef}
+                      controls
+                      autoPlay
+                      className="player-iframe"
+                      style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                      onPlay={() => setIframeLoading(false)}
+                      onLoadedData={() => setIframeLoading(false)}
+                    />
+                  ) : (
+                    <iframe
+                      src={allServers[activeServer]?.url || ''}
+                      onLoad={() => setIframeLoading(false)}
+                      allowFullScreen
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      className="player-iframe"
+                    />
+                  )}
                 </div>
               </div>
 
               {/* Contenedor del Chat Watch Party */}
-              <div className="chat-wrapper">
-                <ChatBox channelId={activeItem.id} channelTitle={activeItem.titulo} />
+              <div className={`chat-wrapper ${chatCollapsed ? 'collapsed' : ''}`}>
+                <ChatBox 
+                  channelId={activeItem.id} 
+                  channelTitle={activeItem.titulo} 
+                  isCollapsed={chatCollapsed}
+                  onToggleCollapse={() => setChatCollapsed(!chatCollapsed)}
+                />
               </div>
             </div>
 
@@ -808,6 +1020,7 @@ export default function StreamPage({ initialPeliculas }) {
                         <div className="card-play-overlay">
                           <div className="play-arrow"></div>
                         </div>
+                        <span className="movie-lang-badge">{getLangBadge(item)}</span>
                         <span className="rating-badge">★ {item.valoracion}</span>
                       </div>
                       <div className="movie-card-info">
@@ -867,6 +1080,18 @@ export default function StreamPage({ initialPeliculas }) {
 
                     <div className="carruseles-container">
                       <CategoryRow 
+                        title="Películas de Estreno (2020 - 2026)" 
+                        items={getEstrenosPeliculas(peliculas)} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
+                      />
+                      <CategoryRow 
+                        title="Series de Estreno y Tendencia (Netflix, Max)" 
+                        items={getEstrenosSeries(peliculas)} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
+                      />
+                      <CategoryRow 
                         title="Películas de Acción" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Acción'))} 
                         onSelect={handleCardClick}
@@ -909,6 +1134,170 @@ export default function StreamPage({ initialPeliculas }) {
                         onPlay={handleCardDoubleClick}
                       />
                     </div>
+                  </div>
+                )}
+
+                {activeTab === 'tdt' && (
+                  <div className="tab-tdt-container">
+                    <h2 className="section-title">Televisión en Vivo (TDT)</h2>
+                    
+                    <div className="alphabet-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+                      {['Todos', 'Perú', 'España', 'México', 'Colombia', 'Argentina', 'Chile', 'Bolivia', 'Deportes', 'Noticias', 'Infantil', 'Música'].map((filt) => (
+                        <button
+                          key={filt}
+                          onClick={() => setTdtFilter(filt)}
+                          className={`letter-btn ${tdtFilter === filt ? 'active' : ''}`}
+                          style={{ minWidth: 'auto', padding: '6px 14px' }}
+                        >
+                          {filt}
+                        </button>
+                      ))}
+                    </div>
+
+                    {(() => {
+                      const filteredTdtCanales = canales.filter(ch => {
+                        if (ch.categoria === 'Cine') return false; // Cine goes to FREE tab
+                        
+                        // Search query match
+                        if (searchQuery) {
+                          const q = searchQuery.toLowerCase();
+                          if (!ch.nombre.toLowerCase().includes(q) && !ch.categoria.toLowerCase().includes(q) && !(ch.pais || '').toLowerCase().includes(q)) {
+                            return false;
+                          }
+                        }
+                        
+                        // Category/Country filter match
+                        if (tdtFilter === 'Todos') return true;
+                        if (['Deportes', 'Noticias', 'Infantil', 'Música'].includes(tdtFilter)) {
+                          return ch.categoria === tdtFilter;
+                        }
+                        return ch.pais === tdtFilter;
+                      });
+
+                      if (filteredTdtCanales.length === 0) {
+                        return (
+                          <div className="no-results" style={{ padding: '40px 0', textAlign: 'center', color: '#6b7280' }}>
+                            No se encontraron canales para este filtro.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="movies-grid">
+                          {filteredTdtCanales.map((item) => (
+                            <div 
+                              key={item.id} 
+                              className="movie-card" 
+                              onClick={() => handleCardClick(item)}
+                            >
+                              <div className="poster-container" style={{ padding: '0' }}>
+                                <img 
+                                  src={item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                  alt={item.nombre} 
+                                  className="movie-poster" 
+                                  style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
+                                  loading="lazy" 
+                                />
+                                <span className="channel-live-badge"><span className="live-dot"></span> EN VIVO</span>
+                                <div className="card-play-overlay">
+                                  <div className="play-arrow"></div>
+                                </div>
+                              </div>
+                              <div className="movie-card-info">
+                                <h3 className="movie-card-title">{item.nombre}</h3>
+                                <div className="movie-card-meta">
+                                  <span className="movie-card-year">{item.pais}</span>
+                                  <span className="movie-card-genre">{item.categoria}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {activeTab === 'free' && (
+                  <div className="tab-free-container">
+                    <h2 className="section-title">Canales de Cine Gratis (FAST TV)</h2>
+                    
+                    {(() => {
+                      const filteredFreeCanales = canales.filter(ch => {
+                        if (ch.categoria !== 'Cine') return false; // Only Cine channels go to FREE tab
+                        
+                        if (searchQuery) {
+                          const q = searchQuery.toLowerCase();
+                          return ch.nombre.toLowerCase().includes(q);
+                        }
+                        return true;
+                      });
+
+                      if (searchQuery) {
+                        if (filteredFreeCanales.length === 0) {
+                          return (
+                            <div className="no-results" style={{ padding: '40px 0', textAlign: 'center', color: '#6b7280' }}>
+                              No se encontraron canales de cine para tu búsqueda.
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="movies-grid">
+                            {filteredFreeCanales.map((item) => (
+                              <div 
+                                key={item.id} 
+                                className="movie-card" 
+                                onClick={() => handleCardClick(item)}
+                              >
+                                <div className="poster-container" style={{ padding: '0' }}>
+                                  <img 
+                                    src={item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                    alt={item.nombre} 
+                                    className="movie-poster" 
+                                    style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
+                                    loading="lazy" 
+                                  />
+                                  <span className="channel-fast-badge"><span className="live-dot"></span> FAST TV</span>
+                                  <div className="card-play-overlay">
+                                    <div className="play-arrow"></div>
+                                  </div>
+                                </div>
+                                <div className="movie-card-info">
+                                  <h3 className="movie-card-title">{item.nombre}</h3>
+                                  <div className="movie-card-meta">
+                                    <span className="movie-card-year">FAST TV</span>
+                                    <span className="movie-card-genre">{item.categoria}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="carruseles-container">
+                          <CategoryRow 
+                            title="Cine en Español Latino" 
+                            items={canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('mex') || c.nombre.toLowerCase().includes('cine premium') || c.nombre.toLowerCase().includes('cine familiar')))} 
+                            onSelect={handleCardClick}
+                            onPlay={handleCardDoubleClick}
+                          />
+                          <CategoryRow 
+                            title="Cine de Acción y Suspenso" 
+                            items={canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror') || c.nombre.toLowerCase().includes('suspenso')))} 
+                            onSelect={handleCardClick}
+                            onPlay={handleCardDoubleClick}
+                          />
+                          <CategoryRow 
+                            title="Cine General y Blockbusters" 
+                            items={canales.filter(c => c.categoria === 'Cine' && !(c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror'))).slice(0, 20)} 
+                            onSelect={handleCardClick}
+                            onPlay={handleCardDoubleClick}
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -966,6 +1355,7 @@ export default function StreamPage({ initialPeliculas }) {
                                   <div className="card-play-overlay">
                                     <div className="play-arrow"></div>
                                   </div>
+                                  <span className="movie-lang-badge">{getLangBadge(item)}</span>
                                   <span className="rating-badge">★ {item.valoracion}</span>
                                 </div>
                                 <div className="movie-card-info">
@@ -1055,6 +1445,7 @@ export default function StreamPage({ initialPeliculas }) {
                                   <div className="card-play-overlay">
                                     <div className="play-arrow"></div>
                                   </div>
+                                  <span className="movie-lang-badge">{getLangBadge(item)}</span>
                                   <span className="rating-badge">★ {item.valoracion}</span>
                                 </div>
                                 <div className="movie-card-info">
@@ -1303,6 +1694,33 @@ export default function StreamPage({ initialPeliculas }) {
           transform: scale(1.02);
         }
 
+        .brand-logo svg rect {
+          animation: logo-glow-pulse 8s infinite ease-in-out;
+        }
+
+        @keyframes logo-glow-pulse {
+          0%, 100% {
+            filter: drop-shadow(0 0 0px rgba(0, 245, 212, 0));
+            transform: scale(1);
+            transform-origin: 132px 29px;
+          }
+          5% {
+            filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.85));
+            transform: scale(1.06);
+            transform-origin: 132px 29px;
+          }
+          10% {
+            filter: drop-shadow(0 0 14px rgba(0, 184, 255, 0.95));
+            transform: scale(1.03);
+            transform-origin: 132px 29px;
+          }
+          15% {
+            filter: drop-shadow(0 0 0px rgba(0, 245, 212, 0));
+            transform: scale(1);
+            transform-origin: 132px 29px;
+          }
+        }
+
         .search-wrapper {
           flex: 0 1 450px;
         }
@@ -1403,6 +1821,11 @@ export default function StreamPage({ initialPeliculas }) {
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 245, 212, 0.25);
         }
 
+        .movie-card:active {
+          transform: translateY(-2px) scale(0.98);
+          transition: transform 0.1s ease;
+        }
+
         .poster-container {
           position: relative;
           aspect-ratio: 2/3;
@@ -1423,6 +1846,23 @@ export default function StreamPage({ initialPeliculas }) {
 
         .movie-card:hover .movie-poster {
           transform: scale(1.05);
+        }
+
+        .movie-lang-badge, .carousel-lang-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background-color: rgba(7, 7, 12, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #00f5d4;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 2px 6px;
+          border-radius: 4px;
+          letter-spacing: 0.5px;
+          z-index: 2;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+          text-transform: uppercase;
         }
 
         .card-play-overlay {
@@ -1782,6 +2222,9 @@ export default function StreamPage({ initialPeliculas }) {
           .theater-grid {
             grid-template-columns: 3fr 1.1fr;
           }
+          .theater-grid.chat-is-collapsed {
+            grid-template-columns: 1fr;
+          }
         }
 
         .player-wrapper {
@@ -1809,21 +2252,19 @@ export default function StreamPage({ initialPeliculas }) {
           border: none;
         }
 
-        .player-ad-blocker-note {
-          font-size: 11px;
-          color: #6b7280;
-          line-height: 1.4;
-          padding: 2px 4px;
-        }
-
         .chat-wrapper {
           min-height: 480px;
           height: 100%;
-          background-color: #0a0b10;
-          border: 1px solid rgba(255, 255, 255, 0.04);
+          background-color: transparent;
+          border: none;
           border-radius: 12px;
           overflow: hidden;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .chat-wrapper.collapsed {
+          min-height: 48px !important;
+          height: 48px !important;
         }
 
         .player-details-full {
@@ -2086,13 +2527,23 @@ export default function StreamPage({ initialPeliculas }) {
 
         .carousel-movie-card {
           flex: 0 0 160px;
+          width: 160px;
+          min-width: 160px;
+          max-width: 160px;
           cursor: pointer;
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+          display: flex;
+          flex-direction: column;
         }
 
         .carousel-movie-card:hover {
-          transform: translateY(-4px) scale(1.08);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 245, 212, 0.2);
+          transform: translateY(-6px) scale(1.06);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 245, 212, 0.3);
+        }
+
+        .carousel-movie-card:active {
+          transform: translateY(-2px) scale(0.98);
+          transition: transform 0.1s ease;
         }
 
         .carousel-poster-container {
@@ -2108,9 +2559,17 @@ export default function StreamPage({ initialPeliculas }) {
         }
 
         .carousel-poster {
+          position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
+          transition: transform 0.4s ease;
+        }
+
+        .carousel-movie-card:hover .carousel-poster {
+          transform: scale(1.05);
         }
 
         .carousel-play-overlay {
@@ -2142,6 +2601,70 @@ export default function StreamPage({ initialPeliculas }) {
           font-weight: 700;
           padding: 2px 6px;
           border-radius: 4px;
+        }
+
+        .channel-live-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background-color: rgba(220, 38, 38, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #ffffff;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 2px 8px;
+          border-radius: 4px;
+          letter-spacing: 0.5px;
+          z-index: 2;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          text-transform: uppercase;
+        }
+
+        .channel-fast-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background-color: rgba(59, 130, 246, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #ffffff;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 2px 8px;
+          border-radius: 4px;
+          letter-spacing: 0.5px;
+          z-index: 2;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          text-transform: uppercase;
+        }
+
+        .live-dot {
+          width: 6px;
+          height: 6px;
+          background-color: #ffffff;
+          border-radius: 50%;
+          display: inline-block;
+          animation: pulse-live 1.2s infinite;
+        }
+
+        @keyframes pulse-live {
+          0% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
+          50% {
+            transform: scale(1.2);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
         }
 
         .carousel-card-info {
@@ -2613,21 +3136,33 @@ export default function StreamPage({ initialPeliculas }) {
         }
 
         .actor-card {
-          flex: 0 0 80px;
+          flex: 0 0 85px;
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 4px;
+          gap: 6px;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+
+        .actor-card:hover {
+          transform: scale(1.05);
         }
 
         .actor-photo {
-          width: 60px;
-          height: 60px;
+          width: 70px;
+          height: 70px;
           border-radius: 50%;
           object-fit: cover;
           border: 2px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+          transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .actor-card:hover .actor-photo {
+          border-color: #00f5d4;
+          transform: scale(1.05);
         }
 
         .actor-name {
@@ -2652,6 +3187,109 @@ export default function StreamPage({ initialPeliculas }) {
         }
 
         .loading-cast-text, .no-cast-text {
+          font-size: 12px;
+          color: #6b7280;
+          font-style: italic;
+        }
+
+        /* RECOMENDACIONES EN MODAL (TasteDive Style) */
+        .modal-recs-section {
+          margin-top: 24px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          padding-top: 20px;
+        }
+
+        .modal-recs-section h3 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 16px;
+          font-weight: 700;
+          color: #00f5d4;
+          margin: 0 0 14px 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .recs-row-scroll {
+          display: flex;
+          gap: 12px;
+          overflow-x: auto;
+          padding-bottom: 10px;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.05) transparent;
+        }
+
+        .recs-row-scroll::-webkit-scrollbar {
+          height: 4px;
+        }
+
+        .recs-row-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+
+        .rec-card {
+          flex: 0 0 100px;
+          width: 100px;
+          min-width: 100px;
+          max-width: 100px;
+          cursor: pointer;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .rec-card:hover {
+          transform: translateY(-4px) scale(1.04);
+        }
+
+        .rec-poster-container {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 2/3;
+          border-radius: 6px;
+          overflow: hidden;
+          background-color: #11131e;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .rec-poster {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .rec-rating {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          background-color: rgba(7, 7, 12, 0.85);
+          color: #ffb800;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 1px 4px;
+          border-radius: 3px;
+        }
+
+        .rec-title {
+          font-size: 10px;
+          font-weight: 700;
+          color: #e5e7eb;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100px;
+        }
+
+        .rec-year {
+          font-size: 9px;
+          color: #6b7280;
+        }
+
+        .loading-recs-text, .no-recs-text {
           font-size: 12px;
           color: #6b7280;
           font-style: italic;
@@ -2778,6 +3416,33 @@ export default function StreamPage({ initialPeliculas }) {
                   <div className="no-cast-text">Información de elenco no disponible.</div>
                 )}
               </div>
+
+              {/* RECOMENDACIONES SECTION */}
+              <div className="modal-recs-section">
+                <h3>Recomendaciones (Estilo TasteDive)</h3>
+                {loadingRecs ? (
+                  <div className="loading-recs-text">Cargando recomendaciones...</div>
+                ) : recommendations.length > 0 ? (
+                  <div className="recs-row-scroll">
+                    {recommendations.map((rec) => (
+                      <div 
+                        key={rec.id} 
+                        className="rec-card" 
+                        onClick={() => setSelectedItemDetails(rec)}
+                      >
+                        <div className="rec-poster-container">
+                          <img src={rec.poster} alt={rec.titulo} className="rec-poster" loading="lazy" />
+                          <span className="rec-rating">★ {rec.valoracion}</span>
+                        </div>
+                        <span className="rec-title">{rec.titulo}</span>
+                        <span className="rec-year">{rec.año}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-recs-text">No hay recomendaciones disponibles para este contenido.</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -2787,7 +3452,25 @@ export default function StreamPage({ initialPeliculas }) {
 }
 
 // Componente del Chat en Vivo (Watch Party) vía MQTT
-function ChatBox({ channelId, channelTitle }) {
+function ChatBox({ channelId, channelTitle, isCollapsed, onToggleCollapse }) {
+  const getSenderColor = (name) => {
+    const colors = [
+      '#38bdf8', // sky-400
+      '#f472b6', // pink-400
+      '#fb7185', // rose-400
+      '#34d399', // emerald-400
+      '#a78bfa', // violet-400
+      '#fb923c', // orange-400
+      '#facc15', // yellow-400
+      '#2dd4bf'  // teal-400
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [nickname, setNickname] = useState('');
@@ -2959,12 +3642,19 @@ function ChatBox({ channelId, channelTitle }) {
   };
 
   return (
-    <div className="chat-container">
+    <div className={`chat-container ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="chat-header">
-        <span className="chat-title">Watch Party</span>
-        <span className={`status-indicator ${isConnected ? 'online' : 'offline'}`}>
-          {isConnected ? 'Activo' : 'Cargando'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="chat-title">Watch Party</span>
+          <span className={`status-indicator ${isConnected ? 'online' : 'offline'}`}>
+            {isConnected ? 'Activo' : 'Cargando'}
+          </span>
+        </div>
+        <button onClick={onToggleCollapse} className="chat-toggle-btn" aria-label="Alternar Chat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
       </div>
 
       {!isJoined ? (
@@ -3003,7 +3693,7 @@ function ChatBox({ channelId, channelTitle }) {
                   className={`chat-message ${msg.sender === nickname ? 'mine' : ''}`}
                 >
                   <div className="message-header">
-                    <span className="message-sender">{msg.sender}</span>
+                    <span className="message-sender" style={{ color: getSenderColor(msg.sender) }}>{msg.sender}</span>
                     <span className="message-time">{msg.timestamp}</span>
                   </div>
                   <div className="message-text">{msg.text}</div>
@@ -3080,8 +3770,26 @@ function ChatBox({ channelId, channelTitle }) {
           display: flex;
           flex-direction: column;
           height: 100%;
-          background-color: #07080c;
+          background: linear-gradient(135deg, rgba(12, 13, 20, 0.94) 0%, rgba(19, 21, 35, 0.97) 100%);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(0, 245, 212, 0.08);
+          border-radius: 12px;
+          overflow: hidden;
           position: relative;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .chat-container.collapsed {
+          height: 48px !important;
+          max-height: 48px !important;
+        }
+
+        .chat-container.collapsed .chat-messages-box,
+        .chat-container.collapsed .chat-form,
+        .chat-container.collapsed .chat-gate {
+          display: none !important;
         }
 
         .scroll-bottom-badge {
@@ -3111,11 +3819,13 @@ function ChatBox({ channelId, channelTitle }) {
 
         .chat-header {
           padding: 12px 16px;
-          background-color: #0c0d14;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+          background-color: rgba(12, 13, 20, 0.5);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
           display: flex;
           justify-content: space-between;
           align-items: center;
+          height: 48px;
+          box-sizing: border-box;
         }
 
         .chat-title {
@@ -3142,6 +3852,24 @@ function ChatBox({ channelId, channelTitle }) {
           color: #ff3b30;
         }
 
+        .chat-toggle-btn {
+          background: transparent;
+          border: none;
+          color: #9ca3af;
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          transition: background-color 0.2s, color 0.2s;
+        }
+
+        .chat-toggle-btn:hover {
+          background-color: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+        }
+
         .chat-gate {
           flex: 1;
           display: flex;
@@ -3155,7 +3883,7 @@ function ChatBox({ channelId, channelTitle }) {
 
         .chat-gate p {
           font-size: 12px;
-          color: #6b7280;
+          color: #9ca3af;
           line-height: 1.6;
           margin: 0 0 10px 0;
           max-width: 85%;
@@ -3222,19 +3950,40 @@ function ChatBox({ channelId, channelTitle }) {
           font-size: 12px;
         }
 
+        @keyframes chat-msg-fade {
+          from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
         .chat-message {
           background-color: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.03);
-          padding: 8px 12px;
-          border-radius: 8px;
+          padding: 10px 14px;
+          border-radius: 12px;
           align-self: flex-start;
           max-width: 90%;
+          border-bottom-left-radius: 2px;
+          animation: chat-msg-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+          transition: transform 0.2s ease;
+        }
+
+        .chat-message:hover {
+          transform: scale(1.01);
         }
 
         .chat-message.mine {
-          background-color: rgba(0, 245, 212, 0.02);
-          border-color: rgba(0, 245, 212, 0.15);
+          background: linear-gradient(135deg, rgba(0, 245, 212, 0.08) 0%, rgba(0, 245, 212, 0.03) 100%);
+          border-color: rgba(0, 245, 212, 0.2);
           align-self: flex-end;
+          border-bottom-left-radius: 12px;
+          border-bottom-right-radius: 2px;
         }
 
         .message-header {
@@ -3247,11 +3996,6 @@ function ChatBox({ channelId, channelTitle }) {
 
         .message-sender {
           font-weight: 700;
-          color: #60a5fa;
-        }
-
-        .chat-message.mine .message-sender {
-          color: #00f5d4;
         }
 
         .message-time {
@@ -3267,8 +4011,8 @@ function ChatBox({ channelId, channelTitle }) {
 
         .chat-form {
           padding: 10px 12px;
-          background-color: #0c0d14;
-          border-top: 1px solid rgba(255, 255, 255, 0.04);
+          background-color: rgba(12, 13, 20, 0.6);
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .input-row {
@@ -3338,7 +4082,7 @@ function ChatBox({ channelId, channelTitle }) {
         .chat-input-field {
           flex: 1;
           padding: 8px 12px;
-          background-color: #050508;
+          background-color: rgba(5, 5, 8, 0.6);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 8px;
           color: #ffffff;
