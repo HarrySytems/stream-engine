@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 // Helper component for horizontal category carousels
-function CategoryRow({ title, items, onSelect }) {
+function CategoryRow({ title, items, onSelect, onPlay }) {
   const rowRef = useRef(null);
 
   const scroll = (direction) => {
@@ -25,7 +25,12 @@ function CategoryRow({ title, items, onSelect }) {
         <button className="carousel-nav-btn prev" onClick={() => scroll('left')}>&lsaquo;</button>
         <div className="category-row-scroll" ref={rowRef}>
           {items.map((item) => (
-            <div key={item.id} className="carousel-movie-card" onClick={() => onSelect(item)}>
+            <div 
+              key={item.id} 
+              className="carousel-movie-card" 
+              onClick={() => onSelect(item)}
+              onDoubleClick={() => onPlay(item)}
+            >
               <div className="carousel-poster-container">
                 <img 
                   src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
@@ -90,6 +95,13 @@ export default function StreamPage({ initialPeliculas }) {
   const [customSeason, setCustomSeason] = useState(1);
   const [customEpisode, setCustomEpisode] = useState(1);
 
+  // NUEVOS ESTADOS para Modal de Detalles, Elenco de Actores, Detalles de TMDB e indicador de carga de Iframe
+  const [selectedItemDetails, setSelectedItemDetails] = useState(null);
+  const [castInfo, setCastInfo] = useState([]);
+  const [loadingCast, setLoadingCast] = useState(false);
+  const [tmdbData, setTmdbData] = useState(null);
+  const [iframeLoading, setIframeLoading] = useState(true);
+
   // Efecto para controlar la duración de la animación del Splash Screen
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
@@ -145,15 +157,105 @@ export default function StreamPage({ initialPeliculas }) {
     }
   ];
 
-  // Resetear servidor, temporada y episodio cuando cambia el elemento activo
+  // Controladores para clicks simples y dobles en tarjetas
+  const handleCardClick = (item) => {
+    setSelectedItemDetails(item);
+  };
+
+  const handleCardDoubleClick = (item) => {
+    setActiveItem(item);
+    setSelectedItemDetails(null);
+  };
+
+  // Resetear servidor, temporada, episodio y estado del cargador de iframe cuando cambia el elemento activo
   useEffect(() => {
     setActiveServer(0);
     setSeason(1);
     setEpisode(1);
     setCuevanaServers([]);
+    setIframeLoading(true);
   }, [activeItem]);
 
-  // Obtener servidores Latino desde Cuevana.gs a través de nuestro proxy de Next.js
+  // Resetear estado del cargador de iframe cuando cambia el servidor, la temporada o el episodio
+  useEffect(() => {
+    setIframeLoading(true);
+  }, [activeServer, season, episode]);
+
+  // Obtener detalles de la película o serie desde TMDB (para obtener el título original en inglés)
+  useEffect(() => {
+    if (!activeItem) {
+      setTmdbData(null);
+      return;
+    }
+
+    const tmdbId = activeItem.tmdbId;
+    if (!tmdbId) {
+      setTmdbData(null);
+      return;
+    }
+
+    const mediaType = activeItem.tipo === 'serie' ? 'tv' : 'movie';
+    fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX`)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch TMDB details");
+        return res.json();
+      })
+      .then(data => {
+        setTmdbData(data);
+      })
+      .catch(err => {
+        console.warn("Fallo al obtener detalles de TMDB:", err);
+        setTmdbData(null);
+      });
+  }, [activeItem]);
+
+  // Obtener elenco (credits) de TMDB para el modal de detalles
+  useEffect(() => {
+    if (!selectedItemDetails) {
+      setCastInfo([]);
+      return;
+    }
+
+    const tmdbId = selectedItemDetails.tmdbId;
+    if (!tmdbId) {
+      setCastInfo([]);
+      return;
+    }
+
+    setLoadingCast(true);
+    setCastInfo([]);
+
+    const mediaType = selectedItemDetails.tipo === 'serie' ? 'tv' : 'movie';
+    fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}/credits?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX`)
+      .then(res => {
+        if (!res.ok) throw new Error("TMDB credits failed");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.cast) {
+          // Filtrar actores principales que tengan foto
+          const filteredCast = data.cast
+            .filter(actor => actor.profile_path)
+            .slice(0, 12)
+            .map(actor => ({
+              id: actor.id,
+              name: actor.name,
+              character: actor.character,
+              profileUrl: `https://image.tmdb.org/t/p/w185${actor.profile_path}`
+            }));
+          setCastInfo(filteredCast);
+        }
+      })
+      .catch(err => {
+        console.warn("Fallo al obtener créditos de TMDB:", err);
+        setCastInfo([]);
+      })
+      .finally(() => {
+        setLoadingCast(false);
+      });
+  }, [selectedItemDetails]);
+
+  // Obtener servidores Latino desde Cuevana.gs y LaMovie.org a través de nuestro proxy de Next.js
   useEffect(() => {
     if (!activeItem) {
       setCuevanaServers([]);
@@ -163,7 +265,7 @@ export default function StreamPage({ initialPeliculas }) {
     setLoadingCuevana(true);
     setCuevanaServers([]);
 
-    // Helper para extraer el nombre legible del servidor de Cuevana
+    // Helper para extraer el nombre legible del servidor de las urls de embeds
     const getServerName = (url) => {
       try {
         const urlObj = new URL(url);
@@ -171,6 +273,12 @@ export default function StreamPage({ initialPeliculas }) {
         if (server) {
           return server.charAt(0).toUpperCase() + server.slice(1);
         }
+        const host = urlObj.hostname;
+        if (host.includes('filemoon')) return 'Filemoon';
+        if (host.includes('goodstream')) return 'Goodstream';
+        if (host.includes('hlswish') || host.includes('swish')) return 'Hlswish';
+        if (host.includes('voe')) return 'Voe';
+        if (host.includes('vimeos') || host.includes('waaw')) return 'Vimeos';
       } catch (e) {}
       return "Online";
     };
@@ -185,93 +293,110 @@ export default function StreamPage({ initialPeliculas }) {
     };
 
     const tituloOriginal = activeItem.titulo;
+    const originalTitle = tmdbData ? (tmdbData.original_title || tmdbData.original_name) : null;
     const postType = activeItem.tipo === 'serie' ? 'tvshows' : 'movies';
 
-    // 1. Buscar la película o serie en Cuevana
-    fetch(`/api/cuevana?action=search&q=${encodeURIComponent(tituloOriginal)}&postType=${postType}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Search API failed");
-        return res.json();
-      })
-      .then(async (searchData) => {
+    // Función para obtener reproductores de un proveedor y título específico
+    const fetchFromProvider = async (provider, titleToSearch) => {
+      try {
+        const searchRes = await fetch(`/api/cuevana?action=search&q=${encodeURIComponent(titleToSearch)}&postType=${postType}&provider=${provider}`);
+        if (!searchRes.ok) return [];
+        const searchData = await searchRes.json();
         if (searchData.error || !searchData.data || !searchData.data.posts || searchData.data.posts.length === 0) {
-          throw new Error("No posts found in Cuevana");
+          return [];
         }
 
-        // Buscar coincidencia exacta o cercana en la lista de posts devuelta
         const posts = searchData.data.posts;
-        const cleanedQuery = cleanTitle(tituloOriginal);
+        const cleanedQuery = cleanTitle(titleToSearch);
         
         let matchedPost = posts.find(p => cleanTitle(p.title).includes(cleanedQuery) || cleanedQuery.includes(cleanTitle(p.title)));
         if (!matchedPost) {
-          matchedPost = posts[0]; // Fallback al primer resultado
+          matchedPost = posts[0];
         }
 
         const postId = matchedPost._id;
 
-        // 2. Si es una película, obtenemos directamente los reproductores
         if (activeItem.tipo === 'pelicula') {
-          return fetch(`/api/cuevana?action=player&postId=${postId}`)
-            .then(res => res.json())
-            .then(playerData => {
-              if (playerData.error || !playerData.data || !playerData.data.embeds) {
-                throw new Error("No players returned for movie");
-              }
-              return playerData.data.embeds;
-            });
-        } 
-        
-        // 3. Si es una serie, primero obtenemos el listado de capítulos para encontrar el ID del episodio específico
-        else {
-          return fetch(`/api/cuevana?action=episodes&postId=${postId}`)
-            .then(res => res.json())
-            .then(episodesData => {
-              if (episodesData.error || !episodesData.data || !Array.isArray(episodesData.data)) {
-                throw new Error("No episodes list found for series");
-              }
+          const playerRes = await fetch(`/api/cuevana?action=player&postId=${postId}&provider=${provider}`);
+          const playerData = await playerRes.json();
+          if (playerData.error || !playerData.data || !playerData.data.embeds) {
+            return [];
+          }
+          return playerData.data.embeds;
+        } else {
+          const epsRes = await fetch(`/api/cuevana?action=episodes&postId=${postId}&provider=${provider}`);
+          const episodesData = await epsRes.json();
+          if (episodesData.error || !episodesData.data || !Array.isArray(episodesData.data)) {
+            return [];
+          }
 
-              // Buscar el episodio correspondiente a la temporada y capítulo actual
-              const matchedEpisode = episodesData.data.find(
-                ep => ep.season_number === season && ep.episode_number === episode
-              );
+          const matchedEpisode = episodesData.data.find(
+            ep => ep.season_number === season && ep.episode_number === episode
+          );
 
-              if (!matchedEpisode) {
-                throw new Error(`Episode S${season}E${episode} not found in episodes list`);
-              }
+          if (!matchedEpisode) {
+            return [];
+          }
 
-              // Llamar al player API usando el ID de la entrada del episodio
-              return fetch(`/api/cuevana?action=player&postId=${matchedEpisode._id}&season=${season}&episode=${episode}`)
-                .then(res => res.json())
-                .then(playerData => {
-                  if (playerData.error || !playerData.data || !playerData.data.embeds) {
-                    throw new Error("No players returned for episode");
-                  }
-                  return playerData.data.embeds;
-                });
-            });
+          const playerRes = await fetch(`/api/cuevana?action=player&postId=${matchedEpisode._id}&season=${season}&episode=${episode}&provider=${provider}`);
+          const playerData = await playerRes.json();
+          if (playerData.error || !playerData.data || !playerData.data.embeds) {
+            return [];
+          }
+          return playerData.data.embeds;
         }
-      })
-      .then(embeds => {
-        // Mapear los embeds en servidores formateados
-        const formatted = embeds
-          .filter(emb => emb.url)
-          .map(emb => ({
-            name: `Latino - ${getServerName(emb.url)}`,
-            url: emb.url
-          }));
-        
-        if (formatted.length > 0) {
-          setCuevanaServers(formatted);
-          setActiveServer(0); // Seleccionar el primer servidor Latino por defecto
+      } catch (err) {
+        console.warn(`Error buscando en ${provider} con "${titleToSearch}":`, err.message);
+        return [];
+      }
+    };
+
+    // Lanzar búsquedas en paralelo para Cuevana y LaMovie, con fallbacks de títulos en inglés
+    const runSearch = async () => {
+      let cuevanaEmbeds = await fetchFromProvider('cuevana', tituloOriginal);
+      if (cuevanaEmbeds.length === 0 && originalTitle && cleanTitle(tituloOriginal) !== cleanTitle(originalTitle)) {
+        cuevanaEmbeds = await fetchFromProvider('cuevana', originalTitle);
+      }
+
+      let lamovieEmbeds = await fetchFromProvider('lamovie', tituloOriginal);
+      if (lamovieEmbeds.length === 0 && originalTitle && cleanTitle(tituloOriginal) !== cleanTitle(originalTitle)) {
+        lamovieEmbeds = await fetchFromProvider('lamovie', originalTitle);
+      }
+
+      const cuevanaServersList = cuevanaEmbeds
+        .filter(emb => emb.url)
+        .map(emb => ({
+          name: `Latino - ${getServerName(emb.url)} (Cuevana)`,
+          url: emb.url
+        }));
+
+      const lamovieServersList = lamovieEmbeds
+        .filter(emb => emb.url)
+        .map(emb => ({
+          name: `Latino - ${getServerName(emb.url)} (LaMovie)`,
+          url: emb.url
+        }));
+
+      // Fusionar y dedupicar por URL del reproductor
+      const combined = [...cuevanaServersList, ...lamovieServersList];
+      const uniqueCombined = [];
+      const seenUrls = new Set();
+      for (const item of combined) {
+        if (!seenUrls.has(item.url)) {
+          seenUrls.add(item.url);
+          uniqueCombined.push(item);
         }
-      })
-      .catch(err => {
-        console.warn("Fallo al obtener servidores de Cuevana Latino:", err.message);
-      })
-      .finally(() => {
-        setLoadingCuevana(false);
-      });
-  }, [activeItem, season, episode]);
+      }
+
+      if (uniqueCombined.length > 0) {
+        setCuevanaServers(uniqueCombined);
+        setActiveServer(0);
+      }
+      setLoadingCuevana(false);
+    };
+
+    runSearch();
+  }, [activeItem, season, episode, tmdbData]);
 
   // Obtener información real de temporadas y capítulos de TMDB
   useEffect(() => {
@@ -609,13 +734,30 @@ export default function StreamPage({ initialPeliculas }) {
               {/* Contenedor del Iframe */}
               <div className="player-wrapper">
                 <div className="iframe-aspect-ratio">
+                  {/* YouTube-style Red Loading Bar */}
+                  {iframeLoading && (
+                    <div className="video-progress-loader-container">
+                      <div className="video-progress-loader-bar"></div>
+                    </div>
+                  )}
+                  
                   <iframe
                     src={allServers[activeServer]?.url || ''}
+                    onLoad={() => setIframeLoading(false)}
                     allowFullScreen
                     allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                     className="player-iframe"
                   />
                 </div>
+
+                {/* Slow Connection Optimization Banner */}
+                <div className="playback-optimization-banner">
+                  <span className="banner-icon">Optimización</span>
+                  <div className="banner-text">
+                    <strong>¿Conexión Lenta o Cortes?</strong> Si la reproducción se detiene o demora, haz clic en el icono de configuración o engranaje dentro del reproductor para cambiar la calidad (ej. de 1080p a 720p o 480p) o intenta cambiar de servidor en la lista superior.
+                  </div>
+                </div>
+
                 <div className="player-ad-blocker-note">
                   Recomendamos usar un navegador con bloqueador de publicidad (como uBlock Origin) para evitar anuncios emergentes de los servidores de transmisión externos.
                 </div>
@@ -653,7 +795,8 @@ export default function StreamPage({ initialPeliculas }) {
                     <div 
                       key={item.id} 
                       className="movie-card"
-                      onClick={() => setActiveItem(item)}
+                      onClick={() => handleCardClick(item)}
+                      onDoubleClick={() => handleCardDoubleClick(item)}
                     >
                       <div className="poster-container">
                         <img 
@@ -714,8 +857,8 @@ export default function StreamPage({ initialPeliculas }) {
                               <span className="hero-genre">{featured.categoria}</span>
                             </div>
                             <p className="hero-desc">{featured.descripcion}</p>
-                            <button className="hero-play-btn" onClick={() => setActiveItem(featured)}>
-                              Reproducir ahora
+                            <button className="hero-play-btn" onClick={() => handleCardClick(featured)}>
+                              Ver detalles
                             </button>
                           </div>
                         </div>
@@ -726,37 +869,44 @@ export default function StreamPage({ initialPeliculas }) {
                       <CategoryRow 
                         title="Películas de Acción" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Acción'))} 
-                        onSelect={setActiveItem} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Ciencia Ficción" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Ciencia Ficción'))} 
-                        onSelect={setActiveItem} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Terror y Suspenso" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Terror'))} 
-                        onSelect={setActiveItem} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Comedia" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Comedia'))} 
-                        onSelect={setActiveItem} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Drama" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Drama'))} 
-                        onSelect={setActiveItem} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Infantil y Familiar" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Infantil'))} 
-                        onSelect={setActiveItem} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Series de TV más vistas" 
                         items={getTop15(peliculas.filter(p => p.tipo === 'serie'))} 
-                        onSelect={setActiveItem} 
+                        onSelect={handleCardClick}
+                        onPlay={handleCardDoubleClick}
                       />
                     </div>
                   </div>
@@ -803,7 +953,8 @@ export default function StreamPage({ initialPeliculas }) {
                               <div 
                                 key={item.id} 
                                 className="movie-card"
-                                onClick={() => setActiveItem(item)}
+                                onClick={() => handleCardClick(item)}
+                                onDoubleClick={() => handleCardDoubleClick(item)}
                               >
                                 <div className="poster-container">
                                   <img 
@@ -820,7 +971,7 @@ export default function StreamPage({ initialPeliculas }) {
                                 <div className="movie-card-info">
                                   <h3 className="movie-card-title">{item.titulo}</h3>
                                   <div className="movie-card-meta">
-                                    <span className="movie-card-year">{item.año}</span>
+                                    <span className="movie-card-year">{item.año || item.año}</span>
                                     <span className="movie-card-genre">{item.categoria}</span>
                                   </div>
                                 </div>
@@ -891,7 +1042,8 @@ export default function StreamPage({ initialPeliculas }) {
                               <div 
                                 key={item.id} 
                                 className="movie-card"
-                                onClick={() => setActiveItem(item)}
+                                onClick={() => handleCardClick(item)}
+                                onDoubleClick={() => handleCardDoubleClick(item)}
                               >
                                 <div className="poster-container">
                                   <img 
@@ -908,7 +1060,7 @@ export default function StreamPage({ initialPeliculas }) {
                                 <div className="movie-card-info">
                                   <h3 className="movie-card-title">{item.titulo}</h3>
                                   <div className="movie-card-meta">
-                                    <span className="movie-card-year">{item.año}</span>
+                                    <span className="movie-card-year">{item.año || item.año}</span>
                                     <span className="movie-card-genre">{item.categoria}</span>
                                   </div>
                                 </div>
@@ -1246,14 +1398,15 @@ export default function StreamPage({ initialPeliculas }) {
         }
 
         .movie-card:hover {
-          transform: translateY(-6px);
-          border-color: rgba(0, 245, 212, 0.3);
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 245, 212, 0.15);
+          transform: translateY(-6px) scale(1.06);
+          border-color: #00f5d4;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 245, 212, 0.25);
         }
 
         .poster-container {
           position: relative;
-          padding-top: 145%; /* Relación de aspecto del póster */
+          aspect-ratio: 2/3;
+          width: 100%;
           overflow: hidden;
           background-color: #0b0c12;
         }
@@ -1934,16 +2087,18 @@ export default function StreamPage({ initialPeliculas }) {
         .carousel-movie-card {
           flex: 0 0 160px;
           cursor: pointer;
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
         }
 
         .carousel-movie-card:hover {
-          transform: scale(1.06);
+          transform: translateY(-4px) scale(1.08);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 245, 212, 0.2);
         }
 
         .carousel-poster-container {
           position: relative;
           aspect-ratio: 2/3;
+          width: 100%;
           border-radius: 10px;
           overflow: hidden;
           background-color: #11131e;
@@ -2270,7 +2425,363 @@ export default function StreamPage({ initialPeliculas }) {
             padding: 8px 4px;
           }
         }
+
+        /* DETAILS MODAL NETFLIX-STYLE */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(8px);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 2000;
+          animation: modal-fade-in 0.25s ease-out forwards;
+        }
+
+        .modal-content-card {
+          background-color: #0b0c10;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          width: 90%;
+          max-width: 780px;
+          max-height: 85vh;
+          overflow-y: auto;
+          position: relative;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 245, 212, 0.05);
+          animation: modal-scale-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+
+        .modal-content-card::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .modal-content-card::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+
+        .modal-close-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background-color: rgba(0, 0, 0, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          z-index: 100;
+          font-size: 14px;
+          font-weight: bold;
+          transition: all 0.2s;
+        }
+
+        .modal-close-btn:hover {
+          background-color: #ff3b30;
+          border-color: #ff3b30;
+          transform: scale(1.05);
+        }
+
+        .modal-hero-header {
+          position: relative;
+          height: 320px;
+          background-size: cover;
+          background-position: center;
+          display: flex;
+          align-items: flex-end;
+          padding: 30px 40px;
+          box-sizing: border-box;
+        }
+
+        .modal-hero-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(to bottom, rgba(11, 12, 16, 0.1) 0%, rgba(11, 12, 16, 0.95) 100%);
+          z-index: 1;
+        }
+
+        .modal-hero-title-box {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+        }
+
+        .modal-hero-title-box h2 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 32px;
+          font-weight: 900;
+          margin: 10px 0 15px 0;
+          color: #ffffff;
+          line-height: 1.1;
+        }
+
+        .modal-meta-row {
+          display: flex;
+          gap: 15px;
+          align-items: center;
+          font-size: 13px;
+          color: #9ca3af;
+          margin-bottom: 20px;
+        }
+
+        .modal-genre-tag {
+          background-color: rgba(255, 255, 255, 0.08);
+          padding: 2px 8px;
+          border-radius: 4px;
+          color: #ffffff;
+        }
+
+        .modal-play-action-btn {
+          background-color: #00f5d4;
+          color: #07070c;
+          border: none;
+          font-family: 'Outfit', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 10px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+        }
+
+        .modal-play-action-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 245, 212, 0.5);
+        }
+
+        .modal-body-desc {
+          padding: 20px 40px 40px 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 30px;
+          box-sizing: border-box;
+        }
+
+        .modal-desc-column h3, .modal-cast-section h3 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 16px;
+          color: #00f5d4;
+          margin: 0 0 10px 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .modal-desc-column p {
+          margin: 0;
+          font-size: 14px;
+          color: #d1d5db;
+          line-height: 1.6;
+        }
+
+        /* CAST FLOW horizontal scroll */
+        .modal-cast-section {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .cast-row-scroll {
+          display: flex;
+          gap: 14px;
+          overflow-x: auto;
+          padding-bottom: 10px;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.05) transparent;
+        }
+
+        .cast-row-scroll::-webkit-scrollbar {
+          height: 4px;
+        }
+
+        .cast-row-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+
+        .actor-card {
+          flex: 0 0 80px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 4px;
+        }
+
+        .actor-photo {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .actor-name {
+          font-size: 10px;
+          font-weight: 700;
+          color: #f3f4f6;
+          display: block;
+          max-width: 80px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .actor-character {
+          font-size: 9px;
+          color: #9ca3af;
+          display: block;
+          max-width: 80px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .loading-cast-text, .no-cast-text {
+          font-size: 12px;
+          color: #6b7280;
+          font-style: italic;
+        }
+
+        @keyframes modal-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes modal-scale-up {
+          from { transform: scale(0.92); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+
+        /* YOUTUBE-STYLE LOADING PROGRESS BAR */
+        .video-progress-loader-container {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background-color: rgba(255, 255, 255, 0.05);
+          z-index: 100;
+        }
+
+        .video-progress-loader-bar {
+          height: 100%;
+          width: 100%;
+          background-color: #ff3b30; /* YouTube Red */
+          animation: video-progress-anim 2s infinite linear;
+          transform-origin: left;
+        }
+
+        @keyframes video-progress-anim {
+          0% { transform: scaleX(0); }
+          50% { transform: scaleX(0.7); }
+          100% { transform: scaleX(1); }
+        }
+
+        /* PLAYBACK OPTIMIZATION BANNER */
+        .playback-optimization-banner {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          background-color: rgba(0, 245, 212, 0.04);
+          border: 1px solid rgba(0, 245, 212, 0.15);
+          border-radius: 8px;
+          padding: 10px 14px;
+          margin-top: 5px;
+        }
+
+        .playback-optimization-banner .banner-icon {
+          font-weight: bold;
+          font-size: 11px;
+          color: #00f5d4;
+          background-color: rgba(0, 245, 212, 0.12);
+          border: 1px solid rgba(0, 245, 212, 0.2);
+          padding: 2px 6px;
+          border-radius: 4px;
+          text-transform: uppercase;
+        }
+
+        .playback-optimization-banner .banner-text {
+          font-size: 11px;
+          line-height: 1.45;
+          color: #9ca3af;
+        }
+
+        .playback-optimization-banner .banner-text strong {
+          color: #ffffff;
+        }
       `}</style>
+      
+      {/* MODAL DE DETALLES NETFLIX-STYLE */}
+      {selectedItemDetails && (
+        <div className="modal-overlay" onClick={() => setSelectedItemDetails(null)}>
+          <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setSelectedItemDetails(null)}>✕</button>
+            
+            <div className="modal-hero-header" style={{ 
+              backgroundImage: `linear-gradient(to bottom, rgba(11,12,16,0.2) 0%, rgba(11,12,16,0.95) 100%), url(${selectedItemDetails.poster || ''})` 
+            }}>
+              <div className="modal-hero-overlay"></div>
+              <div className="modal-hero-title-box">
+                <span className="rating-badge" style={{ position: 'relative', top: '0', right: '0', display: 'inline-block', marginBottom: '8px' }}>★ {selectedItemDetails.valoracion}</span>
+                <h2>{selectedItemDetails.titulo}</h2>
+                <div className="modal-meta-row">
+                  <span>{selectedItemDetails.año || selectedItemDetails.año}</span>
+                  <span className="modal-genre-tag">{selectedItemDetails.categoria}</span>
+                  <span>{selectedItemDetails.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
+                </div>
+                <button className="modal-play-action-btn" onClick={() => {
+                  setActiveItem(selectedItemDetails);
+                  setSelectedItemDetails(null);
+                }}>
+                  Reproducir Ahora
+                </button>
+              </div>
+            </div>
+
+            <div className="modal-body-desc">
+              <div className="modal-desc-column">
+                <h3>Sinopsis</h3>
+                <p>{selectedItemDetails.descripcion}</p>
+              </div>
+              
+              {/* ELENCO / CAST SECTION */}
+              <div className="modal-cast-section">
+                <h3>Elenco / Actores</h3>
+                {loadingCast ? (
+                  <div className="loading-cast-text">Cargando elenco...</div>
+                ) : castInfo.length > 0 ? (
+                  <div className="cast-row-scroll">
+                    {castInfo.map((actor) => (
+                      <div key={actor.id} className="actor-card">
+                        <img src={actor.profileUrl} alt={actor.name} className="actor-photo" loading="lazy" />
+                        <span className="actor-name">{actor.name}</span>
+                        <span className="actor-character">{actor.character}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-cast-text">Información de elenco no disponible.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
