@@ -108,7 +108,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     let active = true;
     if (activeItem && activeItem.tipo === 'canal' && videoRef.current) {
       const video = videoRef.current;
-      const streamUrl = activeItem.url;
+      const streamUrl = `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}`;
 
       const initHls = async () => {
         try {
@@ -409,8 +409,9 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   // Obtener servidores Latino desde Cuevana.gs y LaMovie.org a través de nuestro proxy de Next.js
   useEffect(() => {
-    if (!activeItem) {
+    if (!activeItem || activeItem.tipo === 'canal') {
       setCuevanaServers([]);
+      setLoadingCuevana(false);
       return;
     }
 
@@ -721,8 +722,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   const allServers = activeItem 
     ? (activeItem.tipo === 'canal' 
-        ? [{ name: "Canal en Vivo", url: activeItem.url }]
-        : [...cuevanaServers, ...originalServersList])
+        ? [{ name: "Canal en Vivo", url: `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}` }]
+        : [...originalServersList, ...cuevanaServers])
     : [];
 
   return (
@@ -850,9 +851,18 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                 Volver al catálogo
               </button>
               <div className="player-meta">
-                <span className="player-item-title">{activeItem.titulo}</span>
-                <span className="player-item-year">({activeItem.año})</span>
-                <span className="player-item-rating">★ {activeItem.valoracion}</span>
+                {activeItem.tipo === 'canal' ? (
+                  <>
+                    <span className="player-item-title">{activeItem.nombre}</span>
+                    {activeItem.pais && <span className="player-item-year">({activeItem.pais})</span>}
+                  </>
+                ) : (
+                  <>
+                    <span className="player-item-title">{activeItem.titulo}</span>
+                    <span className="player-item-year">({activeItem.año})</span>
+                    <span className="player-item-rating">★ {activeItem.valoracion}</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -976,7 +986,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               <div className={`chat-wrapper ${chatCollapsed ? 'collapsed' : ''}`}>
                 <ChatBox 
                   channelId={activeItem.id} 
-                  channelTitle={activeItem.titulo} 
+                  channelTitle={activeItem.tipo === 'canal' ? activeItem.nombre : activeItem.titulo} 
                   isCollapsed={chatCollapsed}
                   onToggleCollapse={() => setChatCollapsed(!chatCollapsed)}
                 />
@@ -987,10 +997,16 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             <div className="player-details-full">
               <div className="player-details-card">
                 <h3>Sinopsis</h3>
-                <p>{activeItem.descripcion}</p>
+                <p>
+                  {activeItem.tipo === 'canal' 
+                    ? (activeItem.descripcion || `Transmisión oficial en vivo de ${activeItem.nombre} (${activeItem.pais}).`) 
+                    : activeItem.descripcion}
+                </p>
                 <div className="tags-row">
                   <span className="category-tag">{activeItem.categoria}</span>
-                  <span className="type-tag">{activeItem.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
+                  <span className="type-tag">
+                    {activeItem.tipo === 'canal' ? 'Canal en Vivo' : (activeItem.tipo === 'serie' ? 'Serie de TV' : 'Película')}
+                  </span>
                   {activeItem.tmdbId && <span className="id-tag">TMDB ID: {activeItem.tmdbId}</span>}
                 </div>
               </div>
