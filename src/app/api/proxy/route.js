@@ -11,12 +11,27 @@ export async function GET(request) {
   }
 
   try {
+    // Dynamic Referer and Origin spoofing based on stream host to bypass anti-hotlink checks
+    const urlObj = new URL(targetUrl);
+    const referer = `${urlObj.protocol}//${urlObj.host}/`;
+    
+    // Cookie forwarding (bi-directional proxying) to maintain session/cookie validation (crucial for Pluto TV, etc.)
+    const incomingCookies = request.headers.get('cookie') || '';
+
+    const fetchHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Referer': referer,
+      'Origin': `${urlObj.protocol}//${urlObj.host}`
+    };
+
+    if (incomingCookies) {
+      fetchHeaders['Cookie'] = incomingCookies;
+    }
+
     const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
+      headers: fetchHeaders,
       cache: 'no-store',
       next: { revalidate: 0 }
     });
@@ -27,6 +42,17 @@ export async function GET(request) {
 
     const contentType = response.headers.get('content-type') || '';
     
+    // Extract set-cookie headers from the target response to forward to the client browser
+    let responseCookies = [];
+    if (typeof response.headers.getSetCookie === 'function') {
+      responseCookies = response.headers.getSetCookie();
+    } else {
+      const setCookieVal = response.headers.get('set-cookie');
+      if (setCookieVal) {
+        responseCookies = [setCookieVal];
+      }
+    }
+
     // Check if it is a playlist (.m3u8 or contains mpegurl type)
     const isM3u8 = targetUrl.toLowerCase().includes('.m3u8') || 
                    contentType.toLowerCase().includes('mpegurl') || 
@@ -57,23 +83,40 @@ export async function GET(request) {
         return `${request.nextUrl.origin}/api/proxy?url=${encodeURIComponent(absolute)}`;
       });
 
+      const resHeaders = new Headers({
+        'Content-Type': 'application/vnd.apple.mpegurl',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+
+      // Append cookies to forward them to browser
+      if (responseCookies && responseCookies.length > 0) {
+        responseCookies.forEach(cookie => {
+          resHeaders.append('Set-Cookie', cookie);
+        });
+      }
+
       return new Response(rewrittenLines.join('\n'), {
-        headers: {
-          'Content-Type': 'application/vnd.apple.mpegurl',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
+        headers: resHeaders
       });
     } else {
       // It is a segment (.ts, etc.) or raw continuous stream, stream it using response.body
+      const resHeaders = new Headers({
+        'Content-Type': contentType || 'video/MP2T',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600'
+      });
+
+      if (responseCookies && responseCookies.length > 0) {
+        responseCookies.forEach(cookie => {
+          resHeaders.append('Set-Cookie', cookie);
+        });
+      }
+
       return new Response(response.body, {
-        headers: {
-          'Content-Type': contentType || 'video/MP2T',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=3600'
-        }
+        headers: resHeaders
       });
     }
   } catch (err) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 // Deterministic helper to get a language badge
 const getLangBadge = (item) => {
@@ -614,12 +614,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       });
   }, [activeItem]);
 
-  // Filtrar catálogo por búsqueda
-  const filteredItems = peliculas.filter(item => {
-    const matchesSearch = item.titulo.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  // Filtrar catálogo por búsqueda (se trasladó al useMemo para evitar lag)
 
   // Auxiliar para obtener los 15 más valorados priorizando recientes
   const getTop15 = (list) => {
@@ -686,6 +681,76 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       return normalized === letter;
     });
   };
+
+  // Memoized lists to eliminate CPU/Render Lag
+  const estrenosPeliculas = useMemo(() => getEstrenosPeliculas(peliculas), [peliculas]);
+  const estrenosSeries = useMemo(() => getEstrenosSeries(peliculas), [peliculas]);
+  const topAccion = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Acción')), [peliculas]);
+  const topCienciaFiccion = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Ciencia Ficción')), [peliculas]);
+  const topTerror = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Terror')), [peliculas]);
+  const topComedia = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Comedia')), [peliculas]);
+  const topDrama = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Drama')), [peliculas]);
+  const topInfantil = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Infantil')), [peliculas]);
+  const topSeries = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'serie')), [peliculas]);
+
+  // Memoized FAST TV (FREE) categories
+  const freeLatino = useMemo(() => canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('mex') || c.nombre.toLowerCase().includes('cine premium') || c.nombre.toLowerCase().includes('cine familiar'))), [canales]);
+  const freeAccion = useMemo(() => canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror') || c.nombre.toLowerCase().includes('suspenso'))), [canales]);
+  const freeGeneral = useMemo(() => canales.filter(c => c.categoria === 'Cine' && !(c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror'))).slice(0, 20), [canales]);
+
+  // Memoized sorting for A-Z tabs
+  const sortedMovies = useMemo(() => {
+    return peliculas
+      .filter(p => p.tipo === 'pelicula')
+      .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  }, [peliculas]);
+
+  const sortedSeries = useMemo(() => {
+    return peliculas
+      .filter(p => p.tipo === 'serie')
+      .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  }, [peliculas]);
+
+  // Memoized filters for search and live tabs to prevent UI freezing
+  const filteredItems = useMemo(() => {
+    if (!searchQuery) return [];
+    const q = searchQuery.toLowerCase();
+    return peliculas.filter(item => {
+      return item.titulo.toLowerCase().includes(q) ||
+             item.descripcion.toLowerCase().includes(q);
+    });
+  }, [peliculas, searchQuery]);
+
+  const filteredTdtCanales = useMemo(() => {
+    return canales.filter(ch => {
+      if (ch.categoria === 'Cine') return false;
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!ch.nombre.toLowerCase().includes(q) && !ch.categoria.toLowerCase().includes(q) && !(ch.pais || '').toLowerCase().includes(q)) {
+          return false;
+        }
+      }
+
+      if (tdtFilter === 'Todos') return true;
+      if (['Deportes', 'Noticias', 'Infantil', 'Música'].includes(tdtFilter)) {
+        return ch.categoria === tdtFilter;
+      }
+      return ch.pais === tdtFilter;
+    });
+  }, [canales, tdtFilter, searchQuery]);
+
+  const filteredFreeCanales = useMemo(() => {
+    return canales.filter(ch => {
+      if (ch.categoria !== 'Cine') return false;
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return ch.nombre.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [canales, searchQuery]);
 
   // Manejar carga por ID directo
   const handleLoadCustomId = (e) => {
@@ -1099,55 +1164,55 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     <div className="carruseles-container">
                       <CategoryRow 
                         title="Películas de Estreno (2020 - 2026)" 
-                        items={getEstrenosPeliculas(peliculas)} 
+                        items={estrenosPeliculas} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Series de Estreno y Tendencia (Netflix, Max)" 
-                        items={getEstrenosSeries(peliculas)} 
+                        items={estrenosSeries} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Películas de Acción" 
-                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Acción'))} 
+                        items={topAccion} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Ciencia Ficción" 
-                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Ciencia Ficción'))} 
+                        items={topCienciaFiccion} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Terror y Suspenso" 
-                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Terror'))} 
+                        items={topTerror} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Comedia" 
-                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Comedia'))} 
+                        items={topComedia} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Drama" 
-                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Drama'))} 
+                        items={topDrama} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Infantil y Familiar" 
-                        items={getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Infantil'))} 
+                        items={topInfantil} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
                       <CategoryRow 
                         title="Series de TV más vistas" 
-                        items={getTop15(peliculas.filter(p => p.tipo === 'serie'))} 
+                        items={topSeries} 
                         onSelect={handleCardClick}
                         onPlay={handleCardDoubleClick}
                       />
@@ -1173,24 +1238,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     </div>
 
                     {(() => {
-                      const filteredTdtCanales = canales.filter(ch => {
-                        if (ch.categoria === 'Cine') return false; // Cine goes to FREE tab
-                        
-                        // Search query match
-                        if (searchQuery) {
-                          const q = searchQuery.toLowerCase();
-                          if (!ch.nombre.toLowerCase().includes(q) && !ch.categoria.toLowerCase().includes(q) && !(ch.pais || '').toLowerCase().includes(q)) {
-                            return false;
-                          }
-                        }
-                        
-                        // Category/Country filter match
-                        if (tdtFilter === 'Todos') return true;
-                        if (['Deportes', 'Noticias', 'Infantil', 'Música'].includes(tdtFilter)) {
-                          return ch.categoria === tdtFilter;
-                        }
-                        return ch.pais === tdtFilter;
-                      });
+
 
                       if (filteredTdtCanales.length === 0) {
                         return (
@@ -1241,15 +1289,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     <h2 className="section-title">Canales de Cine Gratis (FAST TV)</h2>
                     
                     {(() => {
-                      const filteredFreeCanales = canales.filter(ch => {
-                        if (ch.categoria !== 'Cine') return false; // Only Cine channels go to FREE tab
-                        
-                        if (searchQuery) {
-                          const q = searchQuery.toLowerCase();
-                          return ch.nombre.toLowerCase().includes(q);
-                        }
-                        return true;
-                      });
+
 
                       if (searchQuery) {
                         if (filteredFreeCanales.length === 0) {
@@ -1296,20 +1336,20 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                       return (
                         <div className="carruseles-container">
                           <CategoryRow 
-                            title="Cine en Español Latino" 
-                            items={canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('mex') || c.nombre.toLowerCase().includes('cine premium') || c.nombre.toLowerCase().includes('cine familiar')))} 
+                            title="Cine en Español Latino"
+                            items={freeLatino}
                             onSelect={handleCardClick}
                             onPlay={handleCardDoubleClick}
                           />
                           <CategoryRow 
                             title="Cine de Acción y Suspenso" 
-                            items={canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror') || c.nombre.toLowerCase().includes('suspenso')))} 
+                            items={freeAccion} 
                             onSelect={handleCardClick}
                             onPlay={handleCardDoubleClick}
                           />
                           <CategoryRow 
                             title="Cine General y Blockbusters" 
-                            items={canales.filter(c => c.categoria === 'Cine' && !(c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror'))).slice(0, 20)} 
+                            items={freeGeneral}
                             onSelect={handleCardClick}
                             onPlay={handleCardDoubleClick}
                           />
@@ -1348,9 +1388,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     </div>
 
                     {(() => {
-                      const allMovies = peliculas.filter(p => p.tipo === 'pelicula');
-                      const sorted = [...allMovies].sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-                      const filtered = filterByLetter(sorted, selectedLetter);
+                      const filtered = filterByLetter(sortedMovies, selectedLetter);
                       const visible = filtered.slice(0, moviesLimit);
 
                       return (
@@ -1438,9 +1476,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     </div>
 
                     {(() => {
-                      const allSeries = peliculas.filter(p => p.tipo === 'serie');
-                      const sorted = [...allSeries].sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-                      const filtered = filterByLetter(sorted, selectedSeriesLetter);
+                      const filtered = filterByLetter(sortedSeries, selectedSeriesLetter);
                       const visible = filtered.slice(0, seriesLimit);
 
                       return (
