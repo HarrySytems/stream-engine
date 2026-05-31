@@ -45,6 +45,54 @@ COUNTRY_MAP = {
     "us": "EE.UU."
 }
 
+GUARANTEED_TDT_CHANNELS = [
+    {
+        "id": "canal-latina-television",
+        "nombre": "Latina Televisión (1080p)",
+        "url": "https://redirector.rudo.video/hls-video/567ffde3fa319fadf3419efda25619456231dfea/latina/latina.smil/playlist.m3u8",
+        "categoria": "TDT / General",
+        "pais": "Perú",
+        "logo": "https://img.youtube.com/vi/3rDtLrcgr3JS3_3JOW4BAw/hqdefault.jpg",
+        "tipo": "canal"
+    },
+    {
+        "id": "canal-america-tv",
+        "nombre": "América Televisión (720p)",
+        "url": "https://prepublish.f.qaotic.net/a07/americahls-100056/playlist_720p.m3u8",
+        "categoria": "TDT / General",
+        "pais": "Perú",
+        "logo": "https://i.imgur.com/T0T9wWb.png",
+        "tipo": "canal"
+    },
+    {
+        "id": "canal-atv-peru",
+        "nombre": "ATV Perú (720p)",
+        "url": "https://alba-pe-atv-atvmas.stream.mediatiquestream.com/index.m3u8",
+        "categoria": "TDT / General",
+        "pais": "Perú",
+        "logo": "https://i.imgur.com/uR6o0sN.png",
+        "tipo": "canal"
+    },
+    {
+        "id": "canal-rtve-la-1",
+        "nombre": "RTVE La 1 (720p)",
+        "url": "https://ztnr.rtve.es/ztnr/1688877.m3u8",
+        "categoria": "TDT / General",
+        "pais": "España",
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/e/e0/La_1_RTVE_logo.png",
+        "tipo": "canal"
+    },
+    {
+        "id": "canal-france-24-espanol",
+        "nombre": "France 24 Español (1080p)",
+        "url": "https://live.france24.com/hls/live/2037220/F24_ES_HI_HLS/master.m3u8",
+        "categoria": "Noticias",
+        "pais": "Internacional",
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/d/da/France_24_Logo.svg",
+        "tipo": "canal"
+    }
+]
+
 # CDNs conocidos de streaming que soportan CORS por defecto en el navegador
 CORS_SUPPORTING_CDNS = [
     '.cloudfront.net', '.rudo.video', '.rtve.es', '.iblups.com', '.smartbit.co', 
@@ -345,8 +393,8 @@ def generar_canales():
 
     # Evitar duplicados por URL de streaming o por ID
     canales_unicos = []
-    urls_vistas = set()
-    ids_vistos = set()
+    urls_vistas = set(c["url"] for c in GUARANTEED_TDT_CHANNELS)
+    ids_vistos = set(c["id"] for c in GUARANTEED_TDT_CHANNELS)
     for ch in todos_los_canales:
         url = ch["url"]
         ch_id = ch["id"]
@@ -432,9 +480,10 @@ def generar_canales():
         # Guardar en canales.json en la raíz del proyecto
         root_path = os.path.dirname(dir_path)
         dest_file = os.path.join(root_path, 'canales.json')
+        canales_finales_completos = GUARANTEED_TDT_CHANNELS + canales_verificados_finales
         with open(dest_file, 'w', encoding='utf-8') as f:
-            json.dump(canales_verificados_finales, f, ensure_ascii=False, indent=4)
-        print(f"\nÉxito total: Se han guardado {len(canales_verificados_finales)} canales verificados en {dest_file}.")
+            json.dump(canales_finales_completos, f, ensure_ascii=False, indent=4)
+        print(f"\nÉxito total: Se han guardado {len(canales_finales_completos)} canales (incluyendo {len(GUARANTEED_TDT_CHANNELS)} garantizados) en {dest_file}.")
     except Exception as e:
         print(f"Error al escribir canales.json: {e}")
 

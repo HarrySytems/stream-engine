@@ -238,10 +238,16 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       if (document.visibilityState === 'visible') {
         const iframes = document.querySelectorAll('.player-iframe');
         iframes.forEach(iframe => {
-          const originalOpacity = iframe.style.opacity || '1';
-          iframe.style.opacity = '0.99';
+          const originalDisplay = iframe.style.display || 'block';
+          iframe.style.display = 'none';
           void iframe.offsetHeight; // Forzar reflow
-          iframe.style.opacity = originalOpacity;
+          iframe.style.display = originalDisplay;
+
+          const originalTransform = iframe.style.transform || 'none';
+          iframe.style.transform = 'scale(0.999)';
+          setTimeout(() => {
+            iframe.style.transform = originalTransform;
+          }, 50);
         });
       }
     };
@@ -583,7 +589,19 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
     const tituloOriginal = activeItem.titulo;
     const originalTitle = tmdbData ? (tmdbData.original_title || tmdbData.original_name) : null;
-    const postType = activeItem.tipo === 'serie' ? 'tvshows' : 'movies';
+    const postType = activeItem.categoria === 'Anime' ? 'animes' : (activeItem.tipo === 'serie' ? 'tvshows' : 'movies');
+
+    const extractTitles = (title) => {
+      if (!title) return [];
+      const list = [title];
+      // Si el título contiene paréntesis, e.g. "Attack on Titan (Ataque a los Titanes)"
+      const match = title.match(/^([^(]+)\(([^)]+)\)/);
+      if (match) {
+        list.push(match[1].trim());
+        list.push(match[2].trim());
+      }
+      return list;
+    };
 
     // Función para obtener reproductores de un proveedor y título específico
     const fetchFromProvider = async (provider, titleToSearch) => {
@@ -640,16 +658,28 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       }
     };
 
-    // Lanzar búsquedas en paralelo para Cuevana y LaMovie, con fallbacks de títulos en inglés
+    // Lanzar búsquedas en paralelo para Cuevana y LaMovie, con fallbacks de títulos en inglés y traducciones
     const runSearch = async () => {
-      let cuevanaEmbeds = await fetchFromProvider('cuevana', tituloOriginal);
-      if (cuevanaEmbeds.length === 0 && originalTitle && cleanTitle(tituloOriginal) !== cleanTitle(originalTitle)) {
-        cuevanaEmbeds = await fetchFromProvider('cuevana', originalTitle);
+      const searchTitles = [];
+      extractTitles(tituloOriginal).forEach(t => {
+        if (!searchTitles.includes(t)) searchTitles.push(t);
+      });
+      if (originalTitle) {
+        extractTitles(originalTitle).forEach(t => {
+          if (!searchTitles.includes(t)) searchTitles.push(t);
+        });
       }
 
-      let lamovieEmbeds = await fetchFromProvider('lamovie', tituloOriginal);
-      if (lamovieEmbeds.length === 0 && originalTitle && cleanTitle(tituloOriginal) !== cleanTitle(originalTitle)) {
-        lamovieEmbeds = await fetchFromProvider('lamovie', originalTitle);
+      let cuevanaEmbeds = [];
+      let lamovieEmbeds = [];
+
+      for (const titleCandidate of searchTitles) {
+        if (cuevanaEmbeds.length === 0) {
+          cuevanaEmbeds = await fetchFromProvider('cuevana', titleCandidate);
+        }
+        if (lamovieEmbeds.length === 0) {
+          lamovieEmbeds = await fetchFromProvider('lamovie', titleCandidate);
+        }
       }
 
       const cuevanaServersList = cuevanaEmbeds
@@ -1032,8 +1062,10 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         if (data && data.baseUrl && data.chapter) {
           const baseUrl = data.baseUrl;
           const hash = data.chapter.hash;
-          const files = data.chapter.dataSaver || data.chapter.data;
-          const urls = files.map(file => `/api/proxy?url=${encodeURIComponent(`${baseUrl}/data-saver/${hash}/${file}`)}`);
+          const isSaver = !!data.chapter.dataSaver;
+          const files = isSaver ? data.chapter.dataSaver : data.chapter.data;
+          const pathType = isSaver ? 'data-saver' : 'data';
+          const urls = files.map(file => `/api/proxy?url=${encodeURIComponent(`${baseUrl}/${pathType}/${hash}/${file}`)}`);
           setChapterPages(urls);
         } else {
           setChapterPages([]);
