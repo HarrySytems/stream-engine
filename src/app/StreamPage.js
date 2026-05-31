@@ -302,35 +302,49 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Servidores de reproducción disponibles
   const servers = [
     {
-      name: 'Servidor 1 (VidSrc.to - Recomendado)',
-      url: (tmdbId, imdbId, type, s, e) => 
-        type === 'pelicula' 
-          ? `https://vidsrc.to/embed/movie/${tmdbId}`
-          : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
-    },
-    {
-      name: 'Servidor 2 (VidSrc.me)',
-      url: (tmdbId, imdbId, type, s, e) => 
-        type === 'pelicula' 
-          ? `https://vidsrc.xyz/embed/movie/${tmdbId}`
-          : `https://vidsrc.xyz/embed/tv/${tmdbId}/${s}/${e}`
-    },
-    {
-      name: 'Servidor 3 (VidLink - Multi-idioma)',
+      name: 'Servidor 1 (VidLink - Multi-idioma / Recomendado)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://vidlink.pro/movie/${tmdbId}?primaryColor=00f5d4`
           : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=00f5d4`
     },
     {
-      name: 'Servidor 4 (Embed.su)',
+      name: 'Servidor 2 (VidSrc.cc)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrc.cc/v2/embed/movie/${imdbId || tmdbId}`
+          : `https://vidsrc.cc/v2/embed/tv/${imdbId || tmdbId}/${s}/${e}`
+    },
+    {
+      name: 'Servidor 3 (VidSrc.to)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrc.to/embed/movie/${tmdbId}`
+          : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
+    },
+    {
+      name: 'Servidor 4 (VidSrc.me / xyz)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`
+          : `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&sea=${s}&epi=${e}`
+    },
+    {
+      name: 'Servidor 5 (VidSrc.pm)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrc.pm/embed/movie/${tmdbId}`
+          : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
+    },
+    {
+      name: 'Servidor 6 (Embed.su)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://embed.su/embed/movie/${tmdbId}`
           : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
-      name: 'Servidor 5 (SmashyStream)',
+      name: 'Servidor 7 (SmashyStream)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`
@@ -1235,7 +1249,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                         className="player-iframe"
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+                        sandbox={activeItem.youtubeId ? undefined : "allow-scripts allow-same-origin allow-forms allow-presentation"}
                       />
                     )}
                   </div>
@@ -1957,7 +1971,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                 allowFullScreen
                 allow="autoplay; encrypted-media; fullscreen"
                 className="trailer-iframe"
-                sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
               />
             </div>
           </div>
