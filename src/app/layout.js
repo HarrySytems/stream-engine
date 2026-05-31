@@ -1,3 +1,5 @@
+import './globals.css';
+
 export const metadata = {
   title: 'FilmTV - Películas y Series en Streaming Gratis',
   description: 'Disfruta de tus películas y series favoritas en alta definición, con múltiples servidores de reproducción, sin costo y con chat en vivo integrado.',
