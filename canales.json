@@ -198,15 +198,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-realmadrid-tv-720p",
-        "nombre": "Realmadrid TV (720p)",
-        "url": "https://jmp2.uk/plu-63dac28760bc8f0008a7654b.m3u8",
-        "categoria": "Deportes",
-        "pais": "España",
-        "logo": "https://i.imgur.com/5pMo7dL.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-sport-italia",
         "nombre": "Sport Italia",
         "url": "https://origin-001.streamup.eu/sportitalia/sisolocalcio_abr/playlist.m3u8",
@@ -348,15 +339,6 @@
         "categoria": "Deportes",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/YPHrFU0.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-bellator-mma",
-        "nombre": "Bellator MMA",
-        "url": "https://jmp2.uk/plu-5ebc8688f3697d00072f7cf8.m3u8",
-        "categoria": "Deportes",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/VBKoLHk.png",
         "tipo": "canal"
     },
     {
@@ -720,15 +702,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-f1-channel-720p",
-        "nombre": "F1 Channel (720p)",
-        "url": "https://jmp2.uk/plu-65c69ee3d77d450008c80438.m3u8",
-        "categoria": "Deportes",
-        "pais": "Internacional",
-        "logo": "https://i.imgur.com/cjXzWsI.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-floracing-24-7-1080p",
         "nombre": "FloRacing 24/7 (1080p)",
         "url": "https://amg02278-amg02278c1-flosports-worldwide-7592.playouts.now.amagi.tv/playlist.m3u8",
@@ -906,15 +879,6 @@
         "categoria": "Deportes",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/mPGtwAP.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-lucha-libre-aaa",
-        "nombre": "Lucha Libre AAA",
-        "url": "https://jmp2.uk/plu-5c01df1759ee03633e7b272c.m3u8",
-        "categoria": "Deportes",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/Nc7K060.png",
         "tipo": "canal"
     },
     {
@@ -1125,24 +1089,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-pbr-ridepass-720p",
-        "nombre": "PBR RidePass (720p)",
-        "url": "https://jmp2.uk/plu-60d39387706fe50007fda8e8.m3u8",
-        "categoria": "Deportes",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/gUxH97E.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-futbol-para-fans-1080p",
-        "nombre": "Pluto TV Futbol Para Fans (1080p)",
-        "url": "https://jmp2.uk/plu-63c6e37e636b7e0007ccb635.m3u8",
-        "categoria": "Deportes",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/yJlY9Rr.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-nbc-sports-boston-1080p-not-24-7",
         "nombre": "NBC Sports Boston (1080p) [Not 24/7]",
         "url": "https://tvpass.org/live/nbc-sports-boston/hd",
@@ -1326,15 +1272,6 @@
         "id": "canal-tennis-channel-1080p",
         "nombre": "Tennis Channel (1080p)",
         "url": "https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg01444-tennischannelth-tennischannelnl-samsungnl/playlist.m3u8",
-        "categoria": "Deportes",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/tsljAnY.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-tennischannel-2-720p",
-        "nombre": "TennisChannel 2 (720p)",
-        "url": "https://jmp2.uk/plu-681109b688b9d85d0938c6ba.m3u8",
         "categoria": "Deportes",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/tsljAnY.png",
@@ -1581,15 +1518,6 @@
         "categoria": "Deportes",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/RPJiolQ.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-world-poker-tour",
-        "nombre": "World Poker Tour",
-        "url": "https://jmp2.uk/plu-5ad9b7aae738977e2c312132.m3u8",
-        "categoria": "Deportes",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/98kLMjj.png",
         "tipo": "canal"
     },
     {
@@ -2169,15 +2097,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-crimen-historia-720p",
-        "nombre": "Crimen & Historia (720p)",
-        "url": "https://jmp2.uk/plu-64ddcbb14c5ed80008fad416.m3u8",
-        "categoria": "TDT / General",
-        "pais": "España",
-        "logo": "https://images.pluto.tv/channels/64ddcbb14c5ed80008fad416/colorLogoPNG.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-el-33-originals-1080p-not-24-7",
         "nombre": "El 33 Originals (1080p) [Not 24/7]",
         "url": "https://directes-tv-int.3catdirectes.cat/live-content/c33-super3-hls/master.m3u8",
@@ -2301,15 +2220,6 @@
         "categoria": "TDT / General",
         "pais": "España",
         "logo": "https://i.imgur.com/VUy8xIG.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-el-mueble-720p",
-        "nombre": "El Mueble (720p)",
-        "url": "https://jmp2.uk/plu-690dd10a37b131228d76d5b1.m3u8",
-        "categoria": "TDT / General",
-        "pais": "España",
-        "logo": "https://provider-static.plex.tv/epg/cms/production/d64983e2-55b1-410b-9599-98a28f7b94ba/Logo_ElMueble_1500x1000_AllWhite_-_Belen_Bruno.png",
         "tipo": "canal"
     },
     {
@@ -2664,15 +2574,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-pluto-tv-horror",
-        "nombre": "Pluto TV Horror",
-        "url": "https://jmp2.uk/plu-6267d4d1fb694f0007a6af0e.m3u8",
-        "categoria": "TDT / General",
-        "pais": "España",
-        "logo": "https://images.pluto.tv/channels/569546031a619b8f07ce6e25/colorLogoPNG.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-mijas-3-40tv-720p",
         "nombre": "Mijas 3.40TV (720p)",
         "url": "https://streaming004.gestec-video.com/hls/MIJAS.m3u8",
@@ -2724,15 +2625,6 @@
         "categoria": "TDT / General",
         "pais": "España",
         "logo": "https://i.imgur.com/x9CgczD.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-one-piece",
-        "nombre": "One Piece",
-        "url": "https://jmp2.uk/plu-680ba8992472a7200a183eb5.m3u8",
-        "categoria": "TDT / General",
-        "pais": "España",
-        "logo": "https://i.imgur.com/XsvbAWR.png",
         "tipo": "canal"
     },
     {
@@ -9819,24 +9711,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-90s-throwback",
-        "nombre": "90s Throwback",
-        "url": "https://jmp2.uk/plu-5f4d86f519358a00072b978e.m3u8",
-        "categoria": "TDT / General",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/KoGko6M.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-80s-rewind",
-        "nombre": "80s Rewind",
-        "url": "https://jmp2.uk/plu-5ca525b650be2571e3943c63.m3u8",
-        "categoria": "TDT / General",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/nkEeYfI.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-30a-sidewalks-720p",
         "nombre": "30A Sidewalks (720p)",
         "url": "https://30a-tv.com/sidewalks.m3u8",
@@ -9960,15 +9834,6 @@
         "categoria": "TDT / General",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/j0UC4ke.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-50-cent-action-720p",
-        "nombre": "50 Cent Action (720p)",
-        "url": "https://jmp2.uk/plu-68487fb3f212bedacf5a53e3.m3u8",
-        "categoria": "TDT / General",
-        "pais": "EE.UU.",
-        "logo": "https://provider-static.plex.tv/epg/cms/production/bcfb9977-809f-49ae-acc7-430f2c6ffb26/50CentAction_Logo_1500x1000_DarkBG_-_Chris_Connors.png",
         "tipo": "canal"
     },
     {
@@ -10248,15 +10113,6 @@
         "categoria": "TDT / General",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/hW6z1RG.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-acapulco-shore",
-        "nombre": "Acapulco Shore",
-        "url": "https://jmp2.uk/plu-64dab1f835425100080e1e7b.m3u8",
-        "categoria": "TDT / General",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/D2jgGOi.png",
         "tipo": "canal"
     },
     {
@@ -10692,39 +10548,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-all-reality-we-tv-720p",
-        "nombre": "All Reality WE tv (720p)",
-        "url": "https://jmp2.uk/plu-5e82530945600e0007ca076c.m3u8",
-        "categoria": "TDT / General",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/HZTz5HJ.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-bolton-community-voice-channel-cvc-government-bolton-ct-480p",
         "nombre": "Bolton Community Voice Channel (CVC) Government (Bolton CT) (480p)",
         "url": "https://dlttx48mxf9m3.cloudfront.net/vod_clients/bolton/live/ch3/video.m3u8",
         "categoria": "TDT / General",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/qLJhNhq.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-auction-hunters",
-        "nombre": "Auction Hunters",
-        "url": "https://jmp2.uk/plu-62ac50e92c48f900071444c9.m3u8",
-        "categoria": "TDT / General",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/4SPOVN7.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-bar-rescue",
-        "nombre": "Bar Rescue",
-        "url": "https://jmp2.uk/plu-60a3d889a5b3690008dc7fe8.m3u8",
-        "categoria": "TDT / General",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/WFgWGPb.png",
         "tipo": "canal"
     },
     {
@@ -10761,15 +10590,6 @@
         "categoria": "Cine",
         "pais": "España",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Logo-bom.svg/960px-Logo-bom.svg.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-cine-comedia",
-        "nombre": "Cine comedia",
-        "url": "https://jmp2.uk/plu-5f513564e4622a0007c578c0.m3u8",
-        "categoria": "Cine",
-        "pais": "España",
-        "logo": "https://i.imgur.com/1H1MHb2.png",
         "tipo": "canal"
     },
     {
@@ -11250,15 +11070,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-70s-cinema",
-        "nombre": "70s Cinema",
-        "url": "https://jmp2.uk/plu-5f4d878d3d19b30007d2e782.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/mgXeEE4.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-hallmark-movies-more-1080p-geo-blocked",
         "nombre": "Hallmark Movies & More (1080p) [Geo-blocked]",
         "url": "https://pb-clwlfvkqpn19r.akamaized.net/Hallmark_Movies_&_More.m3u8",
@@ -11313,84 +11124,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-cine-premiere",
-        "nombre": "Cine Premiere",
-        "url": "https://jmp2.uk/plu-5cf968040ab7d8f181e6a68b.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/PdhWTO6.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-cine-cl-sico",
-        "nombre": "Cine Clásico",
-        "url": "https://jmp2.uk/plu-64b9671cdac71b0008f371df.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/hCA5BRr.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-comedy-central-pluto-tv",
-        "nombre": "Comedy Central Pluto TV",
-        "url": "https://jmp2.uk/plu-5ca671f215a62078d2ec0abf.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/9y6TtjF.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-bet-cinema",
-        "nombre": "BET Cinema",
-        "url": "https://jmp2.uk/plu-58af4c093a41ca9d4ecabe96.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/FKBp987.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-classic-tv-drama",
-        "nombre": "Classic TV Drama",
-        "url": "https://jmp2.uk/plu-5f15e3cccf49290007053c67.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/XHQxv0x.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-cine-terror",
-        "nombre": "Cine terror",
-        "url": "https://jmp2.uk/plu-5d8d180092e97a5e107638d3.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/I5XxyLI.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-universal-crime-1080p",
         "nombre": "Universal Crime (1080p)",
         "url": "https://xumo-xumoent-vc-107-xmuvk.fast.nbcuni.com/live/master.m3u8",
         "categoria": "Cine",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/OwSlGMu.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-cine-adrenalina",
-        "nombre": "Cine adrenalina",
-        "url": "https://jmp2.uk/plu-5d8d164d92e97a5e107638d2.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/njCKaMv.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-comedy-central-en-espa-ol",
-        "nombre": "Comedy Central en español",
-        "url": "https://jmp2.uk/plu-5cf96dad1652631e36d43320.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/6xTD3G8.png",
         "tipo": "canal"
     },
     {
@@ -11439,24 +11178,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-classic-tv-comedy",
-        "nombre": "Classic TV Comedy",
-        "url": "https://jmp2.uk/plu-5f15e32b297f96000768f928.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/wg5I5Fb.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-classic-movies-channel",
-        "nombre": "Classic Movies Channel",
-        "url": "https://jmp2.uk/plu-561c5b0dada51f8004c4d855.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/pQJxov2.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-alien-nation-by-dust-1080p",
         "nombre": "Alien Nation by DUST (1080p)",
         "url": "https://dqi7ayt2o24fn.cloudfront.net/playlist.m3u8",
@@ -11475,30 +11196,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-more-tv-drama",
-        "nombre": "More TV Drama",
-        "url": "https://jmp2.uk/plu-613260e4bdb71c00070d63fa.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/Tw3rTxP.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-tv-international-1080p",
         "nombre": "&TV International (1080p)",
         "url": "https://amg01117-amg01117c1-amgplt0029.playout.now3.amagi.tv/playlist/amg01117-amg01117c1-amgplt0029/playlist.m3u8",
         "categoria": "Cine",
         "pais": "Internacional",
         "logo": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_SYMANDTV/images/LOGO_HD/LOGO_HD_image.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-crime-drama",
-        "nombre": "Pluto TV Crime Drama",
-        "url": "https://jmp2.uk/plu-65a6a7a00c7ff50008cba07b.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/9j1njE3.png",
         "tipo": "canal"
     },
     {
@@ -11538,30 +11241,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-pluto-tv-crime-movies",
-        "nombre": "Pluto TV Crime Movies",
-        "url": "https://jmp2.uk/plu-5f4d8594eb979c0007706de7.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/SJcqknt.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-alankar-tv-720p",
         "nombre": "Alankar TV (720p)",
         "url": "https://livetv.tarangplus.in/alankar-origin/live/playlist.m3u8",
         "categoria": "Cine",
         "pais": "Internacional",
         "logo": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_ALANKAR/images/LOGO_HD/image.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-comedy",
-        "nombre": "Pluto TV Comedy",
-        "url": "https://jmp2.uk/plu-5a4d3a00ad95e4718ae8d8db.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/MTVrbd5.png",
         "tipo": "canal"
     },
     {
@@ -11601,66 +11286,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-tv-land-drama",
-        "nombre": "TV Land Drama",
-        "url": "https://jmp2.uk/plu-5d40bebc5e3d2750a2239d7e.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/y1rXIAS.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-paramount-movie-channel",
-        "nombre": "Paramount Movie Channel",
-        "url": "https://jmp2.uk/plu-5cb0cae7a461406ffe3f5213.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/sj5h9bl.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-adrenalina-pura-tv",
-        "nombre": "Adrenalina Pura TV",
-        "url": "https://jmp2.uk/plu-61b790b985706b00072cb797.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/Pvid2iH.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-drama",
-        "nombre": "Pluto TV Drama",
-        "url": "https://jmp2.uk/plu-5b4e92e4694c027be6ecece1.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/PvhbHTZ.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-paramount-picks",
-        "nombre": "Paramount+ Picks",
-        "url": "https://jmp2.uk/plu-5ff8c708653d080007361b14.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://images.pluto.tv/channels/5ff8c708653d080007361b14/featuredImage.jpg",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-bhojpuri-cinema-720p",
         "nombre": "Bhojpuri Cinema (720p)",
         "url": "https://live-bhojpuri.akamaized.net/liveabr/playlist.m3u8",
         "categoria": "Cine",
         "pais": "Internacional",
         "logo": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_BHOJPURI_CINEMA/images/LOGO_HD/image.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-anime-movies",
-        "nombre": "Pluto TV Anime Movies",
-        "url": "https://jmp2.uk/plu-67ed8f7e443f0671bc2b2368.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://images.pluto.tv/channels/67ed8f7e443f0671bc2b2368/colorLogoPNG.png",
         "tipo": "canal"
     },
     {
@@ -11916,15 +11547,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-filmes-suspense",
-        "nombre": "Filmes Suspense",
-        "url": "https://jmp2.uk/plu-5f171d3442a0500007362f22.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/45V9MKk.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-gem-pixel",
         "nombre": "GEM Pixel",
         "url": "https://glserver1.tamashaland.com/live/aBCH96886YznRbGOiqTnnQ__/stream_0.m3u8",
@@ -12159,30 +11781,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-moviedome-720p",
-        "nombre": "MOVIEDOME (720p)",
-        "url": "https://jmp2.uk/plu-615c1e5ce3039400070a0547.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/8c54ycg.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-kino-24-720p",
         "nombre": "Kino 24 (720p)",
         "url": "https://sirius.greenhosting.ru/Kino24Ru/video.m3u8",
         "categoria": "Cine",
         "pais": "Internacional",
         "logo": "https://i.imgur.com/QAdDARF.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-moviesphere-720p",
-        "nombre": "Moviesphere (720p)",
-        "url": "https://jmp2.uk/plu-6401d85a49839300087b116c.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/h1ejU90.png",
         "tipo": "canal"
     },
     {
@@ -12222,15 +11826,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-moviesphere-by-lionsgate",
-        "nombre": "MovieSphere by Lionsgate",
-        "url": "https://jmp2.uk/plu-64a3d96f060e830008af6745.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/h1ejU90.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-persiana-family",
         "nombre": "Persiana Family",
         "url": "https://familyhls.persiana.live/hls/stream.m3u8",
@@ -12249,15 +11844,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-pluto-tv-cine-cl-ssicos",
-        "nombre": "Pluto TV Cine Clássicos",
-        "url": "https://jmp2.uk/plu-5fa1612a669ba0000702017b.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/N3UYHFS.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-persiana-korea",
         "nombre": "Persiana Korea",
         "url": "https://korhls.persiana.live/hls/stream.m3u8",
@@ -12273,15 +11859,6 @@
         "categoria": "Cine",
         "pais": "Internacional",
         "logo": "https://i.imgur.com/0xttibX.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-cine-drama",
-        "nombre": "Pluto TV Cine Drama",
-        "url": "https://jmp2.uk/plu-5f1210d14ae1f80007bafb1d.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/AQBtheU.png",
         "tipo": "canal"
     },
     {
@@ -12339,75 +11916,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-pluto-tv-filmes-nacionais",
-        "nombre": "Pluto TV Filmes Nacionais",
-        "url": "https://jmp2.uk/plu-5f5a545d0dbf7f0007c09408.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/9QTzDJG.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-cine-fam-lia",
-        "nombre": "Pluto TV Cine Família",
-        "url": "https://jmp2.uk/plu-5f171f032cd22e0007f17f3d.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/r9UhBfV.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-pro100tv-576p",
         "nombre": "Pro100TV (576p)",
         "url": "https://sirius.greenhosting.ru/Pro100tvRu/video.m3u8",
         "categoria": "Cine",
         "pais": "Internacional",
         "logo": "https://i.imgur.com/YfQEflM.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-cine-sucessos",
-        "nombre": "Pluto TV Cine Sucessos",
-        "url": "https://jmp2.uk/plu-5f120e94a5714d00074576a1.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/Tq0SMcl.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-cine-terror",
-        "nombre": "Pluto TV Cine Terror",
-        "url": "https://jmp2.uk/plu-5f12111c9e6c2c00078ef3bb.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/I5XxyLI.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-fic-o-cient-fica",
-        "nombre": "Pluto TV Ficção Científica",
-        "url": "https://jmp2.uk/plu-5fa15ad6367e170007cdd098.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/JVEfXbi.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-movies",
-        "nombre": "Pluto TV Movies",
-        "url": "https://jmp2.uk/plu-5c5c3b948002db3c3e0b262e.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/XzAbXAn.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-filmes-a-o",
-        "nombre": "Pluto TV Filmes Ação",
-        "url": "https://jmp2.uk/plu-5f120f41b7d403000783a6d6.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/HkCV9cQ.png",
         "tipo": "canal"
     },
     {
@@ -12420,30 +11934,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-pluto-tv-cine-romance",
-        "nombre": "Pluto TV Cine Romance",
-        "url": "https://jmp2.uk/plu-5f171f988ab9780007fa95ea.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/WXMD53u.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-rai-movie-576p-geo-blocked",
         "nombre": "Rai Movie (576p) [Geo-blocked]",
         "url": "https://mediapolis.rai.it/relinker/relinkerServlet.htm?cont=747002",
         "categoria": "Cine",
         "pais": "Internacional",
         "logo": "https://i.imgur.com/0FjxXU9.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-pluto-tv-kultfilme",
-        "nombre": "Pluto TV Kultfilme",
-        "url": "https://jmp2.uk/plu-5dde47b63585b500099f74ec.m3u8",
-        "categoria": "Cine",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/RJhxl8t.png",
         "tipo": "canal"
     },
     {
@@ -12780,57 +12276,12 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-el-reino-infantil",
-        "nombre": "El Reino Infantil",
-        "url": "https://jmp2.uk/plu-66fedd65d7de140008dccd66.m3u8",
-        "categoria": "Infantil",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/u7DOoBK.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-forever-kids",
-        "nombre": "Forever Kids",
-        "url": "https://jmp2.uk/plu-56171fafada51f8004c4b40f.m3u8",
-        "categoria": "Infantil",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/deeQqYZ.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-nickelodeon-en-espa-ol",
-        "nombre": "Nickelodeon en español",
-        "url": "https://jmp2.uk/plu-5d8d08395f39465da6fb3ec4.m3u8",
-        "categoria": "Infantil",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/G1J4IsT.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-aghapy-kids-1080p",
         "nombre": "Aghapy Kids (1080p)",
         "url": "https://5b622f07944df.streamlock.net/aghapykids.tv/aghapykids2/playlist.m3u8",
         "categoria": "Infantil",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/8ariztD.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-lego-kids-tv",
-        "nombre": "LEGO Kids TV",
-        "url": "https://jmp2.uk/plu-60fb01a24795a6000762fe83.m3u8",
-        "categoria": "Infantil",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/tMfEsVr.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-nickelodeon-pluto-tv-720p",
-        "nombre": "Nickelodeon Pluto TV (720p)",
-        "url": "https://jmp2.uk/plu-5ca673e0d0bd6c2689c94ce3.m3u8",
-        "categoria": "Infantil",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/N7rQyzN.png",
         "tipo": "canal"
     },
     {
@@ -13455,15 +12906,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-cbs-news-24-7-720p",
-        "nombre": "CBS News 24/7 (720p)",
-        "url": "https://jmp2.uk/plu-6350fdd266e9ea0007bedec5.m3u8",
-        "categoria": "Noticias",
-        "pais": "EE.UU.",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/CBS_News_247_logo.svg/960px-CBS_News_247_logo.svg.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-cbs-news-chicago-720p",
         "nombre": "CBS News Chicago (720p)",
         "url": "https://cbsn-chi.cbsnstream.cbsnews.com/out/v1/b2fc0d5715d54908adf07f97d2616646/master.m3u8",
@@ -13533,15 +12975,6 @@
         "categoria": "Noticias",
         "pais": "EE.UU.",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/News_12_logo_2019.png/960px-News_12_logo_2019.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-america-s-voice-news-720p",
-        "nombre": "America's Voice News (720p)",
-        "url": "https://jmp2.uk/plu-5e1f7da4bc7d740009831259.m3u8",
-        "categoria": "Noticias",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/C4w0eYC.png",
         "tipo": "canal"
     },
     {
@@ -13866,15 +13299,6 @@
         "categoria": "Noticias",
         "pais": "Internacional",
         "logo": "",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-scripps-news",
-        "nombre": "Scripps News",
-        "url": "https://jmp2.uk/plu-5459795fc9f133a519bc0bef.m3u8",
-        "categoria": "Noticias",
-        "pais": "EE.UU.",
-        "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/a/a0/Scripps_News_logo.svg/960px-Scripps_News_logo.svg.png",
         "tipo": "canal"
     },
     {
@@ -14724,24 +14148,6 @@
         "tipo": "canal"
     },
     {
-        "id": "canal-mtv-en-espa-ol",
-        "nombre": "MTV en español",
-        "url": "https://jmp2.uk/plu-5cf96d351652631e36d4331f.m3u8",
-        "categoria": "Música",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/vQWWfyW.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-mtv-biggest-pop-1080p",
-        "nombre": "MTV Biggest Pop (1080p)",
-        "url": "https://jmp2.uk/plu-5d14fd1a252d35decbc4080c.m3u8",
-        "categoria": "Música",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/AOaZmlS.png",
-        "tipo": "canal"
-    },
-    {
         "id": "canal-wvcu-lp-concord-university-radio-the-cure-97-7-1080p",
         "nombre": "WVCU-LP Concord University Radio The Cure 97.7 (1080p)",
         "url": "https://video1.getstreamhosting.com:1936/8152/8152/playlist.m3u8",
@@ -14757,15 +14163,6 @@
         "categoria": "Música",
         "pais": "Internacional",
         "logo": "https://i.imgur.com/vPxvbVv.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-mtv-pluto-tv",
-        "nombre": "MTV Pluto TV",
-        "url": "https://jmp2.uk/plu-5ca672f515a62078d2ec0ad2.m3u8",
-        "categoria": "Música",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/WsQRCmZ.png",
         "tipo": "canal"
     },
     {
@@ -14793,15 +14190,6 @@
         "categoria": "Música",
         "pais": "EE.UU.",
         "logo": "https://i.imgur.com/gNWg9tl.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-mtv-spankin-new-1080p",
-        "nombre": "MTV Spankin' New (1080p)",
-        "url": "https://jmp2.uk/plu-5d14fdb8ca91eedee1633117.m3u8",
-        "categoria": "Música",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/thbvJd1.png",
         "tipo": "canal"
     },
     {
@@ -14910,15 +14298,6 @@
         "categoria": "Música",
         "pais": "Internacional",
         "logo": "https://i.ibb.co/0rYsbRk/Logo-TNO-2021-white.png",
-        "tipo": "canal"
-    },
-    {
-        "id": "canal-yo-mtv-1080p",
-        "nombre": "Yo! MTV (1080p)",
-        "url": "https://jmp2.uk/plu-5d14fc31252d35decbc4080b.m3u8",
-        "categoria": "Música",
-        "pais": "EE.UU.",
-        "logo": "https://i.imgur.com/hzNXDdY.png",
         "tipo": "canal"
     },
     {

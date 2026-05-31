@@ -96,12 +96,24 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [cuevanaServers, setCuevanaServers] = useState([]);
   const [loadingCuevana, setLoadingCuevana] = useState(false);
   
-  // Pestaña activa ('inicio', 'peliculas', 'series', 'tdt', 'free')
+  // Pestaña activa ('inicio', 'peliculas', 'series', 'anime', 'documentales', 'youtube', 'tdt', 'free', 'favoritos')
   const [activeTab, setActiveTab] = useState('inicio');
   const [tdtFilter, setTdtFilter] = useState('Todos');
 
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+
+  // Nuevos estados para favoritos, sidebar responsive, cookies consentimiento y trailers
+  const [favorites, setFavorites] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const [loadingTrailer, setLoadingTrailer] = useState(false);
+
+  const [animeLimit, setAnimeLimit] = useState(32);
+  const [docLimit, setDocLimit] = useState(32);
+  const [ytLimit, setYtLimit] = useState(32);
 
   // Efecto para inicializar el reproductor HLS para canales en vivo
   useEffect(() => {
@@ -167,6 +179,85 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     };
   }, [activeItem]);
 
+  // Cargar Favoritos y Consentimiento de Cookies
+  useEffect(() => {
+    const stored = localStorage.getItem('filmtv_favorites');
+    if (stored) {
+      try {
+        setFavorites(JSON.parse(stored));
+      } catch (e) {
+        console.error("Error al cargar favoritos:", e);
+      }
+    }
+    const consent = localStorage.getItem('filmtv_cookie_consent');
+    if (!consent) {
+      setShowCookieBanner(true);
+    }
+  }, []);
+
+  // Forzar repintado de iframe al volver a enfocar la pestaña (evita congelación de video con sonido activo)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const iframes = document.querySelectorAll('.player-iframe');
+        iframes.forEach(iframe => {
+          const originalOpacity = iframe.style.opacity || '1';
+          iframe.style.opacity = '0.99';
+          void iframe.offsetHeight; // Forzar reflow
+          iframe.style.opacity = originalOpacity;
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  const toggleFavorite = (item) => {
+    let updated;
+    if (favorites.some(fav => fav.id === item.id)) {
+      updated = favorites.filter(fav => fav.id !== item.id);
+    } else {
+      updated = [...favorites, item];
+    }
+    setFavorites(updated);
+    localStorage.setItem('filmtv_favorites', JSON.stringify(updated));
+  };
+
+  const playTrailer = (item) => {
+    if (!item.tmdbId) return;
+    setLoadingTrailer(true);
+    const mediaType = item.tipo === 'serie' ? 'tv' : 'movie';
+    fetch(`https://api.themoviedb.org/3/${mediaType}/${item.tmdbId}/videos?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX`)
+      .then(res => res.json())
+      .then(data => {
+        let video = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+        if (!video) video = data.results?.find(v => v.site === 'YouTube');
+        if (video) {
+          setTrailerKey(video.key);
+          setShowTrailerModal(true);
+        } else {
+          return fetch(`https://api.themoviedb.org/3/${mediaType}/${item.tmdbId}/videos?api_key=04c35731a5ee918f014970082a0088b1`)
+            .then(res => res.json())
+            .then(dataEn => {
+              const videoEn = dataEn.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || dataEn.results?.find(v => v.site === 'YouTube');
+              if (videoEn) {
+                setTrailerKey(videoEn.key);
+                setShowTrailerModal(true);
+              } else {
+                alert("Trailer no disponible.");
+              }
+            });
+        }
+      })
+      .catch(err => {
+        console.error("Error al obtener trailer:", err);
+        alert("Error al cargar el trailer.");
+      })
+      .finally(() => {
+        setLoadingTrailer(false);
+      });
+  };
+
   // Letra seleccionada para índices A-Z
   const [selectedLetter, setSelectedLetter] = useState('Todos');
   const [selectedSeriesLetter, setSelectedSeriesLetter] = useState('Todos');
@@ -181,12 +272,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [episode, setEpisode] = useState(1);
   const [seasonsInfo, setSeasonsInfo] = useState([]);
   const [loadingSeasons, setLoadingSeasons] = useState(false);
-
-  // Estados para el cargador directo de IDs
-  const [customId, setCustomId] = useState('');
-  const [customType, setCustomType] = useState('pelicula');
-  const [customSeason, setCustomSeason] = useState(1);
-  const [customEpisode, setCustomEpisode] = useState(1);
 
   // NUEVOS ESTADOS para Modal de Detalles, Elenco de Actores, Detalles de TMDB e indicador de carga de Iframe
   const [selectedItemDetails, setSelectedItemDetails] = useState(null);
@@ -217,25 +302,25 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Servidores de reproducción disponibles
   const servers = [
     {
-      name: 'Servidor 1 (VidLink - Multi-idioma / Recomendado)',
+      name: 'Servidor 1 (VidSrc.to - Recomendado)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrc.to/embed/movie/${tmdbId}`
+          : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
+    },
+    {
+      name: 'Servidor 2 (VidSrc.me)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrc.xyz/embed/movie/${tmdbId}`
+          : `https://vidsrc.xyz/embed/tv/${tmdbId}/${s}/${e}`
+    },
+    {
+      name: 'Servidor 3 (VidLink - Multi-idioma)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://vidlink.pro/movie/${tmdbId}?primaryColor=00f5d4`
           : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=00f5d4`
-    },
-    {
-      name: 'Servidor 2 (VidSrc.cc)',
-      url: (tmdbId, imdbId, type, s, e) => 
-        type === 'pelicula' 
-          ? `https://vidsrc.cc/v2/embed/movie/${imdbId || tmdbId}`
-          : `https://vidsrc.cc/v2/embed/tv/${imdbId || tmdbId}/${s}/${e}`
-    },
-    {
-      name: 'Servidor 3 (VidSrc.pm)',
-      url: (tmdbId, imdbId, type, s, e) => 
-        type === 'pelicula' 
-          ? `https://vidsrc.pm/embed/movie/${tmdbId}`
-          : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 4 (Embed.su)',
@@ -409,7 +494,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   // Obtener servidores Latino desde Cuevana.gs y LaMovie.org a través de nuestro proxy de Next.js
   useEffect(() => {
-    if (!activeItem || activeItem.tipo === 'canal') {
+    if (!activeItem || activeItem.tipo === 'canal' || activeItem.youtubeId) {
       setCuevanaServers([]);
       setLoadingCuevana(false);
       return;
@@ -440,7 +525,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       return title
         .toLowerCase()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[̀-ͯ]/g, "")
         .replace(/[^a-z0-9\s]/g, '')
         .trim();
     };
@@ -499,7 +584,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           return playerData.data.embeds;
         }
       } catch (err) {
-        console.warn(`Error buscando en ${provider} con "${titleToSearch}":`, err.message);
+        console.error(`Error buscando en ${provider} con "${titleToSearch}":`, err.message);
         return [];
       }
     };
@@ -553,7 +638,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   // Obtener información real de temporadas y capítulos de TMDB
   useEffect(() => {
-    if (!activeItem || activeItem.tipo !== 'serie') {
+    if (!activeItem || activeItem.tipo !== 'serie' || activeItem.youtubeId) {
       setSeasonsInfo([]);
       return;
     }
@@ -614,8 +699,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       });
   }, [activeItem]);
 
-  // Filtrar catálogo por búsqueda (se trasladó al useMemo para evitar lag)
-
   // Auxiliar para obtener los 15 más valorados priorizando recientes
   const getTop15 = (list) => {
     return [...list]
@@ -644,7 +727,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   const getEstrenosPeliculas = (list) => {
     return [...list]
-      .filter(p => p.tipo === 'pelicula' && parseInt(p.año) >= 2020 && parseInt(p.año) <= 2026)
+      .filter(p => p.tipo === 'pelicula' && p.categoria !== 'Anime' && p.categoria !== 'Documentales' && p.categoria !== 'YouTube' && parseInt(p.año) >= 2020 && parseInt(p.año) <= 2026)
       .sort((a, b) => {
         const yearA = parseInt(a.año) || 0;
         const yearB = parseInt(b.año) || 0;
@@ -656,7 +739,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   const getEstrenosSeries = (list) => {
     return [...list]
-      .filter(p => p.tipo === 'serie' && parseInt(p.año) >= 2020 && parseInt(p.año) <= 2026)
+      .filter(p => p.tipo === 'serie' && p.categoria !== 'Anime' && p.categoria !== 'Documentales' && p.categoria !== 'YouTube' && parseInt(p.año) >= 2020 && parseInt(p.año) <= 2026)
       .sort((a, b) => {
         const yearA = parseInt(a.año) || 0;
         const yearB = parseInt(b.año) || 0;
@@ -677,7 +760,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     }
     return list.filter(item => {
       const firstChar = item.titulo.charAt(0).toUpperCase();
-      const normalized = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalized = firstChar.normalize("NFD").replace(/[̀-ͯ]/g, "");
       return normalized === letter;
     });
   };
@@ -691,7 +774,26 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const topComedia = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Comedia')), [peliculas]);
   const topDrama = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Drama')), [peliculas]);
   const topInfantil = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'pelicula' && p.categoria === 'Infantil')), [peliculas]);
-  const topSeries = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'serie')), [peliculas]);
+  const topSeries = useMemo(() => getTop15(peliculas.filter(p => p.tipo === 'serie' && p.categoria !== 'Anime' && p.categoria !== 'Documentales')), [peliculas]);
+
+  // Memoized lists for the new sections
+  const animeItems = useMemo(() => peliculas.filter(p => p.categoria === 'Anime'), [peliculas]);
+  const documentalItems = useMemo(() => peliculas.filter(p => p.categoria === 'Documentales'), [peliculas]);
+  const youtubeItems = useMemo(() => peliculas.filter(p => p.categoria === 'YouTube'), [peliculas]);
+  const recomendadas = useMemo(() => {
+    return [...peliculas]
+      .filter(p => p.categoria !== 'YouTube')
+      .sort((a, b) => parseFloat(b.valoracion || 0) - parseFloat(a.valoracion || 0))
+      .slice(0, 20);
+  }, [peliculas]);
+
+  const featuredMovie = useMemo(() => {
+    const current = peliculas.filter(p => p.tipo === 'pelicula' && p.categoria !== 'YouTube' && (p.año === '2024' || p.año === '2025' || p.año === '2026'));
+    if (current.length > 0) {
+      return current.sort((a, b) => parseFloat(b.valoracion || 0) - parseFloat(a.valoracion || 0))[0];
+    }
+    return peliculas.find(p => p.id === 'movie-157336') || peliculas[0];
+  }, [peliculas]);
 
   // Memoized FAST TV (FREE) categories
   const freeLatino = useMemo(() => canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('mex') || c.nombre.toLowerCase().includes('cine premium') || c.nombre.toLowerCase().includes('cine familiar'))), [canales]);
@@ -701,13 +803,13 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Memoized sorting for A-Z tabs
   const sortedMovies = useMemo(() => {
     return peliculas
-      .filter(p => p.tipo === 'pelicula')
+      .filter(p => p.tipo === 'pelicula' && p.categoria !== 'Anime' && p.categoria !== 'Documentales' && p.categoria !== 'YouTube')
       .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
   }, [peliculas]);
 
   const sortedSeries = useMemo(() => {
     return peliculas
-      .filter(p => p.tipo === 'serie')
+      .filter(p => p.tipo === 'serie' && p.categoria !== 'Anime' && p.categoria !== 'Documentales')
       .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
   }, [peliculas]);
 
@@ -752,33 +854,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     });
   }, [canales, searchQuery]);
 
-  // Manejar carga por ID directo
-  const handleLoadCustomId = (e) => {
-    e.preventDefault();
-    if (!customId.trim()) return;
-
-    // Crear un objeto de película ficticio a partir del ID ingresado
-    const customItem = {
-      id: `custom-${customId}`,
-      titulo: `${customType === 'pelicula' ? 'Película' : 'Serie'} (ID: ${customId})`,
-      tipo: customType,
-      tmdbId: customId,
-      imdbId: customId.startsWith('tt') ? customId : '',
-      descripcion: `Contenido cargado externamente mediante identificador único TMDB o IMDb.`,
-      categoria: customType === 'pelicula' ? 'Película Externa' : 'Serie Externa',
-      año: 'N/A',
-      valoracion: 'N/A',
-      isCustom: true
-    };
-
-    if (customType === 'serie') {
-      setSeason(customSeason);
-      setEpisode(customEpisode);
-    }
-
-    setActiveItem(customItem);
-  };
-
   // Unificar servidores de Cuevana (Latino) y servidores originales
   const originalServersList = servers.map((s) => ({
     name: s.name,
@@ -788,8 +863,109 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const allServers = activeItem 
     ? (activeItem.tipo === 'canal' 
         ? [{ name: "Canal en Vivo", url: `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}` }]
-        : [...originalServersList, ...cuevanaServers])
+        : (activeItem.youtubeId 
+            ? [{ name: "YouTube Player", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }]
+            : [...originalServersList, ...cuevanaServers]))
     : [];
+
+  const navItems = [
+    {
+      id: 'inicio',
+      label: 'Inicio',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      )
+    },
+    {
+      id: 'peliculas',
+      label: 'Películas',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+          <line x1="7" y1="2" x2="7" y2="22"></line>
+          <line x1="17" y1="2" x2="17" y2="22"></line>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <line x1="2" y1="7" x2="7" y2="7"></line>
+          <line x1="2" y1="17" x2="7" y2="17"></line>
+          <line x1="17" y1="17" x2="22" y2="17"></line>
+          <line x1="17" y1="7" x2="22" y2="7"></line>
+        </svg>
+      )
+    },
+    {
+      id: 'series',
+      label: 'Series',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+          <polyline points="17 2 12 7 7 2"></polyline>
+        </svg>
+      )
+    },
+    {
+      id: 'anime',
+      label: 'Anime',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <polygon points="12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9"></polygon>
+        </svg>
+      )
+    },
+    {
+      id: 'documentales',
+      label: 'Documentales',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'youtube',
+      label: 'YouTube',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M23 7l-7 5 7 5V7z"></path>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+      )
+    },
+    {
+      id: 'tdt',
+      label: 'TDT',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8A14 14 0 0 1 14 20M2 20h.01"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'free',
+      label: 'FREE',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M12 2s-1.5 6-3 6c-1.5 0-3-1.5-3-3s1.5-3 3-3z"></path>
+          <path d="M12 2s1.5 6 3 6c1.5 0 3-1.5 3-3s-1.5-3-3-3z"></path>
+          <path d="M12 8v3"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'favoritos',
+      label: 'Favoritos',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+      )
+    }
+  ];
 
   return (
     <div className="app-container">
@@ -812,12 +988,10 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                 </filter>
               </defs>
               
-              {/* FILM Text with draw-in animation */}
               <text x="20" y="68" fill="#ffffff" fontSize="46" fontWeight="900" fontFamily="'Outfit', 'Inter', sans-serif" letterSpacing="3" className="animated-text">
                 FILM
               </text>
               
-              {/* TV glowing pill badge */}
               <rect x="175" y="20" width="115" height="60" rx="12" fill="url(#neon-cyan-gradient)" filter="url(#neon-glow-filter)" className="animated-badge" />
               <text x="232" y="62" fill="#07070c" fontSize="34" fontWeight="900" fontFamily="'Outfit', 'Inter', sans-serif" textAnchor="middle">
                 TV
@@ -830,478 +1004,635 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         </div>
       )}
 
-      {/* 2. HEADER */}
-      <header className="main-header">
-        <div className="header-content">
-          {/* Logo clickeable para volver a la pantalla de inicio */}
-          <div className="brand-logo" onClick={() => { setActiveItem(null); setSearchQuery(''); setActiveTab('inicio'); }}>
-            <svg width="150" height="46" viewBox="0 0 200 60">
-              <defs>
-                <linearGradient id="header-cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f5d4" />
-                  <stop offset="100%" stopColor="#00b8ff" />
-                </linearGradient>
-              </defs>
-              <text x="10" y="42" fill="#ffffff" fontSize="28" fontWeight="900" fontFamily="'Outfit', sans-serif" letterSpacing="1">
-                FILM
-              </text>
-              <rect x="95" y="10" width="75" height="38" rx="8" fill="url(#header-cyan-grad)" />
-              <text x="132" y="38" fill="#07070c" fontSize="22" fontWeight="900" fontFamily="'Outfit', sans-serif" textAnchor="middle">
-                TV
-              </text>
-            </svg>
-          </div>
-
-          {/* Pestañas de navegación superiores */}
-          {!activeItem && (
-            <nav className="header-tabs">
-              <button 
-                onClick={() => { setActiveTab('inicio'); setSearchQuery(''); }}
-                className={`header-tab-btn ${activeTab === 'inicio' && searchQuery === '' ? 'active' : ''}`}
-              >
-                Inicio
-              </button>
-              <button 
-                onClick={() => { setActiveTab('peliculas'); setSearchQuery(''); }}
-                className={`header-tab-btn ${activeTab === 'peliculas' && searchQuery === '' ? 'active' : ''}`}
-              >
-                Películas
-              </button>
-              <button 
-                onClick={() => { setActiveTab('series'); setSearchQuery(''); }}
-                className={`header-tab-btn ${activeTab === 'series' && searchQuery === '' ? 'active' : ''}`}
-              >
-                Series
-              </button>
-              <button 
-                onClick={() => { setActiveTab('tdt'); setSearchQuery(''); }}
-                className={`header-tab-btn ${activeTab === 'tdt' && searchQuery === '' ? 'active' : ''}`}
-              >
-                TDT
-              </button>
-              <button 
-                onClick={() => { setActiveTab('free'); setSearchQuery(''); }}
-                className={`header-tab-btn ${activeTab === 'free' && searchQuery === '' ? 'active' : ''}`}
-              >
-                FREE
-              </button>
-            </nav>
-          )}
-
-          {/* Buscador de catálogo (sólo visible si no estamos en reproducción activa) */}
-          {!activeItem && (
-            <div className="search-wrapper">
-              <input
-                type="text"
-                placeholder="Buscar por título, género o sinopsis..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-              />
-            </div>
-          )}
+      {/* 2. LEFT SIDEBAR (Desktop / Collapsed Mobile) */}
+      <aside className={`main-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+        <button className="sidebar-close-btn" onClick={() => setMobileMenuOpen(false)}>✕</button>
+        
+        <div className="sidebar-logo" onClick={() => { setActiveItem(null); setActiveTab('inicio'); setSearchQuery(''); setMobileMenuOpen(false); }}>
+          <svg width="150" height="46" viewBox="0 0 200 60">
+            <defs>
+              <linearGradient id="sidebar-cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00f5d4" />
+                <stop offset="100%" stopColor="#00b8ff" />
+              </linearGradient>
+            </defs>
+            <text x="10" y="42" fill="#ffffff" fontSize="28" fontWeight="900" fontFamily="'Outfit', sans-serif" letterSpacing="1">
+              FILM
+            </text>
+            <rect x="95" y="10" width="75" height="38" rx="8" fill="url(#sidebar-cyan-grad)" />
+            <text x="132" y="38" fill="#07070c" fontSize="22" fontWeight="900" fontFamily="'Outfit', sans-serif" textAnchor="middle">
+              TV
+            </text>
+          </svg>
         </div>
-      </header>
 
-      {/* 3. CONTENIDO PRINCIPAL */}
-      <main className="main-content">
-        {activeItem ? (
-          /* ========================================================================= */
-          /* VISTA 1: REPRODUCTOR DE VIDEO ACTIVO + CHAT */
-          /* ========================================================================= */
-          <div className="player-view-container">
-            {/* Cabecera del reproductor */}
-            <div className="player-header">
-              <button className="back-btn" onClick={() => setActiveItem(null)}>
-                Volver al catálogo
-              </button>
-              <div className="player-meta">
-                {activeItem.tipo === 'canal' ? (
-                  <>
-                    <span className="player-item-title">{activeItem.nombre}</span>
-                    {activeItem.pais && <span className="player-item-year">({activeItem.pais})</span>}
-                  </>
-                ) : (
-                  <>
-                    <span className="player-item-title">{activeItem.titulo}</span>
-                    <span className="player-item-year">({activeItem.año})</span>
-                    <span className="player-item-rating">★ {activeItem.valoracion}</span>
-                  </>
-                )}
-              </div>
+        <nav className="sidebar-menu">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveItem(null);
+                setActiveTab(item.id);
+                setSearchQuery('');
+                setMobileMenuOpen(false);
+              }}
+              className={`sidebar-menu-btn ${activeTab === item.id && searchQuery === '' ? 'active' : ''}`}
+            >
+              {item.icon}
+              <span className="sidebar-btn-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Background overlay when mobile sidebar is open */}
+      {mobileMenuOpen && <div className="sidebar-overlay-bg" onClick={() => setMobileMenuOpen(false)}></div>}
+
+      {/* 3. CONTENT WRAPPER */}
+      <div className="content-wrapper">
+        {/* HEADER */}
+        <header className="main-header">
+          <div className="header-content">
+            <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen(true)}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+
+            <div className="brand-logo" onClick={() => { setActiveItem(null); setSearchQuery(''); setActiveTab('inicio'); }}>
+              <svg width="150" height="46" viewBox="0 0 200 60">
+                <defs>
+                  <linearGradient id="header-cyan-grad-mobile" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#00f5d4" />
+                    <stop offset="100%" stopColor="#00b8ff" />
+                  </linearGradient>
+                </defs>
+                <text x="10" y="42" fill="#ffffff" fontSize="28" fontWeight="900" fontFamily="'Outfit', sans-serif" letterSpacing="1">
+                  FILM
+                </text>
+                <rect x="95" y="10" width="75" height="38" rx="8" fill="url(#header-cyan-grad-mobile)" />
+                <text x="132" y="38" fill="#07070c" fontSize="22" fontWeight="900" fontFamily="'Outfit', sans-serif" textAnchor="middle">
+                  TV
+                </text>
+              </svg>
             </div>
 
-            {/* Panel de control de episodios si el contenido es una Serie */}
-            {activeItem.tipo === 'serie' && (
-              <div className="series-seasons-episodes-panel">
-                <div className="seasons-tab-container">
-                  <span className="panel-label">Temporadas:</span>
-                  <div className="seasons-tabs">
-                    {loadingSeasons ? (
-                      <span className="loading-text">Cargando temporadas...</span>
-                    ) : seasonsInfo.length > 0 ? (
-                      seasonsInfo.map((s) => (
-                        <button
-                          key={s.seasonNumber}
-                          onClick={() => {
-                            setSeason(s.seasonNumber);
-                            setEpisode(1);
-                          }}
-                          className={`season-tab-btn ${season === s.seasonNumber ? 'active' : ''}`}
-                        >
-                          {s.name}
-                        </button>
-                      ))
-                    ) : (
-                      [1, 2, 3, 4, 5].map((num) => (
-                        <button
-                          key={num}
-                          onClick={() => {
-                            setSeason(num);
-                            setEpisode(1);
-                          }}
-                          className={`season-tab-btn ${season === num ? 'active' : ''}`}
-                        >
-                          Temp {num}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                <div className="episodes-grid-container">
-                  <div className="episodes-header">
-                    <span className="panel-label">Episodios:</span>
-                    <span className="episodes-count-info">
-                      Temporada {season} — {
-                        seasonsInfo.find(s => s.seasonNumber === season)?.episodeCount || 15
-                      } capítulos disponibles
-                    </span>
-                  </div>
-                  
-                  <div className="episodes-buttons-grid">
-                    {Array.from({ 
-                      length: seasonsInfo.find(s => s.seasonNumber === season)?.episodeCount || 15 
-                    }, (_, i) => i + 1).map((epNum) => (
-                      <button
-                        key={epNum}
-                        onClick={() => setEpisode(epNum)}
-                        className={`episode-btn ${episode === epNum ? 'active' : ''}`}
-                      >
-                        Capítulo {epNum}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Pestañas de servidores de transmisión */}
-            <div className="servers-tab-bar">
-              <span className="servers-label">Servidores:</span>
-              <div className="servers-list">
-                {allServers.map((server, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveServer(idx)}
-                    className={`server-tab-btn ${activeServer === idx ? 'active' : ''}`}
-                  >
-                    {server.name}
-                  </button>
-                ))}
-                {loadingCuevana && <span className="loading-text" style={{ marginLeft: '10px' }}>Buscando fuentes en español Latino...</span>}
-              </div>
-            </div>
-
-            {/* Grid del Reproductor y el Chat */}
-            <div className={`theater-grid ${chatCollapsed ? 'chat-is-collapsed' : ''}`}>
-              {/* Contenedor del Iframe */}
-              <div className="player-wrapper">
-                <div className="iframe-aspect-ratio">
-                  {/* YouTube-style Red Loading Bar */}
-                  {iframeLoading && (
-                    <div className="video-progress-loader-container">
-                      <div className="video-progress-loader-bar"></div>
-                    </div>
-                  )}
-                  
-                  {activeItem.tipo === 'canal' ? (
-                    <video
-                      ref={videoRef}
-                      controls
-                      autoPlay
-                      className="player-iframe"
-                      style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
-                      onPlay={() => setIframeLoading(false)}
-                      onLoadedData={() => setIframeLoading(false)}
-                    />
-                  ) : (
-                    <iframe
-                      src={allServers[activeServer]?.url || ''}
-                      onLoad={() => setIframeLoading(false)}
-                      allowFullScreen
-                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                      className="player-iframe"
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Contenedor del Chat Watch Party */}
-              <div className={`chat-wrapper ${chatCollapsed ? 'collapsed' : ''}`}>
-                <ChatBox 
-                  channelId={activeItem.id} 
-                  channelTitle={activeItem.tipo === 'canal' ? activeItem.nombre : activeItem.titulo} 
-                  isCollapsed={chatCollapsed}
-                  onToggleCollapse={() => setChatCollapsed(!chatCollapsed)}
+            {/* Buscador de catálogo (sólo visible si no estamos en reproducción activa) */}
+            {!activeItem && (
+              <div className="search-wrapper">
+                <input
+                  type="text"
+                  placeholder="Buscar por título, género o sinopsis..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
                 />
               </div>
-            </div>
-
-            {/* Sinopsis y detalles debajo del reproductor en ancho completo */}
-            <div className="player-details-full">
-              <div className="player-details-card">
-                <h3>Sinopsis</h3>
-                <p>
-                  {activeItem.tipo === 'canal' 
-                    ? (activeItem.descripcion || `Transmisión oficial en vivo de ${activeItem.nombre} (${activeItem.pais}).`) 
-                    : activeItem.descripcion}
-                </p>
-                <div className="tags-row">
-                  <span className="category-tag">{activeItem.categoria}</span>
-                  <span className="type-tag">
-                    {activeItem.tipo === 'canal' ? 'Canal en Vivo' : (activeItem.tipo === 'serie' ? 'Serie de TV' : 'Película')}
-                  </span>
-                  {activeItem.tmdbId && <span className="id-tag">TMDB ID: {activeItem.tmdbId}</span>}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
-        ) : (
-          /* ========================================================================= */
-          /* VISTA 2: CATÁLOGO PRINCIPAL */
-          /* ========================================================================= */
-          <div className="catalog-view">
-            {searchQuery !== '' ? (
-              <div className="search-results-section">
-                <h2 className="section-title">Resultados de búsqueda para: "{searchQuery}"</h2>
-                <div className="cards-grid">
-                  {filteredItems.slice(0, searchLimit).map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="movie-card"
-                      onClick={() => handleCardClick(item)}
-                      onDoubleClick={() => handleCardDoubleClick(item)}
-                    >
-                      <div className="poster-container">
-                        <img 
-                          src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                          alt={item.titulo} 
-                          className="movie-poster"
-                          loading="lazy"
-                        />
-                        <div className="card-play-overlay">
-                          <div className="play-arrow"></div>
-                        </div>
-                        <span className="movie-lang-badge">{getLangBadge(item)}</span>
-                        <span className="rating-badge">★ {item.valoracion}</span>
-                      </div>
-                      <div className="movie-card-info">
-                        <h3 className="movie-card-title">{item.titulo}</h3>
-                        <div className="movie-card-meta">
-                          <span className="movie-card-year">{item.año}</span>
-                          <span className="movie-card-genre">{item.categoria}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+        </header>
+
+        {/* CONTENIDO PRINCIPAL */}
+        <main className="main-content">
+          {activeItem ? (
+            /* ========================================================================= */
+            /* VISTA 1: REPRODUCTOR DE VIDEO ACTIVO + CHAT */
+            /* ========================================================================= */
+            <div className="player-view-container">
+              {/* Cabecera del reproductor */}
+              <div className="player-header">
+                <button className="back-btn" onClick={() => setActiveItem(null)}>
+                  Volver al catálogo
+                </button>
+                <div className="player-meta">
+                  {activeItem.tipo === 'canal' ? (
+                    <>
+                      <span className="player-item-title">{activeItem.nombre}</span>
+                      {activeItem.pais && <span className="player-item-year">({activeItem.pais})</span>}
+                    </>
+                  ) : (
+                    <>
+                      <span className="player-item-title">{activeItem.titulo}</span>
+                      <span className="player-item-year">({activeItem.año})</span>
+                      <span className="player-item-rating">★ {activeItem.valoracion}</span>
+                    </>
+                  )}
                 </div>
-
-                {filteredItems.length === 0 && (
-                  <div className="no-results">
-                    No se encontraron películas o series con los criterios de búsqueda.
-                  </div>
-                )}
-
-                {filteredItems.length > searchLimit && (
-                  <div className="load-more-container">
-                    <button 
-                      onClick={() => setSearchLimit(prev => prev + 32)}
-                      className="load-more-btn"
-                    >
-                      Cargar más
-                    </button>
-                  </div>
-                )}
               </div>
-            ) : (
-              <>
-                {activeTab === 'inicio' && (
-                  <div className="tab-inicio-container">
-                    {(() => {
-                      const featured = peliculas.find(p => p.id === 'movie-157336') || peliculas[0];
-                      if (!featured) return null;
-                      return (
-                        <div className="hero-banner" style={{ backgroundImage: `linear-gradient(to bottom, rgba(5,5,8,0.25) 0%, rgba(5,5,8,0.95) 100%), url(${featured.poster || ''})` }}>
-                          <div className="hero-backdrop-glow" style={{ backgroundImage: `url(${featured.poster || ''})` }}></div>
-                          <div className="hero-content-box">
-                            <span className="hero-badge">DESTACADA</span>
-                            <h1 className="hero-title">{featured.titulo}</h1>
-                            <div className="hero-meta">
-                              <span className="hero-rating">★ {featured.valoracion}</span>
-                              <span className="hero-year">{featured.año}</span>
-                              <span className="hero-genre">{featured.categoria}</span>
-                            </div>
-                            <p className="hero-desc">{featured.descripcion}</p>
-                            <button className="hero-play-btn" onClick={() => handleCardClick(featured)}>
-                              Ver detalles
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })()}
 
-                    <div className="carruseles-container">
-                      <CategoryRow 
-                        title="Películas de Estreno (2020 - 2026)" 
-                        items={estrenosPeliculas} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Series de Estreno y Tendencia (Netflix, Max)" 
-                        items={estrenosSeries} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Películas de Acción" 
-                        items={topAccion} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Ciencia Ficción" 
-                        items={topCienciaFiccion} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Terror y Suspenso" 
-                        items={topTerror} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Comedia" 
-                        items={topComedia} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Drama" 
-                        items={topDrama} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Infantil y Familiar" 
-                        items={topInfantil} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
-                      <CategoryRow 
-                        title="Series de TV más vistas" 
-                        items={topSeries} 
-                        onSelect={handleCardClick}
-                        onPlay={handleCardDoubleClick}
-                      />
+              {/* Panel de control de episodios si el contenido es una Serie */}
+              {activeItem.tipo === 'serie' && !activeItem.youtubeId && (
+                <div className="series-seasons-episodes-panel">
+                  <div className="seasons-tab-container">
+                    <span className="panel-label">Temporadas:</span>
+                    <div className="seasons-tabs">
+                      {loadingSeasons ? (
+                        <span className="loading-text">Cargando temporadas...</span>
+                      ) : seasonsInfo.length > 0 ? (
+                        seasonsInfo.map((s) => (
+                          <button
+                            key={s.seasonNumber}
+                            onClick={() => {
+                              setSeason(s.seasonNumber);
+                              setEpisode(1);
+                            }}
+                            className={`season-tab-btn ${season === s.seasonNumber ? 'active' : ''}`}
+                          >
+                            {s.name}
+                          </button>
+                        ))
+                      ) : (
+                        [1, 2, 3, 4, 5].map((num) => (
+                          <button
+                            key={num}
+                            onClick={() => {
+                              setSeason(num);
+                              setEpisode(1);
+                            }}
+                            className={`season-tab-btn ${season === num ? 'active' : ''}`}
+                          >
+                            Temp {num}
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
-                )}
 
-                {activeTab === 'tdt' && (
-                  <div className="tab-tdt-container">
-                    <h2 className="section-title">Televisión en Vivo (TDT)</h2>
+                  <div className="episodes-grid-container">
+                    <div className="episodes-header">
+                      <span className="panel-label">Episodios:</span>
+                      <span className="episodes-count-info">
+                        Temporada {season} — {
+                          seasonsInfo.find(s => s.seasonNumber === season)?.episodeCount || 15
+                        } capítulos disponibles
+                      </span>
+                    </div>
                     
-                    <div className="alphabet-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
-                      {['Todos', 'Perú', 'España', 'México', 'Colombia', 'Argentina', 'Chile', 'Bolivia', 'Deportes', 'Noticias', 'Infantil', 'Música'].map((filt) => (
+                    <div className="episodes-buttons-grid">
+                      {Array.from({ 
+                        length: seasonsInfo.find(s => s.seasonNumber === season)?.episodeCount || 15 
+                      }, (_, i) => i + 1).map((epNum) => (
                         <button
-                          key={filt}
-                          onClick={() => setTdtFilter(filt)}
-                          className={`letter-btn ${tdtFilter === filt ? 'active' : ''}`}
-                          style={{ minWidth: 'auto', padding: '6px 14px' }}
+                          key={epNum}
+                          onClick={() => setEpisode(epNum)}
+                          className={`episode-btn ${episode === epNum ? 'active' : ''}`}
                         >
-                          {filt}
+                          Capítulo {epNum}
                         </button>
                       ))}
                     </div>
+                  </div>
+                </div>
+              )}
 
-                    {(() => {
+              {/* Pestañas de servidores de transmisión (se omiten para videos de YouTube) */}
+              {!activeItem.youtubeId && (
+                <div className="servers-tab-bar">
+                  <span className="servers-label">Servidores:</span>
+                  <div className="servers-list">
+                    {allServers.map((server, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveServer(idx)}
+                        className={`server-tab-btn ${activeServer === idx ? 'active' : ''}`}
+                      >
+                        {server.name}
+                      </button>
+                    ))}
+                    {loadingCuevana && <span className="loading-text" style={{ marginLeft: '10px' }}>Buscando fuentes en español Latino...</span>}
+                  </div>
+                </div>
+              )}
 
+              {/* Grid del Reproductor y el Chat */}
+              <div className={`theater-grid ${chatCollapsed ? 'chat-is-collapsed' : ''}`}>
+                {/* Contenedor del Iframe */}
+                <div className="player-wrapper">
+                  <div className="iframe-aspect-ratio">
+                    {/* YouTube-style Red Loading Bar */}
+                    {iframeLoading && (
+                      <div className="video-progress-loader-container">
+                        <div className="video-progress-loader-bar"></div>
+                      </div>
+                    )}
+                    
+                    {activeItem.tipo === 'canal' ? (
+                      <video
+                        ref={videoRef}
+                        controls
+                        autoPlay
+                        className="player-iframe"
+                        style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                        onPlay={() => setIframeLoading(false)}
+                        onLoadedData={() => setIframeLoading(false)}
+                      />
+                    ) : (
+                      <iframe
+                        src={allServers[activeServer]?.url || ''}
+                        onLoad={() => setIframeLoading(false)}
+                        allowFullScreen
+                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        className="player-iframe"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Playback optimization warning message */}
+                  {!activeItem.youtubeId && activeItem.tipo !== 'canal' && (
+                    <div className="playback-optimization-banner">
+                      <span className="banner-icon">Optimización</span>
+                      <span className="banner-text">
+                        Si el reproductor falla o no carga en tu idioma, cambia de <strong>Servidor</strong> en la lista superior. Los servidores <strong>Latino</strong> se cargan dinámicamente.
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                      if (filteredTdtCanales.length === 0) {
-                        return (
-                          <div className="no-results" style={{ padding: '40px 0', textAlign: 'center', color: '#6b7280' }}>
-                            No se encontraron canales para este filtro.
+                {/* Contenedor del Chat Watch Party */}
+                <div className={`chat-wrapper ${chatCollapsed ? 'collapsed' : ''}`}>
+                  <ChatBox 
+                    channelId={activeItem.id} 
+                    channelTitle={activeItem.tipo === 'canal' ? activeItem.nombre : activeItem.titulo} 
+                    isCollapsed={chatCollapsed}
+                    onToggleCollapse={() => setChatCollapsed(!chatCollapsed)}
+                  />
+                </div>
+              </div>
+
+              {/* Sinopsis y detalles debajo del reproductor en ancho completo */}
+              <div className="player-details-full">
+                <div className="player-details-card">
+                  <h3>Sinopsis</h3>
+                  <p>
+                    {activeItem.tipo === 'canal' 
+                      ? (activeItem.descripcion || `Transmisión oficial en vivo de ${activeItem.nombre} (${activeItem.pais}).`) 
+                      : activeItem.descripcion}
+                  </p>
+                  <div className="tags-row">
+                    <span className="category-tag">{activeItem.categoria}</span>
+                    <span className="type-tag">
+                      {activeItem.tipo === 'canal' ? 'Canal en Vivo' : (activeItem.tipo === 'serie' ? 'Serie de TV' : 'Película')}
+                    </span>
+                    {activeItem.tmdbId && <span className="id-tag">TMDB ID: {activeItem.tmdbId}</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* ========================================================================= */
+            /* VISTA 2: CATÁLOGO PRINCIPAL */
+            /* ========================================================================= */
+            <div className="catalog-view">
+              {searchQuery !== '' ? (
+                <div className="search-results-section">
+                  <h2 className="section-title">Resultados de búsqueda para: "{searchQuery}"</h2>
+                  <div className="cards-grid">
+                    {filteredItems.slice(0, searchLimit).map((item) => (
+                      <div 
+                        key={item.id} 
+                        className="movie-card"
+                        onClick={() => handleCardClick(item)}
+                        onDoubleClick={() => handleCardDoubleClick(item)}
+                      >
+                        <div className="poster-container">
+                          <img 
+                            src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                            alt={item.titulo} 
+                            className="movie-poster"
+                            loading="lazy"
+                          />
+                          <div className="card-play-overlay">
+                            <div className="play-arrow"></div>
                           </div>
-                        );
-                      }
+                          <span className="movie-lang-badge">{getLangBadge(item)}</span>
+                          <span className="rating-badge">★ {item.valoracion}</span>
+                        </div>
+                        <div className="movie-card-info">
+                          <h3 className="movie-card-title">{item.titulo}</h3>
+                          <div className="movie-card-meta">
+                            <span className="movie-card-year">{item.año}</span>
+                            <span className="movie-card-genre">{item.categoria}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                      return (
-                        <div className="cards-grid">
-                          {filteredTdtCanales.map((item) => (
-                            <div 
-                              key={item.id} 
-                              className="movie-card" 
-                              onClick={() => handleCardClick(item)}
-                            >
-                              <div className="poster-container" style={{ padding: '0' }}>
-                                <img 
-                                  src={item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                                  alt={item.nombre} 
-                                  className="movie-poster" 
-                                  style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
-                                  loading="lazy" 
-                                />
-                                <span className="channel-live-badge"><span className="live-dot"></span> EN VIVO</span>
-                                <div className="card-play-overlay">
-                                  <div className="play-arrow"></div>
-                                </div>
+                  {filteredItems.length === 0 && (
+                    <div className="no-results">
+                      No se encontraron películas o series con los criterios de búsqueda.
+                    </div>
+                  )}
+
+                  {filteredItems.length > searchLimit && (
+                    <div className="load-more-container">
+                      <button 
+                        onClick={() => setSearchLimit(prev => prev + 32)}
+                        className="load-more-btn"
+                      >
+                        Cargar más
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {activeTab === 'inicio' && (
+                    <div className="tab-inicio-container">
+                      {(() => {
+                        const featured = featuredMovie;
+                        if (!featured) return null;
+                        return (
+                          <div className="hero-banner" style={{ backgroundImage: `linear-gradient(to bottom, rgba(5,5,8,0.25) 0%, rgba(5,5,8,0.95) 100%), url(${featured.poster || ''})` }}>
+                            <div className="hero-backdrop-glow" style={{ backgroundImage: `url(${featured.poster || ''})` }}></div>
+                            <div className="hero-content-box">
+                              <span className="hero-badge">DESTACADA</span>
+                              <h1 className="hero-title">{featured.titulo}</h1>
+                              <div className="hero-meta">
+                                <span className="hero-rating">★ {featured.valoracion}</span>
+                                <span className="hero-year">{featured.año}</span>
+                                <span className="hero-genre">{featured.categoria}</span>
                               </div>
-                              <div className="movie-card-info">
-                                <h3 className="movie-card-title">{item.nombre}</h3>
-                                <div className="movie-card-meta">
-                                  <span className="movie-card-year">{item.pais}</span>
-                                  <span className="movie-card-genre">{item.categoria}</span>
-                                </div>
+                              <p className="hero-desc">{featured.descripcion}</p>
+                              <div style={{ display: 'flex', gap: '12px' }}>
+                                <button className="hero-play-btn" onClick={() => handleCardClick(featured)}>
+                                  Ver detalles
+                                </button>
+                                {featured.tmdbId && (
+                                  <button className="hero-trailer-btn" onClick={() => playTrailer(featured)}>
+                                    {loadingTrailer ? 'Cargando...' : 'Ver Tráiler'}
+                                  </button>
+                                )}
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
+                          </div>
+                        );
+                      })()}
 
-                {activeTab === 'free' && (
-                  <div className="tab-free-container">
-                    <h2 className="section-title">Canales de Cine Gratis (FAST TV)</h2>
-                    
-                    {(() => {
+                      <div className="carruseles-container">
+                        <CategoryRow 
+                          title="Recomendadas por Valoración" 
+                          items={recomendadas} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Películas de Estreno (2020 - 2026)" 
+                          items={estrenosPeliculas} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Series de Estreno y Tendencia (Netflix, Max)" 
+                          items={estrenosSeries} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Películas de Acción" 
+                          items={topAccion} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Ciencia Ficción" 
+                          items={topCienciaFiccion} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Terror y Suspenso" 
+                          items={topTerror} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Comedia" 
+                          items={topComedia} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Drama" 
+                          items={topDrama} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Infantil y Familiar" 
+                          items={topInfantil} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                        <CategoryRow 
+                          title="Series de TV más vistas" 
+                          items={topSeries} 
+                          onSelect={handleCardClick}
+                          onPlay={handleCardDoubleClick}
+                        />
+                      </div>
+                    </div>
+                  )}
 
+                  {activeTab === 'anime' && (
+                    <div className="tab-anime-container">
+                      <h2 className="section-title">Anime Completo</h2>
+                      {(() => {
+                        const visible = animeItems.slice(0, animeLimit);
+                        return (
+                          <>
+                            <div className="cards-grid">
+                              {visible.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card"
+                                  onClick={() => handleCardClick(item)}
+                                  onDoubleClick={() => handleCardDoubleClick(item)}
+                                >
+                                  <div className="poster-container">
+                                    <img src={item.poster} alt={item.titulo} className="movie-poster" loading="lazy" />
+                                    <div className="card-play-overlay"><div className="play-arrow"></div></div>
+                                    <span className="movie-lang-badge">{getLangBadge(item)}</span>
+                                    <span className="rating-badge">★ {item.valoracion}</span>
+                                  </div>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.titulo}</h3>
+                                    <div className="movie-card-meta">
+                                      <span className="movie-card-year">{item.año}</span>
+                                      <span className="movie-card-genre">{item.tipo === 'serie' ? 'Serie' : 'Película'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {animeItems.length > animeLimit && (
+                              <div className="load-more-container">
+                                <button onClick={() => setAnimeLimit(prev => prev + 32)} className="load-more-btn">Cargar más</button>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
 
-                      if (searchQuery) {
-                        if (filteredFreeCanales.length === 0) {
+                  {activeTab === 'documentales' && (
+                    <div className="tab-documentales-container">
+                      <h2 className="section-title">Documentales</h2>
+                      {(() => {
+                        const visible = documentalItems.slice(0, docLimit);
+                        return (
+                          <>
+                            <div className="cards-grid">
+                              {visible.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card"
+                                  onClick={() => handleCardClick(item)}
+                                  onDoubleClick={() => handleCardDoubleClick(item)}
+                                >
+                                  <div className="poster-container">
+                                    <img src={item.poster} alt={item.titulo} className="movie-poster" loading="lazy" />
+                                    <div className="card-play-overlay"><div className="play-arrow"></div></div>
+                                    <span className="movie-lang-badge">{getLangBadge(item)}</span>
+                                    <span className="rating-badge">★ {item.valoracion}</span>
+                                  </div>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.titulo}</h3>
+                                    <div className="movie-card-meta">
+                                      <span className="movie-card-year">{item.año}</span>
+                                      <span className="movie-card-genre">{item.tipo === 'serie' ? 'Serie' : 'Película'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {documentalItems.length > docLimit && (
+                              <div className="load-more-container">
+                                <button onClick={() => setDocLimit(prev => prev + 32)} className="load-more-btn">Cargar más</button>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {activeTab === 'youtube' && (
+                    <div className="tab-youtube-container">
+                      <h2 className="section-title">Películas Completas de YouTube</h2>
+                      {(() => {
+                        const visible = youtubeItems.slice(0, ytLimit);
+                        return (
+                          <>
+                            <div className="cards-grid">
+                              {visible.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card"
+                                  onClick={() => handleCardClick(item)}
+                                  onDoubleClick={() => handleCardDoubleClick(item)}
+                                >
+                                  <div className="poster-container">
+                                    <img src={item.poster} alt={item.titulo} className="movie-poster" loading="lazy" />
+                                    <div className="card-play-overlay"><div className="play-arrow"></div></div>
+                                    <span className="movie-lang-badge">YT</span>
+                                    <span className="rating-badge">★ {item.valoracion}</span>
+                                  </div>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.titulo}</h3>
+                                    <div className="movie-card-meta">
+                                      <span className="movie-card-year">{item.año}</span>
+                                      <span className="movie-card-genre">YouTube</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {youtubeItems.length > ytLimit && (
+                              <div className="load-more-container">
+                                <button onClick={() => setYtLimit(prev => prev + 32)} className="load-more-btn">Cargar más</button>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {activeTab === 'favoritos' && (
+                    <div className="tab-favoritos-container">
+                      <h2 className="section-title">Mis Favoritos</h2>
+                      {(() => {
+                        if (favorites.length === 0) {
                           return (
-                            <div className="no-results" style={{ padding: '40px 0', textAlign: 'center', color: '#6b7280' }}>
-                              No se encontraron canales de cine para tu búsqueda.
+                            <div className="no-results" style={{ padding: '80px 20px', textAlign: 'center', color: '#6b7280', fontSize: '15px' }}>
+                              Aún no tienes elementos guardados en tus favoritos. Haz clic en "Añadir a Favoritos" en la ficha técnica de tus contenidos preferidos para agregarlos aquí.
                             </div>
                           );
                         }
                         return (
                           <div className="cards-grid">
-                            {filteredFreeCanales.map((item) => (
+                            {favorites.map((item) => (
+                              <div 
+                                key={item.id} 
+                                className="movie-card"
+                                onClick={() => handleCardClick(item)}
+                                onDoubleClick={() => handleCardDoubleClick(item)}
+                              >
+                                <div className="poster-container">
+                                  <img src={item.poster} alt={item.titulo} className="movie-poster" loading="lazy" />
+                                  <div className="card-play-overlay"><div className="play-arrow"></div></div>
+                                  <span className="movie-lang-badge">{getLangBadge(item)}</span>
+                                  <span className="rating-badge">★ {item.valoracion}</span>
+                                </div>
+                                <div className="movie-card-info">
+                                  <h3 className="movie-card-title">{item.titulo}</h3>
+                                  <div className="movie-card-meta">
+                                    <span className="movie-card-year">{item.año}</span>
+                                    <span className="movie-card-genre">{item.categoria}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {activeTab === 'tdt' && (
+                    <div className="tab-tdt-container">
+                      <h2 className="section-title">Televisión en Vivo (TDT)</h2>
+                      
+                      <div className="alphabet-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+                        {['Todos', 'Perú', 'España', 'México', 'Colombia', 'Argentina', 'Chile', 'Bolivia', 'Deportes', 'Noticias', 'Infantil', 'Música'].map((filt) => (
+                          <button
+                            key={filt}
+                            onClick={() => setTdtFilter(filt)}
+                            className={`letter-btn ${tdtFilter === filt ? 'active' : ''}`}
+                            style={{ minWidth: 'auto', padding: '6px 14px' }}
+                          >
+                            {filt}
+                          </button>
+                        ))}
+                      </div>
+
+                      {(() => {
+                        if (filteredTdtCanales.length === 0) {
+                          return (
+                            <div className="no-results" style={{ padding: '40px 0', textAlign: 'center', color: '#6b7280' }}>
+                              No se encontraron canales para este filtro.
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="cards-grid">
+                            {filteredTdtCanales.map((item) => (
                               <div 
                                 key={item.id} 
                                 className="movie-card" 
@@ -1315,7 +1646,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                     style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
                                     loading="lazy" 
                                   />
-                                  <span className="channel-fast-badge"><span className="live-dot"></span> FAST TV</span>
+                                  <span className="channel-live-badge"><span className="live-dot"></span> EN VIVO</span>
                                   <div className="card-play-overlay">
                                     <div className="play-arrow"></div>
                                   </div>
@@ -1323,7 +1654,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                 <div className="movie-card-info">
                                   <h3 className="movie-card-title">{item.nombre}</h3>
                                   <div className="movie-card-meta">
-                                    <span className="movie-card-year">FAST TV</span>
+                                    <span className="movie-card-year">{item.pais}</span>
                                     <span className="movie-card-genre">{item.categoria}</span>
                                   </div>
                                 </div>
@@ -1331,295 +1662,405 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                             ))}
                           </div>
                         );
-                      }
-
-                      return (
-                        <div className="carruseles-container">
-                          <CategoryRow 
-                            title="Cine en Español Latino"
-                            items={freeLatino}
-                            onSelect={handleCardClick}
-                            onPlay={handleCardDoubleClick}
-                          />
-                          <CategoryRow 
-                            title="Cine de Acción y Suspenso" 
-                            items={freeAccion} 
-                            onSelect={handleCardClick}
-                            onPlay={handleCardDoubleClick}
-                          />
-                          <CategoryRow 
-                            title="Cine General y Blockbusters" 
-                            items={freeGeneral}
-                            onSelect={handleCardClick}
-                            onPlay={handleCardDoubleClick}
-                          />
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
-
-                {activeTab === 'peliculas' && (
-                  <div className="tab-peliculas-container">
-                    <h2 className="section-title">Películas A-Z</h2>
-                    
-                    <div className="alphabet-bar">
-                      <button 
-                        onClick={() => { setSelectedLetter('Todos'); setMoviesLimit(32); }}
-                        className={`letter-btn ${selectedLetter === 'Todos' ? 'active' : ''}`}
-                      >
-                        Todos
-                      </button>
-                      {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
-                        <button 
-                          key={letter}
-                          onClick={() => { setSelectedLetter(letter); setMoviesLimit(32); }}
-                          className={`letter-btn ${selectedLetter === letter ? 'active' : ''}`}
-                        >
-                          {letter}
-                        </button>
-                      ))}
-                      <button 
-                        onClick={() => { setSelectedLetter('#'); setMoviesLimit(32); }}
-                        className={`letter-btn ${selectedLetter === '#' ? 'active' : ''}`}
-                      >
-                        #
-                      </button>
+                      })()}
                     </div>
+                  )}
 
-                    {(() => {
-                      const filtered = filterByLetter(sortedMovies, selectedLetter);
-                      const visible = filtered.slice(0, moviesLimit);
-
-                      return (
-                        <>
-                          <div className="cards-grid">
-                            {visible.map((item) => (
-                              <div 
-                                key={item.id} 
-                                className="movie-card"
-                                onClick={() => handleCardClick(item)}
-                                onDoubleClick={() => handleCardDoubleClick(item)}
-                              >
-                                <div className="poster-container">
-                                  <img 
-                                    src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                                    alt={item.titulo} 
-                                    className="movie-poster"
-                                    loading="lazy"
-                                  />
-                                  <div className="card-play-overlay">
-                                    <div className="play-arrow"></div>
-                                  </div>
-                                  <span className="movie-lang-badge">{getLangBadge(item)}</span>
-                                  <span className="rating-badge">★ {item.valoracion}</span>
-                                </div>
-                                <div className="movie-card-info">
-                                  <h3 className="movie-card-title">{item.titulo}</h3>
-                                  <div className="movie-card-meta">
-                                    <span className="movie-card-year">{item.año || item.año}</span>
-                                    <span className="movie-card-genre">{item.categoria}</span>
-                                  </div>
-                                </div>
+                  {activeTab === 'free' && (
+                    <div className="tab-free-container">
+                      <h2 className="section-title">Canales de Cine Gratis (FAST TV)</h2>
+                      
+                      {(() => {
+                        if (searchQuery) {
+                          if (filteredFreeCanales.length === 0) {
+                            return (
+                              <div className="no-results" style={{ padding: '40px 0', textAlign: 'center', color: '#6b7280' }}>
+                                No se encontraron canales de cine para tu búsqueda.
                               </div>
-                            ))}
+                            );
+                          }
+                          return (
+                            <div className="cards-grid">
+                              {filteredFreeCanales.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card" 
+                                  onClick={() => handleCardClick(item)}
+                                >
+                                  <div className="poster-container" style={{ padding: '0' }}>
+                                    <img 
+                                      src={item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                      alt={item.nombre} 
+                                      className="movie-poster" 
+                                      style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
+                                      loading="lazy" 
+                                    />
+                                    <span className="channel-fast-badge"><span className="live-dot"></span> FAST TV</span>
+                                    <div className="card-play-overlay">
+                                      <div className="play-arrow"></div>
+                                    </div>
+                                  </div>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.nombre}</h3>
+                                    <div className="movie-card-meta">
+                                      <span className="movie-card-year">FAST TV</span>
+                                      <span className="movie-card-genre">{item.categoria}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
 
-                            {filtered.length === 0 && (
-                              <div className="no-results">
-                                No hay películas que comiencen con la letra seleccionada.
+                        return (
+                          <div className="carruseles-container">
+                            <CategoryRow 
+                              title="Cine en Español Latino"
+                              items={freeLatino}
+                              onSelect={handleCardClick}
+                              onPlay={handleCardDoubleClick}
+                            />
+                            <CategoryRow 
+                              title="Cine de Acción y Suspenso" 
+                              items={freeAccion} 
+                              onSelect={handleCardClick}
+                              onPlay={handleCardDoubleClick}
+                            />
+                            <CategoryRow 
+                              title="Cine General y Blockbusters" 
+                              items={freeGeneral}
+                              onSelect={handleCardClick}
+                              onPlay={handleCardDoubleClick}
+                            />
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {activeTab === 'peliculas' && (
+                    <div className="tab-peliculas-container">
+                      <h2 className="section-title">Películas A-Z</h2>
+                      
+                      <div className="alphabet-bar">
+                        <button 
+                          onClick={() => { setSelectedLetter('Todos'); setMoviesLimit(32); }}
+                          className={`letter-btn ${selectedLetter === 'Todos' ? 'active' : ''}`}
+                        >
+                          Todos
+                        </button>
+                        {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
+                          <button 
+                            key={letter}
+                            onClick={() => { setSelectedLetter(letter); setMoviesLimit(32); }}
+                            className={`letter-btn ${selectedLetter === letter ? 'active' : ''}`}
+                          >
+                            {letter}
+                          </button>
+                        ))}
+                        <button 
+                          onClick={() => { setSelectedLetter('#'); setMoviesLimit(32); }}
+                          className={`letter-btn ${selectedLetter === '#' ? 'active' : ''}`}
+                        >
+                          #
+                        </button>
+                      </div>
+
+                      {(() => {
+                        const filtered = filterByLetter(sortedMovies, selectedLetter);
+                        const visible = filtered.slice(0, moviesLimit);
+
+                        return (
+                          <>
+                            <div className="cards-grid">
+                              {visible.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card"
+                                  onClick={() => handleCardClick(item)}
+                                  onDoubleClick={() => handleCardDoubleClick(item)}
+                                >
+                                  <div className="poster-container">
+                                    <img 
+                                      src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                      alt={item.titulo} 
+                                      className="movie-poster"
+                                      loading="lazy"
+                                    />
+                                    <div className="card-play-overlay">
+                                      <div className="play-arrow"></div>
+                                    </div>
+                                    <span className="movie-lang-badge">{getLangBadge(item)}</span>
+                                    <span className="rating-badge">★ {item.valoracion}</span>
+                                  </div>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.titulo}</h3>
+                                    <div className="movie-card-meta">
+                                      <span className="movie-card-year">{item.año}</span>
+                                      <span className="movie-card-genre">{item.categoria}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {filtered.length === 0 && (
+                                <div className="no-results">
+                                  No hay películas que comiencen con la letra seleccionada.
+                                </div>
+                              )}
+                            </div>
+
+                            {filtered.length > moviesLimit && (
+                              <div className="load-more-container">
+                                <button 
+                                  onClick={() => setMoviesLimit(prev => prev + 32)}
+                                  className="load-more-btn"
+                                >
+                                  Cargar más
+                                </button>
                               </div>
                             )}
-                          </div>
-
-                          {filtered.length > moviesLimit && (
-                            <div className="load-more-container">
-                              <button 
-                                onClick={() => setMoviesLimit(prev => prev + 32)}
-                                className="load-more-btn"
-                              >
-                                Cargar más
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-
-                {activeTab === 'series' && (
-                  <div className="tab-series-container">
-                    <h2 className="section-title">Series de TV A-Z</h2>
-                    
-                    <div className="alphabet-bar">
-                      <button 
-                        onClick={() => { setSelectedSeriesLetter('Todos'); setSeriesLimit(32); }}
-                        className={`letter-btn ${selectedSeriesLetter === 'Todos' ? 'active' : ''}`}
-                      >
-                        Todos
-                      </button>
-                      {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
-                        <button 
-                          key={letter}
-                          onClick={() => { setSelectedSeriesLetter(letter); setSeriesLimit(32); }}
-                          className={`letter-btn ${selectedSeriesLetter === letter ? 'active' : ''}`}
-                        >
-                          {letter}
-                        </button>
-                      ))}
-                      <button 
-                        onClick={() => { setSelectedSeriesLetter('#'); setSeriesLimit(32); }}
-                        className={`letter-btn ${selectedSeriesLetter === '#' ? 'active' : ''}`}
-                      >
-                        #
-                      </button>
+                          </>
+                        );
+                      })()}
                     </div>
+                  )}
 
-                    {(() => {
-                      const filtered = filterByLetter(sortedSeries, selectedSeriesLetter);
-                      const visible = filtered.slice(0, seriesLimit);
+                  {activeTab === 'series' && (
+                    <div className="tab-series-container">
+                      <h2 className="section-title">Series de TV A-Z</h2>
+                      
+                      <div className="alphabet-bar">
+                        <button 
+                          onClick={() => { setSelectedSeriesLetter('Todos'); setSeriesLimit(32); }}
+                          className={`letter-btn ${selectedSeriesLetter === 'Todos' ? 'active' : ''}`}
+                        >
+                          Todos
+                        </button>
+                        {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
+                          <button 
+                            key={letter}
+                            onClick={() => { setSelectedSeriesLetter(letter); setSeriesLimit(32); }}
+                            className={`letter-btn ${selectedSeriesLetter === letter ? 'active' : ''}`}
+                          >
+                            {letter}
+                          </button>
+                        ))}
+                        <button 
+                          onClick={() => { setSelectedSeriesLetter('#'); setSeriesLimit(32); }}
+                          className={`letter-btn ${selectedSeriesLetter === '#' ? 'active' : ''}`}
+                        >
+                          #
+                        </button>
+                      </div>
 
-                      return (
-                        <>
-                          <div className="cards-grid">
-                            {visible.map((item) => (
-                              <div 
-                                key={item.id} 
-                                className="movie-card"
-                                onClick={() => handleCardClick(item)}
-                                onDoubleClick={() => handleCardDoubleClick(item)}
-                              >
-                                <div className="poster-container">
-                                  <img 
-                                    src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                                    alt={item.titulo} 
-                                    className="movie-poster"
-                                    loading="lazy"
-                                  />
-                                  <div className="card-play-overlay">
-                                    <div className="play-arrow"></div>
+                      {(() => {
+                        const filtered = filterByLetter(sortedSeries, selectedSeriesLetter);
+                        const visible = filtered.slice(0, seriesLimit);
+
+                        return (
+                          <>
+                            <div className="cards-grid">
+                              {visible.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card"
+                                  onClick={() => handleCardClick(item)}
+                                  onDoubleClick={() => handleCardDoubleClick(item)}
+                                >
+                                  <div className="poster-container">
+                                    <img 
+                                      src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                      alt={item.titulo} 
+                                      className="movie-poster"
+                                      loading="lazy"
+                                    />
+                                    <div className="card-play-overlay">
+                                      <div className="play-arrow"></div>
+                                    </div>
+                                    <span className="movie-lang-badge">{getLangBadge(item)}</span>
+                                    <span className="rating-badge">★ {item.valoracion}</span>
                                   </div>
-                                  <span className="movie-lang-badge">{getLangBadge(item)}</span>
-                                  <span className="rating-badge">★ {item.valoracion}</span>
-                                </div>
-                                <div className="movie-card-info">
-                                  <h3 className="movie-card-title">{item.titulo}</h3>
-                                  <div className="movie-card-meta">
-                                    <span className="movie-card-year">{item.año || item.año}</span>
-                                    <span className="movie-card-genre">{item.categoria}</span>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.titulo}</h3>
+                                    <div className="movie-card-meta">
+                                      <span className="movie-card-year">{item.año}</span>
+                                      <span className="movie-card-genre">{item.categoria}</span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
 
-                            {filtered.length === 0 && (
-                              <div className="no-results">
-                                No hay series que comiencen con la letra seleccionada.
+                              {filtered.length === 0 && (
+                                <div className="no-results">
+                                  No hay series que comiencen con la letra seleccionada.
+                                </div>
+                              )}
+                            </div>
+
+                            {filtered.length > seriesLimit && (
+                              <div className="load-more-container">
+                                <button 
+                                  onClick={() => setSeriesLimit(prev => prev + 32)}
+                                  className="load-more-btn"
+                                >
+                                  Cargar más
+                                </button>
                               </div>
                             )}
-                          </div>
-
-                          {filtered.length > seriesLimit && (
-                            <div className="load-more-container">
-                              <button 
-                                onClick={() => setSeriesLimit(prev => prev + 32)}
-                                className="load-more-btn"
-                              >
-                                Cargar más
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* SECCIÓN DE CARGADOR DIRECTO DE IDs (TMDB / IMDb) */}
-            <div className="direct-loader-section">
-              <div className="direct-loader-card">
-                <h2>Cargar contenido por ID de TMDB o IMDb</h2>
-                <p>
-                  ¿Quieres ver algo que no está en el catálogo? Ingresa el ID de la película o serie de The Movie Database (TMDB) o IMDb para reproducirla directamente desde nuestros servidores.
-                </p>
-
-                <form onSubmit={handleLoadCustomId} className="direct-loader-form">
-                  <div className="form-fields">
-                    <div className="input-group">
-                      <label htmlFor="content-id">ID del Contenido:</label>
-                      <input
-                        type="text"
-                        id="content-id"
-                        placeholder="Ej: 533535 (Deadpool 3) o tt6263850"
-                        value={customId}
-                        onChange={(e) => setCustomId(e.target.value)}
-                        className="form-input"
-                        required
-                      />
+                          </>
+                        );
+                      })()}
                     </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </main>
 
-                    <div className="input-group">
-                      <label htmlFor="content-type">Tipo de Contenido:</label>
-                      <select
-                        id="content-type"
-                        value={customType}
-                        onChange={(e) => setCustomType(e.target.value)}
-                        className="form-select"
-                      >
-                        <option value="pelicula">Película</option>
-                        <option value="serie">Serie de TV</option>
-                      </select>
-                    </div>
+        {/* 4. FOOTER */}
+        <footer className="main-footer">
+          <div className="footer-content">
+            <p>FilmTV - Portal elegante de streaming. Todos los derechos a sus respectivos servidores externos.</p>
+          </div>
+        </footer>
+      </div>
 
-                    {customType === 'serie' && (
-                      <>
-                        <div className="input-group-short">
-                          <label htmlFor="content-season">Temp:</label>
-                          <input
-                            type="number"
-                            id="content-season"
-                            min="1"
-                            value={customSeason}
-                            onChange={(e) => setCustomSeason(Math.max(1, parseInt(e.target.value) || 1))}
-                            className="form-input-number"
-                          />
-                        </div>
+      {/* 5. AVISO DE COOKIES */}
+      {showCookieBanner && (
+        <div className="cookie-banner-overlay">
+          <div className="cookie-banner">
+            <div className="cookie-content">
+              <h3>Aviso de Cookies</h3>
+              <p>Este portal elegante utiliza cookies locales para guardar tus canales y películas favoritos, y para recordar tus preferencias de reproducción. Al continuar navegando, aceptas su uso.</p>
+            </div>
+            <button className="cookie-accept-btn" onClick={() => {
+              localStorage.setItem('filmtv_cookie_consent', 'accepted');
+              setShowCookieBanner(false);
+            }}>
+              Aceptar
+            </button>
+          </div>
+        </div>
+      )}
 
-                        <div className="input-group-short">
-                          <label htmlFor="content-episode">Cap:</label>
-                          <input
-                            type="number"
-                            id="content-episode"
-                            min="1"
-                            value={customEpisode}
-                            onChange={(e) => setCustomEpisode(Math.max(1, parseInt(e.target.value) || 1))}
-                            className="form-input-number"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <button type="submit" className="load-btn">
-                    Cargar Reproductor
-                  </button>
-                </form>
-              </div>
+      {/* 6. MODAL DE TRÁILER LIGHTBOX */}
+      {showTrailerModal && trailerKey && (
+        <div className="trailer-modal-overlay" onClick={() => { setShowTrailerModal(false); setTrailerKey(null); }}>
+          <div className="trailer-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="trailer-close-btn" onClick={() => { setShowTrailerModal(false); setTrailerKey(null); }}>✕</button>
+            <div className="trailer-video-wrapper">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
+                allowFullScreen
+                allow="autoplay; encrypted-media; fullscreen"
+                className="trailer-iframe"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+              />
             </div>
           </div>
-        )}
-      </main>
-
-      {/* 4. FOOTER */}
-      <footer className="main-footer">
-        <div className="footer-content">
-          <p>FilmTV - Portal elegante de streaming. Todos los derechos a sus respectivos servidores externos.</p>
         </div>
-      </footer>
+      )}
 
-      {/* 5. DISEÑO ESTÉTICO EN VANILLA CSS (CSS-in-JS Global) */}
+      {/* 7. MODAL DE DETALLES NETFLIX-STYLE */}
+      {selectedItemDetails && (
+        <div className="modal-overlay" onClick={() => setSelectedItemDetails(null)}>
+          <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setSelectedItemDetails(null)}>✕</button>
+            
+            <div className="modal-hero-header" style={{ 
+              backgroundImage: `linear-gradient(to bottom, rgba(11,12,16,0.2) 0%, rgba(11,12,16,0.95) 100%), url(${selectedItemDetails.poster || ''})` 
+            }}>
+              <div className="modal-hero-overlay"></div>
+              <div className="modal-hero-title-box">
+                <span className="rating-badge" style={{ position: 'relative', top: '0', right: '0', display: 'inline-block', marginBottom: '8px' }}>★ {selectedItemDetails.valoracion}</span>
+                <h2>{selectedItemDetails.titulo}</h2>
+                <div className="modal-meta-row">
+                  <span>{selectedItemDetails.año}</span>
+                  <span className="modal-genre-tag">{selectedItemDetails.categoria}</span>
+                  <span>{selectedItemDetails.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button className="modal-play-action-btn" onClick={() => {
+                    setActiveItem(selectedItemDetails);
+                    setSelectedItemDetails(null);
+                  }}>
+                    Reproducir Ahora
+                  </button>
+                  <button 
+                    className={`modal-fav-action-btn ${favorites.some(fav => fav.id === selectedItemDetails.id) ? 'is-fav' : ''}`}
+                    onClick={() => toggleFavorite(selectedItemDetails)}
+                  >
+                    {favorites.some(fav => fav.id === selectedItemDetails.id) ? '★ Quitar de Favoritos' : '☆ Añadir a Favoritos'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-body-desc">
+              <div className="modal-desc-column">
+                <h3>Sinopsis</h3>
+                <p>{selectedItemDetails.descripcion}</p>
+              </div>
+              
+              {/* ELENCO / CAST SECTION */}
+              {selectedItemDetails.categoria !== 'YouTube' && (
+                <div className="modal-cast-section">
+                  <h3>Elenco / Actores</h3>
+                  {loadingCast ? (
+                    <div className="loading-cast-text">Cargando elenco...</div>
+                  ) : castInfo.length > 0 ? (
+                    <div className="cast-row-scroll">
+                      {castInfo.map((actor) => (
+                        <div key={actor.id} className="actor-card">
+                          <img src={actor.profileUrl} alt={actor.name} className="actor-photo" loading="lazy" />
+                          <span className="actor-name">{actor.name}</span>
+                          <span className="actor-character">{actor.character}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-cast-text">Información de elenco no disponible.</div>
+                  )}
+                </div>
+              )}
+
+              {/* RECOMENDACIONES SECTION */}
+              {selectedItemDetails.categoria !== 'YouTube' && (
+                <div className="modal-recs-section">
+                  <h3>Recomendaciones</h3>
+                  {loadingRecs ? (
+                    <div className="loading-recs-text">Cargando recomendaciones...</div>
+                  ) : recommendations.length > 0 ? (
+                    <div className="recs-row-scroll">
+                      {recommendations.map((rec) => (
+                        <div 
+                          key={rec.id} 
+                          className="rec-card" 
+                          onClick={() => setSelectedItemDetails(rec)}
+                        >
+                          <div className="rec-poster-container">
+                            <img src={rec.poster} alt={rec.titulo} className="rec-poster" loading="lazy" />
+                            <span className="rec-rating">★ {rec.valoracion}</span>
+                          </div>
+                          <span className="rec-title">{rec.titulo}</span>
+                          <span className="rec-year">{rec.año}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-recs-text">No hay recomendaciones disponibles para este contenido.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 8. DISEÑO ESTÉTICO EN VANILLA CSS (CSS-in-JS Global) */}
       <style jsx global>{`
         /* Reset e Importación de Estilos */
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700&display=swap');
@@ -1636,7 +2077,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         .app-container {
           min-height: 100vh;
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           background: radial-gradient(circle at top, #0f101a 0%, #050508 100%);
         }
 
@@ -1718,11 +2159,113 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           }
         }
 
-        /* 2. HEADER */
+        /* 2. SIDEBAR NAVIGATION SYSTEM (LEFT SIDE) */
+        .main-sidebar {
+          width: 240px;
+          min-width: 240px;
+          background: rgba(10, 11, 18, 0.95);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-right: 1px solid rgba(0, 245, 212, 0.1);
+          display: flex;
+          flex-direction: column;
+          padding: 24px 0;
+          box-sizing: border-box;
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 1050;
+          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sidebar-logo {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 30px;
+          cursor: pointer;
+          padding: 0 20px;
+          transition: transform 0.2s ease;
+        }
+
+        .sidebar-logo:hover {
+          transform: scale(1.02);
+        }
+
+        .sidebar-menu {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: 0 12px;
+          overflow-y: auto;
+          flex: 1;
+          scrollbar-width: none;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+          display: none;
+        }
+
+        .sidebar-menu-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: transparent;
+          border: none;
+          color: #9ca3af;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: 'Outfit', sans-serif;
+          cursor: pointer;
+          text-align: left;
+          transition: all 0.2s ease;
+        }
+
+        .sidebar-menu-btn:hover {
+          background-color: rgba(255, 255, 255, 0.03);
+          color: #ffffff;
+        }
+
+        .sidebar-menu-btn.active {
+          background-color: rgba(0, 245, 212, 0.08);
+          border-left: 3px solid #00f5d4;
+          color: #00f5d4;
+        }
+
+        .sidebar-menu-btn svg {
+          color: inherit;
+          transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar-menu-btn.active svg, .sidebar-menu-btn:hover svg {
+          color: #00f5d4;
+          transform: scale(1.05);
+        }
+
+        .sidebar-btn-label {
+          font-size: 13px;
+          letter-spacing: 0.5px;
+        }
+
+        /* 3. CONTENT WRAPPER & MAIN LAYOUT */
+        .content-wrapper {
+          flex: 1;
+          margin-left: 240px;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          position: relative;
+        }
+
+        /* HEADER */
         .main-header {
-          background-color: rgba(5, 5, 8, 0.8);
+          background-color: rgba(5, 5, 8, 0.85);
           backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(0, 245, 212, 0.12);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(0, 245, 212, 0.1);
           position: sticky;
           top: 0;
           z-index: 1000;
@@ -1734,49 +2277,26 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           max-width: 1300px;
           margin: 0 auto;
           display: flex;
-          justify-content: space-between;
+          justify-content: flex-end;
           align-items: center;
           gap: 20px;
         }
 
-        .brand-logo {
-          cursor: pointer;
-          transition: transform 0.2s ease;
-        }
-
-        .brand-logo:hover {
-          transform: scale(1.02);
-        }
-
-        .brand-logo svg rect {
-          animation: logo-glow-pulse 8s infinite ease-in-out;
-        }
-
-        @keyframes logo-glow-pulse {
-          0%, 100% {
-            filter: drop-shadow(0 0 0px rgba(0, 245, 212, 0));
-            transform: scale(1);
-            transform-origin: 132px 29px;
-          }
-          5% {
-            filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.85));
-            transform: scale(1.06);
-            transform-origin: 132px 29px;
-          }
-          10% {
-            filter: drop-shadow(0 0 14px rgba(0, 184, 255, 0.95));
-            transform: scale(1.03);
-            transform-origin: 132px 29px;
-          }
-          15% {
-            filter: drop-shadow(0 0 0px rgba(0, 245, 212, 0));
-            transform: scale(1);
-            transform-origin: 132px 29px;
+        @media (max-width: 768px) {
+          .header-content {
+            justify-content: space-between;
           }
         }
 
         .search-wrapper {
           flex: 0 1 450px;
+        }
+
+        @media (max-width: 768px) {
+          .search-wrapper {
+            flex: 1;
+            max-width: 300px;
+          }
         }
 
         .search-input {
@@ -1797,7 +2317,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           box-shadow: 0 0 15px rgba(0, 245, 212, 0.2);
         }
 
-        /* 3. MAIN CONTENT */
+        /* 3.1 CATALOG VIEW */
         .main-content {
           flex: 1;
           max-width: 1300px;
@@ -1807,57 +2327,19 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           box-sizing: border-box;
         }
 
-        /* 3.1 CATALOG VIEW */
-        .filters-container {
-          display: flex;
-          gap: 10px;
-          overflow-x: auto;
-          padding-bottom: 12px;
-          margin-bottom: 30px;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-        }
-
-        .filters-container::-webkit-scrollbar {
-          height: 4px;
-        }
-
-        .filters-container::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 4px;
-        }
-
-        .filter-btn {
-          background-color: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #9ca3af;
-          padding: 8px 20px;
-          border-radius: 30px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.25s ease;
-          white-space: nowrap;
-        }
-
-        .filter-btn:hover {
-          border-color: #00f5d4;
-          color: #ffffff;
-        }
-
-        .filter-btn.active {
-          background-color: #00f5d4;
-          border-color: #00f5d4;
-          color: #07070c;
-          box-shadow: 0 0 15px rgba(0, 245, 212, 0.35);
-        }
-
         .cards-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, 180px);
           justify-content: start;
           gap: 24px;
           margin-bottom: 50px;
+        }
+
+        @media (max-width: 480px) {
+          .cards-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+          }
         }
 
         .movie-card {
@@ -1874,11 +2356,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           transform: translateY(-6px) scale(1.06);
           border-color: #00f5d4;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 245, 212, 0.25);
-        }
-
-        .movie-card:active {
-          transform: translateY(-2px) scale(0.98);
-          transition: transform 0.1s ease;
         }
 
         .poster-container {
@@ -1992,120 +2469,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           font-size: 15px;
         }
 
-        /* 3.2 DIRECT LOADER SECTION */
-        .direct-loader-section {
-          margin-top: 50px;
-          display: flex;
-          justify-content: center;
-        }
-
-        .direct-loader-card {
-          background: linear-gradient(135deg, #0e0f17 0%, #08080c 100%);
-          border: 1px solid rgba(0, 245, 212, 0.15);
-          border-radius: 16px;
-          padding: 24px 30px;
-          max-width: 750px;
-          width: 100%;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-
-        .direct-loader-card h2 {
-          font-family: 'Outfit', sans-serif;
-          font-size: 20px;
-          color: #ffffff;
-          margin: 0 0 10px 0;
-        }
-
-        .direct-loader-card p {
-          font-size: 13px;
-          color: #9ca3af;
-          line-height: 1.6;
-          margin: 0 0 20px 0;
-        }
-
-        .direct-loader-form {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .form-fields {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-
-        .input-group {
-          flex: 1 1 200px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .input-group-short {
-          flex: 0 1 70px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .input-group label, .input-group-short label {
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: #9ca3af;
-          font-weight: 600;
-        }
-
-        .form-input, .form-select, .form-input-number {
-          padding: 10px 14px;
-          background-color: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 8px;
-          color: #ffffff;
-          font-size: 13px;
-          outline: none;
-          box-sizing: border-box;
-          transition: all 0.2s ease;
-        }
-
-        .form-input:focus, .form-select:focus, .form-input-number:focus {
-          border-color: #00f5d4;
-          background-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .form-input {
-          width: 100%;
-        }
-
-        .form-select {
-          cursor: pointer;
-        }
-
-        .form-input-number {
-          width: 100%;
-          text-align: center;
-        }
-
-        .load-btn {
-          align-self: flex-start;
-          background-color: #00f5d4;
-          border: none;
-          color: #07070c;
-          font-weight: 700;
-          font-size: 13px;
-          padding: 10px 24px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.25s ease;
-          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.2);
-        }
-
-        .load-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 245, 212, 0.35);
-        }
-
         /* 3.3 PLAYER VIEW CONTAINER */
         .player-view-container {
           display: flex;
@@ -2159,68 +2522,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           font-size: 13px;
           color: #f59e0b;
           font-weight: 700;
-        }
-
-        .series-selector-panel {
-          display: flex;
-          align-items: center;
-          gap: 24px;
-          flex-wrap: wrap;
-          background-color: #0e0f17;
-          border: 1px solid rgba(255, 255, 255, 0.04);
-          padding: 12px 20px;
-          border-radius: 10px;
-        }
-
-        .selector-group {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .selector-label {
-          font-size: 12px;
-          font-weight: 700;
-          text-transform: uppercase;
-          color: #9ca3af;
-        }
-
-        .counter-controls {
-          display: flex;
-          align-items: center;
-          background-color: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 6px;
-          overflow: hidden;
-        }
-
-        .counter-btn {
-          background: transparent;
-          border: none;
-          color: #ffffff;
-          width: 32px;
-          height: 32px;
-          cursor: pointer;
-          font-weight: 700;
-          font-size: 15px;
-          transition: background-color 0.2s;
-        }
-
-        .counter-btn:hover {
-          background-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .counter-display {
-          width: 36px;
-          text-align: center;
-          font-size: 13px;
-          font-weight: 700;
-        }
-
-        .selector-info {
-          font-size: 12px;
-          color: #00f5d4;
-          font-weight: 600;
         }
 
         .servers-tab-bar {
@@ -2393,37 +2694,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           color: #4b5563;
         }
 
-        /* ESTILOS DE REDISEÑO PREMIUM AGREGADOS */
-        
-        /* HEADER TABS */
-        .header-tabs {
-          display: flex;
-          gap: 20px;
-          margin-left: 30px;
-          align-items: center;
-        }
-
-        .header-tab-btn {
-          background: transparent;
-          border: none;
-          color: #a3a3a3;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: color 0.2s, transform 0.2s;
-          padding: 8px 4px;
-          font-family: 'Outfit', sans-serif;
-        }
-
-        .header-tab-btn:hover {
-          color: #ffffff;
-        }
-
-        .header-tab-btn.active {
-          color: #00f5d4;
-          border-bottom: 2px solid #00f5d4;
-        }
-
         /* HERO BANNER */
         .hero-banner {
           position: relative;
@@ -2534,6 +2804,24 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         .hero-play-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(0, 245, 212, 0.5);
+        }
+
+        .hero-trailer-btn {
+          background-color: transparent;
+          color: #ffffff;
+          border: 1px solid rgba(255,255,255,0.3);
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          padding: 12px 28px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+
+        .hero-trailer-btn:hover {
+          background-color: rgba(255, 255, 255, 0.05);
+          border-color: #ffffff;
         }
 
         /* CATEGORY ROWS & CAROUSELS */
@@ -2988,13 +3276,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             font-size: 13px;
             -webkit-line-clamp: 3;
           }
-          .header-tabs {
-            margin-left: 15px;
-            gap: 12px;
-          }
-          .header-tab-btn {
-            font-size: 13px;
-          }
           .episodes-buttons-grid {
             grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
           }
@@ -3417,95 +3698,252 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         .playback-optimization-banner .banner-text strong {
           color: #ffffff;
         }
+
+        /* SIDEBAR SYSTEM RESPONSIVE OVERRIDES */
+        @media (max-width: 768px) {
+          .app-container {
+            flex-direction: column;
+          }
+          .main-sidebar {
+            transform: translateX(-100%);
+            width: 260px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+          }
+          .main-sidebar.open {
+            transform: translateX(0);
+          }
+          .sidebar-close-btn {
+            display: block;
+          }
+          .mobile-menu-toggle {
+            display: block;
+          }
+          .content-wrapper {
+            margin-left: 0 !important;
+          }
+          .brand-logo {
+            display: block !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .brand-logo {
+            display: none !important;
+          }
+          .mobile-menu-toggle {
+            display: none !important;
+          }
+        }
+
+        .mobile-menu-toggle {
+          background: transparent;
+          border: none;
+          color: #00f5d4;
+          cursor: pointer;
+          display: none;
+        }
+
+        .sidebar-close-btn {
+          display: none;
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background: rgba(0,0,0,0.4);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #ffffff;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: bold;
+          z-index: 1060;
+          transition: all 0.2s;
+        }
+
+        .sidebar-close-btn:hover {
+          background: #ff3b30;
+          border-color: #ff3b30;
+        }
+
+        .sidebar-overlay-bg {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(4px);
+          z-index: 1040;
+        }
+
+        /* COOKIE consent banner */
+        .cookie-banner-overlay {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          left: 24px;
+          z-index: 10000;
+          display: flex;
+          justify-content: center;
+          pointer-events: none;
+        }
+
+        @media (min-width: 769px) {
+          .cookie-banner-overlay {
+            left: auto;
+            width: 420px;
+          }
+        }
+
+        .cookie-banner {
+          pointer-events: auto;
+          background-color: rgba(11, 12, 16, 0.96);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(0, 245, 212, 0.2);
+          border-radius: 12px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 20px rgba(0, 245, 212, 0.05);
+          animation: slide-in-cookie 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slide-in-cookie {
+          from { transform: translateY(100px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        .cookie-content h3 {
+          margin: 0 0 6px 0;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          color: #00f5d4;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .cookie-content p {
+          margin: 0;
+          font-size: 12px;
+          color: #9ca3af;
+          line-height: 1.5;
+        }
+
+        .cookie-accept-btn {
+          background-color: #00f5d4;
+          border: none;
+          color: #07070c;
+          font-family: 'Outfit', sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          padding: 8px 20px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .cookie-accept-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 245, 212, 0.3);
+        }
+
+        /* TRAILER modal box */
+        .trailer-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.9);
+          backdrop-filter: blur(10px);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+        }
+
+        .trailer-modal-content {
+          position: relative;
+          width: 90%;
+          max-width: 960px;
+          aspect-ratio: 16/9;
+          background-color: #000000;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(0, 245, 212, 0.25);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(0, 245, 212, 0.1);
+        }
+
+        .trailer-close-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background-color: rgba(0, 0, 0, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #ffffff;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          z-index: 10010;
+          font-size: 14px;
+          font-weight: bold;
+          transition: all 0.2s;
+        }
+
+        .trailer-close-btn:hover {
+          background-color: #ff3b30;
+          border-color: #ff3b30;
+          transform: scale(1.05);
+        }
+
+        .trailer-video-wrapper {
+          width: 100%;
+          height: 100%;
+        }
+
+        .trailer-iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+
+        /* FAVORITES button actions in details modal */
+        .modal-fav-action-btn {
+          background-color: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #ffffff;
+          font-family: 'Outfit', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 10px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          margin-left: 12px;
+        }
+
+        .modal-fav-action-btn:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-fav-action-btn.is-fav {
+          border-color: #00f5d4;
+          color: #00f5d4;
+          background-color: rgba(0, 245, 212, 0.08);
+          box-shadow: 0 0 10px rgba(0, 245, 212, 0.15);
+        }
       `}</style>
-      
-      {/* MODAL DE DETALLES NETFLIX-STYLE */}
-      {selectedItemDetails && (
-        <div className="modal-overlay" onClick={() => setSelectedItemDetails(null)}>
-          <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={() => setSelectedItemDetails(null)}>✕</button>
-            
-            <div className="modal-hero-header" style={{ 
-              backgroundImage: `linear-gradient(to bottom, rgba(11,12,16,0.2) 0%, rgba(11,12,16,0.95) 100%), url(${selectedItemDetails.poster || ''})` 
-            }}>
-              <div className="modal-hero-overlay"></div>
-              <div className="modal-hero-title-box">
-                <span className="rating-badge" style={{ position: 'relative', top: '0', right: '0', display: 'inline-block', marginBottom: '8px' }}>★ {selectedItemDetails.valoracion}</span>
-                <h2>{selectedItemDetails.titulo}</h2>
-                <div className="modal-meta-row">
-                  <span>{selectedItemDetails.año || selectedItemDetails.año}</span>
-                  <span className="modal-genre-tag">{selectedItemDetails.categoria}</span>
-                  <span>{selectedItemDetails.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
-                </div>
-                <button className="modal-play-action-btn" onClick={() => {
-                  setActiveItem(selectedItemDetails);
-                  setSelectedItemDetails(null);
-                }}>
-                  Reproducir Ahora
-                </button>
-              </div>
-            </div>
-
-            <div className="modal-body-desc">
-              <div className="modal-desc-column">
-                <h3>Sinopsis</h3>
-                <p>{selectedItemDetails.descripcion}</p>
-              </div>
-              
-              {/* ELENCO / CAST SECTION */}
-              <div className="modal-cast-section">
-                <h3>Elenco / Actores</h3>
-                {loadingCast ? (
-                  <div className="loading-cast-text">Cargando elenco...</div>
-                ) : castInfo.length > 0 ? (
-                  <div className="cast-row-scroll">
-                    {castInfo.map((actor) => (
-                      <div key={actor.id} className="actor-card">
-                        <img src={actor.profileUrl} alt={actor.name} className="actor-photo" loading="lazy" />
-                        <span className="actor-name">{actor.name}</span>
-                        <span className="actor-character">{actor.character}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="no-cast-text">Información de elenco no disponible.</div>
-                )}
-              </div>
-
-              {/* RECOMENDACIONES SECTION */}
-              <div className="modal-recs-section">
-                <h3>Recomendaciones (Estilo TasteDive)</h3>
-                {loadingRecs ? (
-                  <div className="loading-recs-text">Cargando recomendaciones...</div>
-                ) : recommendations.length > 0 ? (
-                  <div className="recs-row-scroll">
-                    {recommendations.map((rec) => (
-                      <div 
-                        key={rec.id} 
-                        className="rec-card" 
-                        onClick={() => setSelectedItemDetails(rec)}
-                      >
-                        <div className="rec-poster-container">
-                          <img src={rec.poster} alt={rec.titulo} className="rec-poster" loading="lazy" />
-                          <span className="rec-rating">★ {rec.valoracion}</span>
-                        </div>
-                        <span className="rec-title">{rec.titulo}</span>
-                        <span className="rec-year">{rec.año}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="no-recs-text">No hay recomendaciones disponibles para este contenido.</div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
 // Componente del Chat en Vivo (Watch Party) vía MQTT
 function ChatBox({ channelId, channelTitle, isCollapsed, onToggleCollapse }) {
   const getSenderColor = (name) => {

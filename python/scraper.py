@@ -350,7 +350,7 @@ def generar_canales():
     for ch in todos_los_canales:
         url = ch["url"]
         ch_id = ch["id"]
-        if url.endswith(".png") or url.endswith(".jpg") or "wiseplay" in url:
+        if url.endswith(".png") or url.endswith(".jpg") or "wiseplay" in url or "jmp2.uk" in url or "pluto.tv" in url:
             continue
         if url not in urls_vistas and ch_id not in ids_vistos:
             canales_unicos.append(ch)
