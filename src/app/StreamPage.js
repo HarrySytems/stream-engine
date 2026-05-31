@@ -543,7 +543,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   // Obtener servidores Latino desde Cuevana.gs y LaMovie.org a través de nuestro proxy de Next.js
   useEffect(() => {
-    if (!activeItem || activeItem.tipo === 'canal' || activeItem.youtubeId) {
+    if (!activeItem || activeItem.tipo === 'canal' || !activeItem.tmdbId) {
       setCuevanaServers([]);
       setLoadingCuevana(false);
       return;
@@ -687,7 +687,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   // Obtener información real de temporadas y capítulos de TMDB
   useEffect(() => {
-    if (!activeItem || activeItem.tipo !== 'serie' || activeItem.youtubeId) {
+    if (!activeItem || activeItem.tipo !== 'serie' || !activeItem.tmdbId) {
       setSeasonsInfo([]);
       return;
     }
@@ -946,7 +946,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         ? 'https://api.mangadex.org/manga?limit=30&includes[]=cover_art&order[followedCount]=desc'
         : `https://api.mangadex.org/manga?title=${encodeURIComponent(mangaSearchQuery)}&limit=30&includes[]=cover_art`;
 
-      fetch(url)
+      fetch(`/api/proxy?url=${encodeURIComponent(url)}`)
         .then(res => res.json())
         .then(data => {
           if (data && data.data) {
@@ -974,7 +974,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     setLoadingChapters(true);
     
     const mangaId = manga.id;
-    fetch(`https://api.mangadex.org/manga/${mangaId}/feed?translatedLanguage[]=es&translatedLanguage[]=en&limit=500&order[chapter]=asc&includes[]=scanlation_group`)
+    const feedUrl = `https://api.mangadex.org/manga/${mangaId}/feed?translatedLanguage[]=es&translatedLanguage[]=en&limit=500&order[chapter]=asc&includes[]=scanlation_group`;
+    fetch(`/api/proxy?url=${encodeURIComponent(feedUrl)}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -1002,14 +1003,15 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     setCurrentMangaPage(0);
     setLoadingPages(true);
 
-    fetch(`https://api.mangadex.org/at-home/server/${chapter.id}`)
+    const pagesUrl = `https://api.mangadex.org/at-home/server/${chapter.id}`;
+    fetch(`/api/proxy?url=${encodeURIComponent(pagesUrl)}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.baseUrl && data.chapter) {
           const baseUrl = data.baseUrl;
           const hash = data.chapter.hash;
           const files = data.chapter.dataSaver || data.chapter.data;
-          const urls = files.map(file => `${baseUrl}/data-saver/${hash}/${file}`);
+          const urls = files.map(file => `/api/proxy?url=${encodeURIComponent(`${baseUrl}/data-saver/${hash}/${file}`)}`);
           setChapterPages(urls);
         } else {
           setChapterPages([]);
@@ -1079,10 +1081,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   const allServers = activeItem 
     ? (activeItem.tipo === 'canal' 
-        ? [{ name: "Canal en Vivo", url: `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}` }]
-        : (activeItem.youtubeId 
-            ? [{ name: "YouTube Player", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }]
-            : [...originalServersList, ...cuevanaServers]))
+        ? [{ name: "Canal en Vivo", url: isYouTubeUrl(activeItem.url) ? (activeItem.url.includes('/embed/') ? activeItem.url : `https://www.youtube.com/embed/${getYouTubeId(activeItem.url)}?autoplay=1&rel=0`) : `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}` }]
+        : [
+            ...(activeItem.youtubeId ? [{ name: "Servidor Principal (YouTube)", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }] : []),
+            ...originalServersList,
+            ...cuevanaServers
+          ])
     : [];
 
   const navItems = [
@@ -1350,7 +1354,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               </div>
 
               {/* Panel de control de episodios si el contenido es una Serie */}
-              {activeItem.tipo === 'serie' && !activeItem.youtubeId && (
+              {activeItem.tipo === 'serie' && (
                 <div className="series-seasons-episodes-panel">
                   <div className="seasons-tab-container">
                     <span className="panel-label">Temporadas:</span>
@@ -1414,8 +1418,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                 </div>
               )}
 
-              {/* Pestañas de servidores de transmisión (se omiten para videos de YouTube) */}
-              {!activeItem.youtubeId && (
+              {/* Pestañas de servidores de transmisión (se omiten para canales) */}
+              {activeItem.tipo !== 'canal' && (
                 <div className="servers-tab-bar">
                   <span className="servers-label">Servidores:</span>
                   <div className="servers-list">
@@ -1476,8 +1480,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     )}
                   </div>
                   
-                  {/* Playback optimization warning message */}
-                  {!activeItem.youtubeId && activeItem.tipo !== 'canal' && (
+                  {activeItem.tipo !== 'canal' && (
                     <div className="playback-optimization-banner">
                       <span className="banner-icon">Optimización</span>
                       <span className="banner-text">
@@ -1867,7 +1870,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                     const coverRel = selectedManga.relationships?.find(r => r.type === 'cover_art');
                                     const coverFileName = coverRel?.attributes?.fileName;
                                     return coverFileName 
-                                      ? `https://uploads.mangadex.org/covers/${selectedManga.id}/${coverFileName}.512.jpg` 
+                                      ? `/api/proxy?url=${encodeURIComponent(`https://uploads.mangadex.org/covers/${selectedManga.id}/${coverFileName}.512.jpg`)}` 
                                       : "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=400&q=80";
                                   })()
                                 } 
@@ -1998,7 +2001,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                 const coverRel = manga.relationships?.find(r => r.type === 'cover_art');
                                 const coverFileName = coverRel?.attributes?.fileName;
                                 const coverUrl = coverFileName 
-                                  ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}.256.jpg` 
+                                  ? `/api/proxy?url=${encodeURIComponent(`https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}.256.jpg`)}` 
                                   : "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=400&q=80";
                                 return (
                                   <div 

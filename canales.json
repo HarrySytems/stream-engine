@@ -1,47 +1,47 @@
 [
   {
-    "id": "canal-youtube-rtve-noticias",
-    "nombre": "RTVE Noticias 24h",
-    "url": "https://www.youtube.com/embed/live_stream?channel=UC7QZIf0dta-XPXsp9Hv4dTw",
-    "categoria": "Noticias",
-    "pais": "España",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Logo_RTVE.svg/512px-Logo_RTVE.svg.png",
-    "tipo": "canal"
-  },
-  {
-    "id": "canal-youtube-milenio-tv",
-    "nombre": "Milenio TV",
-    "url": "https://www.youtube.com/embed/live_stream?channel=UC1m-C61Hl1Gj9YnB2m6Q4sA",
-    "categoria": "Noticias",
-    "pais": "México",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Milenio_Televisi%C3%B3n.png/512px-Milenio_Televisi%C3%B3n.png",
-    "tipo": "canal"
-  },
-  {
-    "id": "canal-youtube-france24-es",
-    "nombre": "FRANCE 24 Español",
-    "url": "https://www.youtube.com/embed/live_stream?channel=UCUdOoVWuWmgo1wByzcsyKDQ",
-    "categoria": "Noticias",
-    "pais": "Francia",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/France_24_logo.svg/512px-France_24_logo.svg.png",
-    "tipo": "canal"
-  },
-  {
-    "id": "canal-youtube-latina-tv",
-    "nombre": "Latina Televisión",
-    "url": "https://www.youtube.com/embed/live_stream?channel=UC3rDtLrcgr3JS3_3JOW4BAw",
+    "id": "canal-latina-pe-direct",
+    "nombre": "Latina Televisión (Perú)",
+    "url": "https://redirector.rudo.video/hls-video/567ffde3fa319fadf3419efda25619456231dfea/latina/latina.smil/playlist.m3u8",
     "categoria": "General",
     "pais": "Perú",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Latina_Televisi%C3%B3n_-_Logo_2019.png/512px-Latina_Televisi%C3%B3n_-_Logo_2019.png",
     "tipo": "canal"
   },
   {
-    "id": "canal-youtube-tn-live",
-    "nombre": "Todo Noticias (TN)",
-    "url": "https://www.youtube.com/embed/live_stream?channel=UCj6PcyLvpnIRT_2W_mwa9Aw",
+    "id": "canal-america-pe-direct",
+    "nombre": "América TV (Perú)",
+    "url": "https://prepublish.f.qaotic.net/a07/americahls-100056/playlist_720p.m3u8",
+    "categoria": "General",
+    "pais": "Perú",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Logo_de_Am%C3%A9rica_Televisi%C3%B3n_%282016%29.svg",
+    "tipo": "canal"
+  },
+  {
+    "id": "canal-atv-pe-direct",
+    "nombre": "ATV Perú",
+    "url": "https://d2qsan2ut81n2k.cloudfront.net/live/25046411-8673-4dec-8ae8-5b41984f34e1/ts:abr.m3u8",
+    "categoria": "General",
+    "pais": "Perú",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/ce/ATV_Logo_Per%C3%BA.png",
+    "tipo": "canal"
+  },
+  {
+    "id": "canal-rtve-la1-direct",
+    "nombre": "RTVE La 1 (España)",
+    "url": "https://ztnr.rtve.es/ztnr/1688877.m3u8",
+    "categoria": "General",
+    "pais": "España",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Logo_RTVE.svg/512px-Logo_RTVE.svg.png",
+    "tipo": "canal"
+  },
+  {
+    "id": "canal-france24-es-direct",
+    "nombre": "FRANCE 24 Español",
+    "url": "https://static.france24.com/live/F24_ES_LO_HLS/live_tv.m3u8",
     "categoria": "Noticias",
-    "pais": "Argentina",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Todo_Noticias_Logo_2016.svg/512px-Todo_Noticias_Logo_2016.svg.png",
+    "pais": "Francia",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/France_24_logo.svg/512px-France_24_logo.svg.png",
     "tipo": "canal"
   },
   {
