@@ -13,6 +13,24 @@ const getLangBadge = (item) => {
   return 'MULTI';
 };
 
+const getYouTubeId = (url) => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/live\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
+
+const isYouTubeUrl = (url) => {
+  if (!url) return false;
+  return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('youtube-nocookie.com');
+};
+
+const getMangaTitle = (manga) => {
+  if (!manga || !manga.attributes || !manga.attributes.title) return 'Sin título';
+  const titleObj = manga.attributes.title;
+  return titleObj.es || titleObj.en || titleObj['ja-ro'] || titleObj['ko-ro'] || Object.values(titleObj)[0] || 'Sin título';
+};
+
 // Helper component for horizontal category carousels
 function CategoryRow({ title, items, onSelect, onPlay }) {
   const rowRef = useRef(null);
@@ -93,6 +111,23 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [activeItem, setActiveItem] = useState(null); // Película o Serie seleccionada
   const [activeServer, setActiveServer] = useState(0); // Servidor seleccionado (0 a 3)
   const [searchQuery, setSearchQuery] = useState('');
+  const [tmdbSearchResults, setTmdbSearchResults] = useState([]);
+  const [loadingTmdbSearch, setLoadingTmdbSearch] = useState(false);
+
+  // ESTADOS DE MANGA
+  const [mangaSearchQuery, setMangaSearchQuery] = useState('');
+  const [mangas, setMangas] = useState([]);
+  const [loadingMangas, setLoadingMangas] = useState(false);
+  const [selectedManga, setSelectedManga] = useState(null);
+  const [mangaChapters, setMangaChapters] = useState([]);
+  const [loadingChapters, setLoadingChapters] = useState(false);
+  const [mangaLanguage, setMangaLanguage] = useState('es'); // 'es' o 'en'
+  const [activeChapter, setActiveChapter] = useState(null);
+  const [chapterPages, setChapterPages] = useState([]);
+  const [loadingPages, setLoadingPages] = useState(false);
+  const [mangaReaderMode, setMangaReaderMode] = useState('single'); // 'single' o 'vertical'
+  const [currentMangaPage, setCurrentMangaPage] = useState(0);
+
   const [cuevanaServers, setCuevanaServers] = useState([]);
   const [loadingCuevana, setLoadingCuevana] = useState(false);
   
@@ -118,7 +153,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Efecto para inicializar el reproductor HLS para canales en vivo
   useEffect(() => {
     let active = true;
-    if (activeItem && activeItem.tipo === 'canal' && videoRef.current) {
+    if (activeItem && activeItem.tipo === 'canal' && !isYouTubeUrl(activeItem.url) && videoRef.current) {
       const video = videoRef.current;
       const streamUrl = `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}`;
 
@@ -837,6 +872,174 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     });
   }, [peliculas, searchQuery]);
 
+  // Búsqueda en TMDB en tiempo real
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setTmdbSearchResults([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(() => {
+      setLoadingTmdbSearch(true);
+      fetch(`https://api.themoviedb.org/3/search/multi?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX&query=${encodeURIComponent(searchQuery)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.results) {
+            const parsed = data.results
+              .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
+              .map(item => {
+                const isTv = item.media_type === 'tv';
+                return {
+                  id: `tmdb-${item.media_type}-${item.id}`,
+                  titulo: item.title || item.name || item.original_title || item.original_name || 'Sin título',
+                  descripcion: item.overview || 'Sin descripción disponible.',
+                  tipo: isTv ? 'serie' : 'pelicula',
+                  tmdbId: item.id.toString(),
+                  imdbId: '',
+                  poster: item.poster_path 
+                    ? `https://image.tmdb.org/t/p/w342${item.poster_path}` 
+                    : "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80",
+                  backdrop: item.backdrop_path 
+                    ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` 
+                    : '',
+                  año: (item.release_date || item.first_air_date || '').substring(0, 4) || 'N/A',
+                  valoracion: item.vote_average ? item.vote_average.toFixed(1) : 'N/A',
+                  categoria: isTv ? 'Series' : 'Películas',
+                  idioma: 'Latino / Sub',
+                  duracion: 'N/A'
+                };
+              });
+            setTmdbSearchResults(parsed);
+          } else {
+            setTmdbSearchResults([]);
+          }
+          setLoadingTmdbSearch(false);
+        })
+        .catch(err => {
+          console.error("Error fetching TMDB search:", err);
+          setTmdbSearchResults([]);
+          setLoadingTmdbSearch(false);
+        });
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const mergedSearchResults = useMemo(() => {
+    const local = filteredItems;
+    const localTmdbIds = new Set(local.map(item => item.tmdbId).filter(Boolean));
+    const uniqueTmdb = tmdbSearchResults.filter(item => !localTmdbIds.has(item.tmdbId));
+    return [...local, ...uniqueTmdb];
+  }, [filteredItems, tmdbSearchResults]);
+
+  // --- MANGA IMPLEMENTATION HANDLERS & EFFECTS ---
+  const filteredChaptersByLanguage = useMemo(() => {
+    return mangaChapters.filter(ch => ch.attributes.translatedLanguage === mangaLanguage);
+  }, [mangaChapters, mangaLanguage]);
+
+  useEffect(() => {
+    if (activeTab !== 'manga') return;
+
+    const delayDebounceFn = setTimeout(() => {
+      setLoadingMangas(true);
+      const url = mangaSearchQuery.trim() === ''
+        ? 'https://api.mangadex.org/manga?limit=30&includes[]=cover_art&order[followedCount]=desc'
+        : `https://api.mangadex.org/manga?title=${encodeURIComponent(mangaSearchQuery)}&limit=30&includes[]=cover_art`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.data) {
+            setMangas(data.data);
+          } else {
+            setMangas([]);
+          }
+          setLoadingMangas(false);
+        })
+        .catch(err => {
+          console.error("Error fetching mangas:", err);
+          setMangas([]);
+          setLoadingMangas(false);
+        });
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [activeTab, mangaSearchQuery]);
+
+  const handleSelectManga = (manga) => {
+    setSelectedManga(manga);
+    setMangaChapters([]);
+    setActiveChapter(null);
+    setChapterPages([]);
+    setLoadingChapters(true);
+    
+    const mangaId = manga.id;
+    fetch(`https://api.mangadex.org/manga/${mangaId}/feed?translatedLanguage[]=es&translatedLanguage[]=en&limit=500&order[chapter]=asc&includes[]=scanlation_group`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.data) {
+          const sorted = data.data.sort((a, b) => {
+            const numA = parseFloat(a.attributes.chapter) || 0;
+            const numB = parseFloat(b.attributes.chapter) || 0;
+            return numA - numB;
+          });
+          setMangaChapters(sorted);
+        } else {
+          setMangaChapters([]);
+        }
+        setLoadingChapters(false);
+      })
+      .catch(err => {
+        console.error("Error fetching manga chapters:", err);
+        setMangaChapters([]);
+        setLoadingChapters(false);
+      });
+  };
+
+  const handleSelectChapter = (chapter) => {
+    setActiveChapter(chapter);
+    setChapterPages([]);
+    setCurrentMangaPage(0);
+    setLoadingPages(true);
+
+    fetch(`https://api.mangadex.org/at-home/server/${chapter.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.baseUrl && data.chapter) {
+          const baseUrl = data.baseUrl;
+          const hash = data.chapter.hash;
+          const files = data.chapter.dataSaver || data.chapter.data;
+          const urls = files.map(file => `${baseUrl}/data-saver/${hash}/${file}`);
+          setChapterPages(urls);
+        } else {
+          setChapterPages([]);
+        }
+        setLoadingPages(false);
+      })
+      .catch(err => {
+        console.error("Error loading chapter pages:", err);
+        setChapterPages([]);
+        setLoadingPages(false);
+      });
+  };
+
+  // Keyboard navigation for manga reader (page turn)
+  useEffect(() => {
+    if (activeTab !== 'manga' || !activeChapter || mangaReaderMode !== 'single') return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        setCurrentMangaPage(prev => Math.max(0, prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        setCurrentMangaPage(prev => Math.min(chapterPages.length - 1, prev + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, activeChapter, mangaReaderMode, chapterPages]);
+  // --- END MANGA IMPLEMENTATION ---
+
   const filteredTdtCanales = useMemo(() => {
     return canales.filter(ch => {
       if (ch.categoria === 'Cine') return false;
@@ -925,6 +1128,16 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <polygon points="12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9"></polygon>
+        </svg>
+      )
+    },
+    {
+      id: 'manga',
+      label: 'Manga',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
       )
     },
@@ -1233,15 +1446,25 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     )}
                     
                     {activeItem.tipo === 'canal' ? (
-                      <video
-                        ref={videoRef}
-                        controls
-                        autoPlay
-                        className="player-iframe"
-                        style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
-                        onPlay={() => setIframeLoading(false)}
-                        onLoadedData={() => setIframeLoading(false)}
-                      />
+                      isYouTubeUrl(activeItem.url) ? (
+                        <iframe
+                          src={activeItem.url.includes('/embed/') ? activeItem.url : `https://www.youtube.com/embed/${getYouTubeId(activeItem.url)}?autoplay=1&rel=0`}
+                          onLoad={() => setIframeLoading(false)}
+                          allowFullScreen
+                          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                          className="player-iframe"
+                        />
+                      ) : (
+                        <video
+                          ref={videoRef}
+                          controls
+                          autoPlay
+                          className="player-iframe"
+                          style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                          onPlay={() => setIframeLoading(false)}
+                          onLoadedData={() => setIframeLoading(false)}
+                        />
+                      )
                     ) : (
                       <iframe
                         src={allServers[activeServer]?.url || ''}
@@ -1249,7 +1472,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                         className="player-iframe"
-                        sandbox={activeItem.youtubeId ? undefined : "allow-scripts allow-same-origin allow-forms allow-presentation"}
                       />
                     )}
                   </div>
@@ -1303,8 +1525,15 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               {searchQuery !== '' ? (
                 <div className="search-results-section">
                   <h2 className="section-title">Resultados de búsqueda para: "{searchQuery}"</h2>
+
+                  {loadingTmdbSearch && (
+                    <div className="search-loading-bar-container" style={{ width: '100%', height: '4px', backgroundColor: 'rgba(0, 245, 212, 0.1)', overflow: 'hidden', marginBottom: '20px', borderRadius: '2px' }}>
+                      <div className="search-loading-bar" style={{ width: '30%', height: '100%', backgroundColor: '#00f5d4', borderRadius: '2px', animation: 'search-pulse 1.5s infinite ease-in-out' }}></div>
+                    </div>
+                  )}
+
                   <div className="cards-grid">
-                    {filteredItems.slice(0, searchLimit).map((item) => (
+                    {mergedSearchResults.slice(0, searchLimit).map((item) => (
                       <div 
                         key={item.id} 
                         className="movie-card"
@@ -1335,13 +1564,13 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     ))}
                   </div>
 
-                  {filteredItems.length === 0 && (
+                  {mergedSearchResults.length === 0 && !loadingTmdbSearch && (
                     <div className="no-results">
                       No se encontraron películas o series con los criterios de búsqueda.
                     </div>
                   )}
 
-                  {filteredItems.length > searchLimit && (
+                  {mergedSearchResults.length > searchLimit && (
                     <div className="load-more-container">
                       <button 
                         onClick={() => setSearchLimit(prev => prev + 32)}
@@ -1490,6 +1719,316 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                           </>
                         );
                       })()}
+                    </div>
+                  )}
+
+                  {activeTab === 'manga' && (
+                    <div className="tab-manga-container">
+                      {activeChapter ? (
+                        /* ================== VISOR DE MANGA (READER) ================== */
+                        <div className="manga-reader-view">
+                          <div className="manga-reader-header" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '15px', padding: '15px 0', borderBottom: '1px solid #1a1a24', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                              <button 
+                                onClick={() => {
+                                  setActiveChapter(null);
+                                  setChapterPages([]);
+                                }} 
+                                className="back-btn"
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#13131a', border: '1px solid #27273a', borderRadius: '8px', color: '#fff', cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px', fontWeight: 'bold' }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                                  <polyline points="12 19 5 12 12 5"></polyline>
+                                </svg>
+                                Volver al Listado
+                              </button>
+                              <div>
+                                <h2 style={{ fontSize: '18px', fontWeight: '900', color: '#fff', margin: 0 }}>
+                                  {getMangaTitle(selectedManga)}
+                                </h2>
+                                <p style={{ fontSize: '13px', color: '#00f5d4', margin: '4px 0 0 0', fontWeight: 'bold' }}>
+                                  Capítulo {activeChapter.attributes.chapter} {activeChapter.attributes.title ? `- ${activeChapter.attributes.title}` : ''} ({activeChapter.attributes.translatedLanguage === 'es' ? 'Español' : 'Inglés'})
+                                </p>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <button
+                                onClick={() => setMangaReaderMode(prev => prev === 'single' ? 'vertical' : 'single')}
+                                className="mode-toggle-btn"
+                                style={{ padding: '8px 16px', backgroundColor: '#13131a', border: '1px solid #27273a', borderRadius: '8px', color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', transition: 'all 0.2s' }}
+                              >
+                                Modo: {mangaReaderMode === 'single' ? 'Página a Página' : 'Cascada Continuo'}
+                              </button>
+
+                              {mangaReaderMode === 'single' && chapterPages.length > 0 && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <button
+                                    onClick={() => setCurrentMangaPage(prev => Math.max(0, prev - 1))}
+                                    disabled={currentMangaPage === 0}
+                                    style={{ padding: '8px 12px', backgroundColor: '#13131a', border: '1px solid #27273a', borderRadius: '8px', color: '#fff', cursor: currentMangaPage === 0 ? 'not-allowed' : 'pointer', opacity: currentMangaPage === 0 ? 0.4 : 1 }}
+                                  >
+                                    Anterior
+                                  </button>
+                                  <span style={{ fontSize: '14px', color: '#8e8e9f', fontWeight: 'bold' }}>
+                                    {currentMangaPage + 1} / {chapterPages.length}
+                                  </span>
+                                  <button
+                                    onClick={() => setCurrentMangaPage(prev => Math.min(chapterPages.length - 1, prev + 1))}
+                                    disabled={currentMangaPage === chapterPages.length - 1}
+                                    style={{ padding: '8px 12px', backgroundColor: '#13131a', border: '1px solid #27273a', borderRadius: '8px', color: '#fff', cursor: currentMangaPage === chapterPages.length - 1 ? 'not-allowed' : 'pointer', opacity: currentMangaPage === chapterPages.length - 1 ? 0.4 : 1 }}
+                                  >
+                                    Siguiente
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {loadingPages ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '15px' }}>
+                              <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(0, 245, 212, 0.1)', borderTop: '4px solid #00f5d4', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                              <span style={{ color: '#8e8e9f', fontSize: '15px' }}>Cargando páginas del manga...</span>
+                            </div>
+                          ) : chapterPages.length === 0 ? (
+                            <div style={{ padding: '50px', textAlign: 'center', backgroundColor: '#13131a', borderRadius: '12px', border: '1px solid #1a1a24', color: '#8e8e9f' }}>
+                              No se pudieron cargar las páginas de este capítulo. Prueba con otro capítulo o grupo de traducción.
+                            </div>
+                          ) : (
+                            <div className="manga-pages-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', backgroundColor: '#09090d', borderRadius: '12px', padding: '20px', border: '1px solid #1a1a24' }}>
+                              {mangaReaderMode === 'vertical' ? (
+                                <div className="manga-vertical-stack" style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '800px', width: '100%' }}>
+                                  {chapterPages.map((url, index) => (
+                                    <img 
+                                      key={index} 
+                                      src={url} 
+                                      alt={`Página ${index + 1}`} 
+                                      style={{ width: '100%', height: 'auto', borderRadius: '4px', border: '1px solid #1a1a24', backgroundColor: '#13131a' }} 
+                                      loading="lazy"
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                <div 
+                                  className="manga-single-page-container" 
+                                  style={{ position: 'relative', maxWidth: '800px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
+                                  onClick={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    if (x > rect.width / 2) {
+                                      if (currentMangaPage < chapterPages.length - 1) {
+                                        setCurrentMangaPage(prev => prev + 1);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                      }
+                                    } else {
+                                      if (currentMangaPage > 0) {
+                                        setCurrentMangaPage(prev => prev - 1);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <img 
+                                    src={chapterPages[currentMangaPage]} 
+                                    alt={`Página ${currentMangaPage + 1}`} 
+                                    style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #27273a', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', backgroundColor: '#13131a' }} 
+                                  />
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: '15px', fontSize: '13px', color: '#8e8e9f' }}>
+                                    <span>◄ Click Izquierda para Retroceder</span>
+                                    <span style={{ color: '#00f5d4', fontWeight: 'bold' }}>Página {currentMangaPage + 1} de {chapterPages.length}</span>
+                                    <span>Click Derecha para Avanzar ►</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : selectedManga ? (
+                        /* ================== DETALLES DE MANGA ================== */
+                        <div className="manga-detail-view">
+                          <button 
+                            onClick={() => setSelectedManga(null)} 
+                            className="back-btn"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#13131a', border: '1px solid #27273a', borderRadius: '8px', color: '#fff', cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px', fontWeight: 'bold', marginBottom: '25px' }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <line x1="19" y1="12" x2="5" y2="12"></line>
+                              <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Volver al Catálogo
+                          </button>
+
+                          <div className="manga-details-container" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '30px', backgroundColor: '#13131a', padding: '30px', borderRadius: '16px', border: '1px solid #1a1a24', marginBottom: '30px' }}>
+                            <div className="manga-details-left" style={{ width: '220px', flexShrink: 0 }}>
+                              <img 
+                                src={
+                                  (() => {
+                                    const coverRel = selectedManga.relationships?.find(r => r.type === 'cover_art');
+                                    const coverFileName = coverRel?.attributes?.fileName;
+                                    return coverFileName 
+                                      ? `https://uploads.mangadex.org/covers/${selectedManga.id}/${coverFileName}.512.jpg` 
+                                      : "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=400&q=80";
+                                  })()
+                                } 
+                                alt={getMangaTitle(selectedManga)} 
+                                style={{ width: '100%', borderRadius: '12px', border: '1px solid #27273a', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', aspectRatio: '2/3', objectFit: 'cover' }}
+                              />
+                            </div>
+                            <div className="manga-details-right" style={{ flex: 1, minWidth: '300px' }}>
+                              <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Outfit', sans-serif" }}>
+                                {getMangaTitle(selectedManga)}
+                              </h1>
+                              
+                              {selectedManga.attributes.altTitles && selectedManga.attributes.altTitles.length > 0 && (
+                                <p style={{ fontSize: '14px', color: '#8e8e9f', margin: '0 0 15px 0', fontStyle: 'italic' }}>
+                                  {Object.values(selectedManga.attributes.altTitles[0])[0]}
+                                </p>
+                              )}
+
+                              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                                <span style={{ padding: '4px 10px', backgroundColor: 'rgba(0, 245, 212, 0.1)', color: '#00f5d4', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
+                                  Estado: {selectedManga.attributes.status === 'completed' ? 'Finalizado' : 'En Emisión'}
+                                </span>
+                                {selectedManga.attributes.year && (
+                                  <span style={{ padding: '4px 10px', backgroundColor: '#1e1e2f', color: '#8e8e9f', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
+                                    Año: {selectedManga.attributes.year}
+                                  </span>
+                                )}
+                              </div>
+
+                              <p style={{ fontSize: '15px', color: '#b5b5c6', lineHeight: '1.6', margin: '0 0 20px 0' }}>
+                                {selectedManga.attributes.description?.es || selectedManga.attributes.description?.en || 'Sin descripción disponible en español o inglés.'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="manga-chapters-section" style={{ backgroundColor: '#13131a', borderRadius: '16px', border: '1px solid #1a1a24', padding: '25px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '15px', borderBottom: '1px solid #1a1a24', paddingBottom: '15px', marginBottom: '20px' }}>
+                              <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#fff', margin: 0, fontFamily: "'Outfit', sans-serif" }}>
+                                Capítulos Disponibles
+                              </h3>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '13px', color: '#8e8e9f', fontWeight: 'bold' }}>Idioma:</span>
+                                <select 
+                                  value={mangaLanguage} 
+                                  onChange={(e) => setMangaLanguage(e.target.value)}
+                                  style={{ padding: '6px 12px', backgroundColor: '#09090d', border: '1px solid #27273a', borderRadius: '6px', color: '#fff', cursor: 'pointer', outline: 'none', fontSize: '13px', fontWeight: 'bold' }}
+                                >
+                                  <option value="es">Español (ES)</option>
+                                  <option value="en">Inglés (EN)</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {loadingChapters ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '50px 0', gap: '15px' }}>
+                                <div className="spinner" style={{ width: '30px', height: '30px', border: '3px solid rgba(0, 245, 212, 0.1)', borderTop: '3px solid #00f5d4', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                                <span style={{ color: '#8e8e9f', fontSize: '14px' }}>Buscando capítulos traducidos...</span>
+                              </div>
+                            ) : filteredChaptersByLanguage.length === 0 ? (
+                              <div style={{ padding: '40px', textAlign: 'center', color: '#8e8e9f', fontSize: '14px' }}>
+                                No se encontraron capítulos en el idioma seleccionado. Prueba cambiando a <strong>Inglés</strong> en el selector de arriba.
+                              </div>
+                            ) : (
+                              <div className="chapters-list-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
+                                {filteredChaptersByLanguage.map((chapter) => {
+                                  const group = chapter.relationships?.find(r => r.type === 'scanlation_group');
+                                  const groupName = group?.attributes?.name || 'Traductor Independiente';
+                                  return (
+                                    <div 
+                                      key={chapter.id}
+                                      onClick={() => handleSelectChapter(chapter)}
+                                      style={{ padding: '15px', backgroundColor: '#09090d', border: '1px solid #27273a', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: '6px' }}
+                                    >
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>
+                                          Capítulo {chapter.attributes.chapter}
+                                        </span>
+                                        <span style={{ fontSize: '11px', padding: '2px 6px', backgroundColor: 'rgba(0, 245, 212, 0.1)', color: '#00f5d4', borderRadius: '4px', fontWeight: 'bold' }}>
+                                          {chapter.attributes.translatedLanguage.toUpperCase()}
+                                        </span>
+                                      </div>
+                                      {chapter.attributes.title && (
+                                        <span style={{ fontSize: '13px', color: '#8e8e9f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                          {chapter.attributes.title}
+                                        </span>
+                                      )}
+                                      <span style={{ fontSize: '11px', color: '#52526b', marginTop: '4px' }}>
+                                        Grupo: {groupName}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        /* ================== LISTADO/BÚSQUEDA DE MANGA ================== */
+                        <div className="manga-catalog-view">
+                          <h2 className="section-title">Lector de Manga Online</h2>
+                          
+                          <div className="manga-search-bar-container" style={{ position: 'relative', maxWidth: '600px', marginBottom: '30px' }}>
+                            <input 
+                              type="text" 
+                              placeholder="Buscar Manga por título (ej. One Piece, Demon Slayer, Chainsaw Man...)" 
+                              value={mangaSearchQuery}
+                              onChange={(e) => setMangaSearchQuery(e.target.value)}
+                              style={{ width: '100%', padding: '14px 20px 14px 45px', backgroundColor: '#13131a', border: '1px solid #27273a', borderRadius: '12px', color: '#fff', fontSize: '15px', outline: 'none', transition: 'all 0.3s', fontFamily: "'Outfit', sans-serif" }}
+                            />
+                            <svg style={{ position: 'absolute', left: '16px', top: '16px', color: '#52526b' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <circle cx="11" cy="11" r="8"></circle>
+                              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                          </div>
+
+                          {loadingMangas ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '15px' }}>
+                              <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(0, 245, 212, 0.1)', borderTop: '4px solid #00f5d4', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                              <span style={{ color: '#8e8e9f', fontSize: '15px' }}>Buscando mangas en MangaDex...</span>
+                            </div>
+                          ) : mangas.length === 0 ? (
+                            <div style={{ padding: '50px', textAlign: 'center', backgroundColor: '#13131a', borderRadius: '12px', border: '1px solid #1a1a24', color: '#8e8e9f' }}>
+                              No se encontraron mangas. Intenta con otra palabra clave.
+                            </div>
+                          ) : (
+                            <div className="cards-grid">
+                              {mangas.map((manga) => {
+                                const coverRel = manga.relationships?.find(r => r.type === 'cover_art');
+                                const coverFileName = coverRel?.attributes?.fileName;
+                                const coverUrl = coverFileName 
+                                  ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}.256.jpg` 
+                                  : "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=400&q=80";
+                                return (
+                                  <div 
+                                    key={manga.id} 
+                                    className="movie-card"
+                                    onClick={() => handleSelectManga(manga)}
+                                  >
+                                    <div className="poster-container">
+                                      <img src={coverUrl} alt={getMangaTitle(manga)} className="movie-poster" loading="lazy" style={{ aspectRatio: '2/3', objectFit: 'cover' }} />
+                                      <div className="card-play-overlay"><div className="play-arrow" style={{ borderLeftColor: '#00f5d4', borderBottomColor: 'transparent', borderTopColor: 'transparent' }}></div></div>
+                                      <span className="movie-lang-badge">MANGA</span>
+                                      {manga.attributes.year && (
+                                        <span className="rating-badge">{manga.attributes.year}</span>
+                                      )}
+                                    </div>
+                                    <div className="movie-card-info">
+                                      <h3 className="movie-card-title">{getMangaTitle(manga)}</h3>
+                                      <div className="movie-card-meta">
+                                        <span className="movie-card-genre" style={{ color: '#00f5d4' }}>
+                                          {manga.attributes.status === 'completed' ? 'Finalizado' : 'Emisión'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -2085,6 +2624,26 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           margin: 0;
           padding: 0;
           overflow-x: hidden;
+        }
+
+        @keyframes search-pulse {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(350%); }
+        }
+
+        /* Manga Visor Custom Scrollbar */
+        .chapters-list-grid::-webkit-scrollbar {
+          width: 6px;
+        }
+        .chapters-list-grid::-webkit-scrollbar-track {
+          background: #09090d;
+        }
+        .chapters-list-grid::-webkit-scrollbar-thumb {
+          background: #27273a;
+          border-radius: 3px;
+        }
+        .chapters-list-grid::-webkit-scrollbar-thumb:hover {
+          background: #00f5d4;
         }
 
         .app-container {
