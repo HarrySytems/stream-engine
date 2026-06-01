@@ -327,21 +327,21 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       name: 'Servidor 1 (VidSrc.to - Recomendado / Rápido)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.to/embed/movie/${tmdbId}`
+          ? `https://vidsrc.to/embed/movie/${imdbId || tmdbId}`
           : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 2 (Embed.su - Alternativo)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://embed.su/embed/movie/${tmdbId}`
+          ? `https://embed.su/embed/movie/${imdbId || tmdbId}`
           : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 3 (VidLink - Multi-idioma)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidlink.pro/movie/${tmdbId}?primaryColor=00f5d4`
+          ? `https://vidlink.pro/movie/${imdbId || tmdbId}?primaryColor=00f5d4`
           : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=00f5d4`
     },
     {
@@ -355,14 +355,14 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       name: 'Servidor 5 (VidSrc.me / xyz)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`
+          ? (imdbId ? `https://vidsrc.xyz/embed/movie?imdb=${imdbId}` : `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`)
           : `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&sea=${s}&epi=${e}`
     },
     {
       name: 'Servidor 6 (VidSrc.pm)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.pm/embed/movie/${tmdbId}`
+          ? `https://vidsrc.pm/embed/movie/${imdbId || tmdbId}`
           : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
@@ -1314,7 +1314,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Unificar servidores de Cuevana (Latino) y servidores originales
   const originalServersList = servers.map((s) => ({
     name: s.name,
-    url: s.url(activeItem ? activeItem.tmdbId : '', activeItem ? activeItem.imdbId : '', activeItem ? activeItem.tipo : '', season, episode)
+    url: s.url(
+      activeItem ? activeItem.tmdbId : '', 
+      activeItem ? (activeItem.imdbId || (tmdbData && tmdbData.imdb_id) || '') : '', 
+      activeItem ? activeItem.tipo : '', 
+      season, episode
+    )
   }));
 
   const allServers = activeItem 
