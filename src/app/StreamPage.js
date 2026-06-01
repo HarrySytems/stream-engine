@@ -1663,6 +1663,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                         className="player-iframe"
                       />
                     )}
@@ -3246,8 +3247,6 @@ function ChatBox({ channelId, channelTitle, isCollapsed, onToggleCollapse }) {
           </form>
         </>
       )}
-
-      /* Style JSX Local Removed */
     </div>
   );
 }
