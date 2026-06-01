@@ -1315,11 +1315,13 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const allServers = activeItem 
     ? (activeItem.tipo === 'canal' 
         ? [{ name: "Canal en Vivo", url: isYouTubeUrl(activeItem.url) ? (activeItem.url.includes('/embed/') ? activeItem.url : `https://www.youtube.com/embed/${getYouTubeId(activeItem.url)}?autoplay=1&rel=0`) : `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}` }]
-        : [
-            ...(activeItem.youtubeId ? [{ name: "Servidor Principal (YouTube)", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }] : []),
-            ...originalServersList,
-            ...cuevanaServers
-          ])
+        : (activeItem.categoria === 'YouTube' || (activeItem.categoria === 'Documentales' && activeItem.youtubeId))
+          ? [{ name: "Servidor Principal (YouTube)", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }]
+          : [
+              ...(activeItem.youtubeId ? [{ name: "Servidor Principal (YouTube)", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }] : []),
+              ...originalServersList,
+              ...cuevanaServers
+            ])
     : [];
 
   const navItems = [
@@ -1379,12 +1381,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       )
     },
     {
-      id: 'clasicos',
-      label: 'Clásicos',
+      id: 'youtube',
+      label: 'YouTube',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M23 7l-7 5 7 5V7z"></path>
-          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path>
+          <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
         </svg>
       )
     },
@@ -2384,9 +2386,9 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     </div>
                   )}
 
-                  {activeTab === 'clasicos' && (
+                  {activeTab === 'youtube' && (
                     <div className="tab-youtube-container">
-                      <h2 className="section-title">Cine Clásico</h2>
+                      <h2 className="section-title">Películas de YouTube</h2>
                       {(() => {
                         const visible = youtubeItems.slice(0, ytLimit);
                         return (
@@ -2409,7 +2411,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                     <h3 className="movie-card-title">{item.titulo}</h3>
                                     <div className="movie-card-meta">
                                       <span className="movie-card-year">{item.año}</span>
-                                      <span className="movie-card-genre">Clásico</span>
+                                      <span className="movie-card-genre">YouTube</span>
                                     </div>
                                   </div>
                                 </div>
