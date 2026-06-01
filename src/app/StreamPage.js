@@ -152,7 +152,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [animeLimit, setAnimeLimit] = useState(32);
   const [docLimit, setDocLimit] = useState(32);
   const [ytLimit, setYtLimit] = useState(32);
-  const [antiAds, setAntiAds] = useState(true);
+  const [antiAds, setAntiAds] = useState(false);
 
   // Efecto para inicializar el reproductor HLS para canales en vivo
   useEffect(() => {
@@ -414,13 +414,26 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     setEpisode(1);
     setCuevanaServers([]);
     setIframeLoading(true);
-    setAntiAds(true);
+    setAntiAds(false);
   }, [activeItem]);
 
   // Resetear estado del cargador de iframe cuando cambia el servidor, la temporada o el episodio
   useEffect(() => {
     setIframeLoading(true);
   }, [activeServer, season, episode]);
+
+  // Interceptar y prevenir redirecciones automáticas de anuncios fuera de la aplicación
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (activeItem) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [activeItem]);
 
   // Obtener detalles de la película o serie desde TMDB (para obtener el título original en inglés)
   useEffect(() => {
