@@ -234,24 +234,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     }
   }, []);
 
-  // Forzar repintado de iframe al volver a enfocar la pestaña (evita congelación de video con sonido activo)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const iframes = document.querySelectorAll('.player-iframe');
-        iframes.forEach(iframe => {
-          const originalTransform = iframe.style.transform || 'none';
-          iframe.style.transform = 'scale(0.999)';
-          setTimeout(() => {
-            iframe.style.transform = originalTransform;
-          }, 50);
-        });
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-
   const toggleFavorite = (item) => {
     let updated;
     if (favorites.some(fav => fav.id === item.id)) {
@@ -1735,7 +1717,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        sandbox={isYouTubeUrl(allServers[activeServer]?.url || '') ? undefined : (antiAds ? "allow-scripts allow-same-origin allow-forms allow-presentation" : undefined)}
+                        sandbox={isYouTubeUrl(allServers[activeServer]?.url || '') ? undefined : (antiAds ? "allow-scripts allow-same-origin allow-forms allow-presentation allow-top-navigation-by-user-activation allow-popups allow-popups-to-escape-sandbox" : undefined)}
                         className="player-iframe"
                       />
                     )}
