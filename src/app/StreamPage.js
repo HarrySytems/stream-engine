@@ -152,7 +152,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [animeLimit, setAnimeLimit] = useState(32);
   const [docLimit, setDocLimit] = useState(32);
   const [ytLimit, setYtLimit] = useState(32);
-  const [antiAds, setAntiAds] = useState(false);
+  const [antiAds, setAntiAds] = useState(true);
 
   // Efecto para inicializar el reproductor HLS para canales en vivo
   useEffect(() => {
@@ -342,46 +342,46 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Servidores de reproducción disponibles
   const servers = [
     {
-      name: 'Servidor 1 (VidLink - Multi-idioma / Recomendado)',
-      url: (tmdbId, imdbId, type, s, e) => 
-        type === 'pelicula' 
-          ? `https://vidlink.pro/movie/${tmdbId}?primaryColor=00f5d4`
-          : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=00f5d4`
-    },
-    {
-      name: 'Servidor 2 (VidSrc.cc)',
-      url: (tmdbId, imdbId, type, s, e) => 
-        type === 'pelicula' 
-          ? `https://vidsrc.cc/v2/embed/movie/${imdbId || tmdbId}`
-          : `https://vidsrc.cc/v2/embed/tv/${imdbId || tmdbId}/${s}/${e}`
-    },
-    {
-      name: 'Servidor 3 (VidSrc.to)',
+      name: 'Servidor 1 (VidSrc.to - Recomendado / Rápido)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://vidsrc.to/embed/movie/${tmdbId}`
           : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
-      name: 'Servidor 4 (VidSrc.me / xyz)',
+      name: 'Servidor 2 (Embed.su - Alternativo)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://embed.su/embed/movie/${tmdbId}`
+          : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`
+    },
+    {
+      name: 'Servidor 3 (VidLink - Multi-idioma)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidlink.pro/movie/${tmdbId}?primaryColor=00f5d4`
+          : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=00f5d4`
+    },
+    {
+      name: 'Servidor 4 (VidSrc.cc)',
+      url: (tmdbId, imdbId, type, s, e) => 
+        type === 'pelicula' 
+          ? `https://vidsrc.cc/v2/embed/movie/${imdbId || tmdbId}`
+          : `https://vidsrc.cc/v2/embed/tv/${imdbId || tmdbId}/${s}/${e}`
+    },
+    {
+      name: 'Servidor 5 (VidSrc.me / xyz)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`
           : `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&sea=${s}&epi=${e}`
     },
     {
-      name: 'Servidor 5 (VidSrc.pm)',
+      name: 'Servidor 6 (VidSrc.pm)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://vidsrc.pm/embed/movie/${tmdbId}`
           : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
-    },
-    {
-      name: 'Servidor 6 (Embed.su)',
-      url: (tmdbId, imdbId, type, s, e) => 
-        type === 'pelicula' 
-          ? `https://embed.su/embed/movie/${tmdbId}`
-          : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 7 (SmashyStream)',
@@ -414,7 +414,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     setEpisode(1);
     setCuevanaServers([]);
     setIframeLoading(true);
-    setAntiAds(false);
+    setAntiAds(true);
   }, [activeItem]);
 
   // Resetear estado del cargador de iframe cuando cambia el servidor, la temporada o el episodio
