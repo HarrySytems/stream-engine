@@ -239,11 +239,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       if (document.visibilityState === 'visible') {
         const iframes = document.querySelectorAll('.player-iframe');
         iframes.forEach(iframe => {
-          const originalDisplay = iframe.style.display || 'block';
-          iframe.style.display = 'none';
-          void iframe.offsetHeight; // Forzar reflow
-          iframe.style.display = originalDisplay;
-
           const originalTransform = iframe.style.transform || 'none';
           iframe.style.transform = 'scale(0.999)';
           setTimeout(() => {
