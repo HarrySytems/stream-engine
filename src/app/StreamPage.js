@@ -1329,8 +1329,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           ? [{ name: "Servidor Principal (YouTube)", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }]
           : [
               ...(activeItem.youtubeId ? [{ name: "Servidor Principal (YouTube)", url: `https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0` }] : []),
-              ...originalServersList,
-              ...cuevanaServers
+              ...cuevanaServers,
+              ...originalServersList
             ])
     : [];
 
