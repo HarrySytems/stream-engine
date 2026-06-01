@@ -1712,7 +1712,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        sandbox={isYouTubeUrl(allServers[activeServer]?.url || '') ? undefined : "allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox"}
                         className="player-iframe"
                       />
                     )}
