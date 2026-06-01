@@ -1379,19 +1379,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       )
     },
     {
-      id: 'documentales',
-      label: 'Documentales',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="2" y1="12" x2="22" y2="12"></line>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
-      )
-    },
-    {
-      id: 'youtube',
-      label: 'YouTube',
+      id: 'clasicos',
+      label: 'Clásicos',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M23 7l-7 5 7 5V7z"></path>
@@ -2395,51 +2384,9 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     </div>
                   )}
 
-                  {activeTab === 'documentales' && (
-                    <div className="tab-documentales-container">
-                      <h2 className="section-title">Documentales</h2>
-                      {(() => {
-                        const visible = documentalItems.slice(0, docLimit);
-                        return (
-                          <>
-                            <div className="cards-grid">
-                              {visible.map((item) => (
-                                <div 
-                                  key={item.id} 
-                                  className="movie-card"
-                                  onClick={() => handleCardClick(item)}
-                                  onDoubleClick={() => handleCardDoubleClick(item)}
-                                >
-                                  <div className="poster-container">
-                                    <img src={item.poster} alt={item.titulo} className="movie-poster" loading="lazy" />
-                                    <div className="card-play-overlay"><div className="play-arrow"></div></div>
-                                    <span className="movie-lang-badge">{getLangBadge(item)}</span>
-                                    <span className="rating-badge">★ {item.valoracion}</span>
-                                  </div>
-                                  <div className="movie-card-info">
-                                    <h3 className="movie-card-title">{item.titulo}</h3>
-                                    <div className="movie-card-meta">
-                                      <span className="movie-card-year">{item.año}</span>
-                                      <span className="movie-card-genre">{item.tipo === 'serie' ? 'Serie' : 'Película'}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            {documentalItems.length > docLimit && (
-                              <div className="load-more-container">
-                                <button onClick={() => setDocLimit(prev => prev + 32)} className="load-more-btn">Cargar más</button>
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {activeTab === 'youtube' && (
+                  {activeTab === 'clasicos' && (
                     <div className="tab-youtube-container">
-                      <h2 className="section-title">Películas Completas de YouTube</h2>
+                      <h2 className="section-title">Cine Clásico</h2>
                       {(() => {
                         const visible = youtubeItems.slice(0, ytLimit);
                         return (
@@ -2462,7 +2409,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                     <h3 className="movie-card-title">{item.titulo}</h3>
                                     <div className="movie-card-meta">
                                       <span className="movie-card-year">{item.año}</span>
-                                      <span className="movie-card-genre">YouTube</span>
+                                      <span className="movie-card-genre">Clásico</span>
                                     </div>
                                   </div>
                                 </div>
