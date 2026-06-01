@@ -988,9 +988,22 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   }, [peliculas]);
 
   const featuredMovie = useMemo(() => {
-    const current = peliculas.filter(p => p.tipo === 'pelicula' && p.categoria !== 'YouTube' && (p.año === '2024' || p.año === '2025' || p.año === '2026'));
-    if (current.length > 0) {
-      return current.sort((a, b) => parseFloat(b.valoracion || 0) - parseFloat(a.valoracion || 0))[0];
+    const popularIds = [
+      'movie-157336',    // Interestelar
+      'movie-1022789',   // IntensaMente 2
+      'movie-693134',    // Duna: Parte dos
+      'movie-872585',    // Oppenheimer
+      'movie-533535',    // Deadpool & Wolverine
+      'movie-569094',    // Spider-Man: A través del Spider-Verso
+      'movie-76600',     // Avatar: El camino del agua
+      'movie-299534',    // Avengers: Endgame
+      'movie-346698',    // Barbie
+    ];
+    const popularMovies = peliculas.filter(p => popularIds.includes(p.id));
+    if (popularMovies.length > 0) {
+      const day = new Date().getDate();
+      const index = day % popularMovies.length;
+      return popularMovies[index];
     }
     return peliculas.find(p => p.id === 'movie-157336') || peliculas[0];
   }, [peliculas]);
@@ -1381,12 +1394,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       )
     },
     {
-      id: 'youtube',
-      label: 'YouTube',
+      id: 'clasicos',
+      label: 'Clásicos',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path>
-          <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+          <path d="M23 7l-7 5 7 5V7z"></path>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
         </svg>
       )
     },
@@ -2386,9 +2399,9 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                     </div>
                   )}
 
-                  {activeTab === 'youtube' && (
+                  {activeTab === 'clasicos' && (
                     <div className="tab-youtube-container">
-                      <h2 className="section-title">Películas de YouTube</h2>
+                      <h2 className="section-title">Cine Clásico</h2>
                       {(() => {
                         const visible = youtubeItems.slice(0, ytLimit);
                         return (
@@ -2411,7 +2424,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                     <h3 className="movie-card-title">{item.titulo}</h3>
                                     <div className="movie-card-meta">
                                       <span className="movie-card-year">{item.año}</span>
-                                      <span className="movie-card-genre">YouTube</span>
+                                      <span className="movie-card-genre">Clásico</span>
                                     </div>
                                   </div>
                                 </div>
