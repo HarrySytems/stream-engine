@@ -592,6 +592,22 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         .trim();
     };
 
+    const isValidMatch = (query, candidate) => {
+      if (!query || !candidate) return false;
+      const qWords = cleanTitle(query).split(/\s+/).filter(w => w.length > 3);
+      const cWords = cleanTitle(candidate).split(/\s+/).filter(w => w.length > 3);
+      
+      if (qWords.length === 0) return true;
+      
+      const matches = qWords.filter(w => cWords.includes(w));
+      
+      if (qWords.length <= 2) {
+        return matches.length === qWords.length;
+      }
+      
+      return (matches.length / qWords.length) >= 0.5;
+    };
+
     const tituloOriginal = activeItem.titulo;
     const originalTitle = tmdbData ? (tmdbData.original_title || tmdbData.original_name) : null;
     const postType = activeItem.categoria === 'Anime' ? 'animes' : (activeItem.tipo === 'serie' ? 'tvshows' : 'movies');
@@ -622,9 +638,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           const cleanedQuery = cleanTitle(titleToSearch);
           let matchedPost = searchData.results.find(p => cleanTitle(p.title).includes(cleanedQuery) || cleanedQuery.includes(cleanTitle(p.title)));
           if (!matchedPost) {
-            matchedPost = searchData.results[0];
+            if (searchData.results[0] && isValidMatch(titleToSearch, searchData.results[0].title)) {
+              matchedPost = searchData.results[0];
+            }
           }
 
+          if (!matchedPost) return [];
           const slug = matchedPost.slug;
           const epsRes = await fetch(`/api/anime?action=episodes&slug=${slug}`);
           if (!epsRes.ok) return [];
@@ -659,9 +678,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         
         let matchedPost = posts.find(p => cleanTitle(p.title).includes(cleanedQuery) || cleanedQuery.includes(cleanTitle(p.title)));
         if (!matchedPost) {
-          matchedPost = posts[0];
+          if (posts[0] && isValidMatch(titleToSearch, posts[0].title)) {
+            matchedPost = posts[0];
+          }
         }
 
+        if (!matchedPost) return [];
         const postId = matchedPost._id;
 
         if (activeItem.tipo === 'pelicula') {
