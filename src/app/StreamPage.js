@@ -978,7 +978,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   // Memoized lists for the new sections
   const animeItems = useMemo(() => peliculas.filter(p => p.categoria === 'Anime'), [peliculas]);
-  const documentalItems = useMemo(() => peliculas.filter(p => p.categoria === 'Documentales'), [peliculas]);
+  const documentalItems = useMemo(() => peliculas.filter(p => p.categoria === 'Documentales' && p.youtubeId), [peliculas]);
   const youtubeItems = useMemo(() => peliculas.filter(p => p.categoria === 'YouTube'), [peliculas]);
   const recomendadas = useMemo(() => {
     return [...peliculas]

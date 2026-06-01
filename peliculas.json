@@ -95481,7 +95481,8 @@
     "año": "2013",
     "valoracion": "7.8",
     "idioma": "Latino / Sub",
-    "duracion": "N/A"
+    "duracion": "N/A",
+    "youtubeId": "ngadnHw7mRo"
   },
   {
     "id": "movie-1585476",
@@ -95551,7 +95552,8 @@
     "año": "2010",
     "valoracion": "7.7",
     "idioma": "Latino / Sub",
-    "duracion": "N/A"
+    "duracion": "N/A",
+    "youtubeId": "-eJKyohKoxY"
   },
   {
     "id": "movie-440249",
@@ -95719,7 +95721,8 @@
     "año": "2016",
     "valoracion": "7.7",
     "idioma": "Latino / Sub",
-    "duracion": "N/A"
+    "duracion": "N/A",
+    "youtubeId": "8UqBuUSn3hY"
   },
   {
     "id": "movie-1662432",
@@ -96559,7 +96562,8 @@
     "año": "2019",
     "valoracion": "7.3",
     "idioma": "Latino / Sub",
-    "duracion": "N/A"
+    "duracion": "N/A",
+    "youtubeId": "smzax7je83s"
   },
   {
     "id": "movie-1400288",
@@ -96587,7 +96591,8 @@
     "año": "2020",
     "valoracion": "7.7",
     "idioma": "Latino / Sub",
-    "duracion": "N/A"
+    "duracion": "N/A",
+    "youtubeId": "L5PsADOg8Jc"
   },
   {
     "id": "movie-911518",
@@ -220159,5 +220164,244 @@
     "poster": "https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&w=400&q=80",
     "descripcion": "Documental sobre la minería del coltán en el Congo, esencial para baterías de teléfonos móviles y automóviles eléctricos, y el costo humano y ecológico que conlleva su extracción.",
     "valoracion": 8.5
+  },
+  {
+    "id": "yt-movie-10098",
+    "titulo": "The Kid",
+    "tituloOriginal": "The Kid",
+    "sinopsis": "Una mujer londinense, sumamente pobre, se ve en la necesidad de abandonar a su hijo en una casa de millonarios, aunque por una serie de circustancias el niño terminará siendo cuidado por un vagabundo que se convierte así en su padre. Cinco años después, y con la madre convertida en una popular cantante, el destino tratará de separarlos...",
+    "poster": "https://image.tmdb.org/t/p/w500/we8AMv9ufyoXgmOlfX0SmubKOrd.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/mAhCW7QbpL5kwvCWGsfyY3ILoW6.jpg",
+    "valoracion": 8.1,
+    "año": "1921",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Comedia",
+      "Drama"
+    ],
+    "youtubeId": "nPCTdleuBfk"
+  },
+  {
+    "id": "yt-movie-3082",
+    "titulo": "Tiempos Modernos",
+    "tituloOriginal": "Modern Times",
+    "sinopsis": "Extenuado por el frenético ritmo de la cadena de montaje, un obrero metalúrgico acaba perdiendo la razón. Después de recuperarse en un hospital, sale y es encarcelado por participar en una manifestación en la que se encontraba por casualidad. En la cárcel, también sin pretenderlo, ayuda a controlar un motín, gracias a lo cual queda en libertad. Una vez fuera, reemprende la lucha por la supervivencia en compañía de una joven huérfana a la que conoce en la calle.",
+    "poster": "https://image.tmdb.org/t/p/w500/f3uOJseH4oPEo0Sq7WyQ6IwMG4l.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/kSlO1pHpwQfPQdgVPr7dJiJNtJ8.jpg",
+    "valoracion": 8.3,
+    "año": "1936",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Comedia",
+      "Drama",
+      "Romance"
+    ],
+    "youtubeId": "i15UCTIdfwI"
+  },
+  {
+    "id": "yt-movie-914",
+    "titulo": "El Gran Dictador",
+    "tituloOriginal": "The Great Dictator",
+    "sinopsis": "Un humilde barbero judío tiene un parecido asombroso con el dictador de la nación Tomania, que promete sacar adelante y que culpa a los judíos de la situación del país. El dictador ataca al país fronterizo, pero es confundido con el barbero por sus propios guardias, siendo ingresado en un campo de concentración. Simultáneamente, el pobre barbero es confundido con el dictador...",
+    "poster": "https://image.tmdb.org/t/p/w500/w7ovs2B2AlNRig68HOmuYVQRroQ.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/c8Pi8F1FzpNebtgXcSjC9nWCdSW.jpg",
+    "valoracion": 8.3,
+    "año": "1940",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Comedia",
+      "Bélica"
+    ],
+    "youtubeId": "wXJjwJMWf50"
+  },
+  {
+    "id": "doc-yt-dw-moda",
+    "titulo": "Víctimas de la moda barata",
+    "tituloOriginal": "Víctimas de la moda barata",
+    "sinopsis": "Un viaje al interior de la industria de la moda rápida para ver el costo ecológico y humano detrás de nuestra ropa barata.",
+    "poster": "https://image.tmdb.org/t/p/w500/lrVD0u477BZsg5Fp7gIFjZQBU24.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/mruCboXhVXmGX7NUbD7SIfHwplG.jpg",
+    "valoracion": 8.1,
+    "año": "2021",
+    "tipo": "pelicula",
+    "categoria": "Documentales",
+    "generos": [
+      "Documental"
+    ],
+    "youtubeId": "7Y18UAF8M68"
+  },
+  {
+    "id": "doc-yt-dw-plastico",
+    "titulo": "La mentira del reciclaje de plástico",
+    "tituloOriginal": "La mentira del reciclaje de plástico",
+    "sinopsis": "Investigación sobre cómo la industria del plástico promueve el reciclaje mientras continúa aumentando drásticamente la producción de plástico.",
+    "poster": "https://image.tmdb.org/t/p/w500/lrVD0u477BZsg5Fp7gIFjZQBU24.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/mruCboXhVXmGX7NUbD7SIfHwplG.jpg",
+    "valoracion": 8.3,
+    "año": "2021",
+    "tipo": "pelicula",
+    "categoria": "Documentales",
+    "generos": [
+      "Documental"
+    ],
+    "youtubeId": "SDi7Na4rQ20"
+  },
+  {
+    "id": "doc-yt-dw-comida",
+    "titulo": "El poder de la industria alimentaria",
+    "tituloOriginal": "El poder de la industria alimentaria",
+    "sinopsis": "Cómo los gigantes de la alimentación influyen en nuestra dieta y en las políticas de salud pública a nivel mundial.",
+    "poster": "https://image.tmdb.org/t/p/w500/lrVD0u477BZsg5Fp7gIFjZQBU24.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/mruCboXhVXmGX7NUbD7SIfHwplG.jpg",
+    "valoracion": 8.0,
+    "año": "2022",
+    "tipo": "pelicula",
+    "categoria": "Documentales",
+    "generos": [
+      "Documental"
+    ],
+    "youtubeId": "lP7iJf3Tgn8"
+  },
+  {
+    "id": "doc-yt-dw-agua",
+    "titulo": "El negocio del agua embotellada",
+    "tituloOriginal": "El negocio del agua embotellada",
+    "sinopsis": "Investigación sobre la privatización del agua dulce y el lucrativo mercado global de agua embotellada.",
+    "poster": "https://image.tmdb.org/t/p/w500/lrVD0u477BZsg5Fp7gIFjZQBU24.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/mruCboXhVXmGX7NUbD7SIfHwplG.jpg",
+    "valoracion": 7.9,
+    "año": "2020",
+    "tipo": "pelicula",
+    "categoria": "Documentales",
+    "generos": [
+      "Documental"
+    ],
+    "youtubeId": "ZGmD5fIMt-M"
+  },
+  {
+    "id": "doc-yt-obsolescencia",
+    "titulo": "Comprar, tirar, comprar (Obsolescencia Programada)",
+    "tituloOriginal": "Comprar, tirar, comprar (Obsolescencia Programada)",
+    "sinopsis": "El aclamado documental sobre la obsolescencia programada: la reducción deliberada de la vida útil de un producto para incrementar su consumo.",
+    "poster": "https://image.tmdb.org/t/p/w500/lrVD0u477BZsg5Fp7gIFjZQBU24.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/mruCboXhVXmGX7NUbD7SIfHwplG.jpg",
+    "valoracion": 8.5,
+    "año": "2010",
+    "tipo": "pelicula",
+    "categoria": "Documentales",
+    "generos": [
+      "Documental"
+    ],
+    "youtubeId": "mUaCLzbDgm0"
+  },
+  {
+    "id": "yt-movie-962",
+    "titulo": "La quimera del oro",
+    "tituloOriginal": "The Gold Rush",
+    "sinopsis": "Venturas de un solitario buscador de oro en Alaska, donde se topa con varios personajes rudos y se enamora de la hermosa Georgia, a la que trata de conquistar.",
+    "poster": "https://image.tmdb.org/t/p/w500/jU1KhFlRm7UTURXjW4vQNzQ4GQj.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/8ZsEc2b9iCMWaFjUw3a0kPZZLXu.jpg",
+    "valoracion": 8.0,
+    "año": "1925",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Aventura",
+      "Comedia",
+      "Drama"
+    ],
+    "youtubeId": "BjAn02ynpSg"
+  },
+  {
+    "id": "yt-movie-643",
+    "titulo": "El acorazado Potemkin",
+    "tituloOriginal": "Броненосец Потёмкин",
+    "sinopsis": "Un relato dramatizado de un gran motín naval ruso y una manifestación pública resultante, mostrando apoyo, que provocó una masacre policial. La película tuvo un impacto increíble en el desarrollo del cine y es un ejemplo magistral de montaje de montaje.",
+    "poster": "https://image.tmdb.org/t/p/w500/olQ0vHFCK5TzRyNkkT2aJgG2gLz.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/3RH61Z7BP3f215936PJBEG2qQrT.jpg",
+    "valoracion": 7.6,
+    "año": "1925",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Drama",
+      "Historia",
+      "Bélica"
+    ],
+    "youtubeId": "MzZw8Qj17aM"
+  },
+  {
+    "id": "yt-movie-964",
+    "titulo": "El fantasma de la ópera",
+    "tituloOriginal": "The Phantom of the Opera",
+    "sinopsis": "En los sótanos de la Ópera de París vive oculto el misterioso Eric, el hombre de voz de ángel y rostro desfigurado de demonio, que acecha entre pared y pared a la hermosa soprano Christine Daeé, a la que desea catapultar hasta la cima de la fama; pero cuando se entera de que la cantante está prometida al apuesto vizconde Raoul, se vuelve loco de celos.",
+    "poster": "https://image.tmdb.org/t/p/w500/7pN9oFWN5yH8v5Nt5nrMbkL2hCJ.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/6FSs7jMimg1PBYdhZtPNQhtKtEc.jpg",
+    "valoracion": 7.1,
+    "año": "1925",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Terror",
+      "Música"
+    ],
+    "youtubeId": "yEeLXa_UxnU"
+  },
+  {
+    "id": "yt-movie-18987",
+    "titulo": "The Hunchback of Notre Dame",
+    "tituloOriginal": "The Hunchback of Notre Dame",
+    "sinopsis": "",
+    "poster": "https://image.tmdb.org/t/p/w500/3oheTQrTuqS1jPUW6GOc65ZbM5u.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/3Y5AcPiWQ3kzyIzdrbdV43dWrgX.jpg",
+    "valoracion": 6.5,
+    "año": "1923",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Romance",
+      "Drama",
+      "Terror"
+    ],
+    "youtubeId": "-iVVxdL8unw"
+  },
+  {
+    "id": "yt-movie-42657",
+    "titulo": "The Mark of Zorro",
+    "tituloOriginal": "The Mark of Zorro",
+    "sinopsis": "",
+    "poster": "https://image.tmdb.org/t/p/w500/hLeSKg3UG6JNYhp7xbFRe9fVtr1.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/oNEY4mX0C9bO1KaVWYf9kTsq9oS.jpg",
+    "valoracion": 7.2,
+    "año": "1920",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Western",
+      "Aventura",
+      "Drama",
+      "Acción",
+      "Romance"
+    ],
+    "youtubeId": "0P_gBPupRhs"
+  },
+  {
+    "id": "yt-movie-626",
+    "titulo": "Un Perro Andaluz",
+    "tituloOriginal": "Un chien andalou",
+    "sinopsis": "Filme surrealista, todo un clásico del cine de arte y ensayo, una obra única y de culto, fruto de la poderosa imaginación de dos jóvenes mentes -Buñuel tenía 29 años y Dalí 25- poseedoras de un talento tan singular como genial.",
+    "poster": "https://image.tmdb.org/t/p/w500/nlgxiSXyIq08XHWuGwxYnpLSKgP.jpg",
+    "banner": "https://image.tmdb.org/t/p/original/jQywhaFDVLPlFw864Bgw5eNtWfi.jpg",
+    "valoracion": 7.4,
+    "año": "1929",
+    "tipo": "pelicula",
+    "categoria": "YouTube",
+    "generos": [
+      "Fantasía"
+    ],
+    "youtubeId": "79czRbhT9Sc"
   }
 ]
