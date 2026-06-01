@@ -2908,7 +2908,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       )}
 
       {/* 8. DISEÑO ESTÉTICO EN VANILLA CSS (CSS-in-JS Global) */}
-      /* Style JSX Global Removed */
     </div>
   );
 }
