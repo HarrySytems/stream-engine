@@ -152,6 +152,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [animeLimit, setAnimeLimit] = useState(32);
   const [docLimit, setDocLimit] = useState(32);
   const [ytLimit, setYtLimit] = useState(32);
+  const [antiAds, setAntiAds] = useState(true);
 
   // Efecto para inicializar el reproductor HLS para canales en vivo
   useEffect(() => {
@@ -413,6 +414,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     setEpisode(1);
     setCuevanaServers([]);
     setIframeLoading(true);
+    setAntiAds(true);
   }, [activeItem]);
 
   // Resetear estado del cargador de iframe cuando cambia el servidor, la temporada o el episodio
@@ -1665,6 +1667,19 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                       </button>
                     ))}
                     {loadingCuevana && <span className="loading-text" style={{ marginLeft: '10px' }}>Buscando fuentes en español Latino...</span>}
+                    <button
+                      onClick={() => setAntiAds(prev => !prev)}
+                      className={`server-tab-btn ${antiAds ? 'active' : ''}`}
+                      style={{
+                        marginLeft: 'auto',
+                        border: antiAds ? '1px solid #00f5d4' : '1px solid #ff4b4b',
+                        color: antiAds ? '#00f5d4' : '#ff4b4b',
+                        backgroundColor: antiAds ? 'rgba(0, 245, 212, 0.1)' : 'rgba(255, 75, 75, 0.1)',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {antiAds ? 'Anti-Publicidad: ON' : 'Anti-Publicidad: OFF'}
+                    </button>
                   </div>
                 </div>
               )}
@@ -1707,17 +1722,23 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        sandbox={isYouTubeUrl(allServers[activeServer]?.url || '') ? undefined : (antiAds ? "allow-scripts allow-same-origin allow-forms allow-presentation" : undefined)}
                         className="player-iframe"
                       />
                     )}
                   </div>
                   
                   {activeItem.tipo !== 'canal' && (
-                    <div className="playback-optimization-banner">
-                      <span className="banner-icon">Optimización</span>
-                      <span className="banner-text">
-                        Si el reproductor falla o no carga en tu idioma, cambia de <strong>Servidor</strong> en la lista superior. Los servidores <strong>Latino</strong> se cargan dinámicamente.
-                      </span>
+                    <div className="playback-optimization-banner" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div>
+                        <span className="banner-icon">Optimización</span>
+                        <span className="banner-text">
+                          Si el reproductor falla o no carga en tu idioma, cambia de <strong>Servidor</strong> en la lista superior. Los servidores <strong>Latino</strong> se cargan dinámicamente.
+                        </span>
+                      </div>
+                      <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '6px', fontSize: '12px', opacity: 0.9 }}>
+                        <strong>Nota sobre Anuncios:</strong> Si el reproductor se congela o abre publicidad, activa la protección <strong>Anti-Publicidad</strong> arriba a la derecha. Si el video muestra el mensaje "Please Disable Sandbox", desactívala temporalmente para que pueda reproducir.
+                      </div>
                     </div>
                   )}
                 </div>
