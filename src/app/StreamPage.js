@@ -592,20 +592,50 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         .trim();
     };
 
-    const isValidMatch = (query, candidate) => {
-      if (!query || !candidate) return false;
-      const qWords = cleanTitle(query).split(/\s+/).filter(w => w.length > 3);
-      const cWords = cleanTitle(candidate).split(/\s+/).filter(w => w.length > 3);
+    const cleanTitleNoYear = (title) => {
+      return cleanTitle(title).replace(/\b(19|20)\d{2}\b/g, '').replace(/\s+/g, ' ').trim();
+    };
+
+    const getMatchScore = (query, candidateTitle, queryYear, candidateYear) => {
+      const qClean = cleanTitleNoYear(query);
+      const cClean = cleanTitleNoYear(candidateTitle);
       
-      if (qWords.length === 0) return true;
-      
-      const matches = qWords.filter(w => cWords.includes(w));
-      
-      if (qWords.length <= 2) {
-        return matches.length === qWords.length;
+      if (qClean === cClean) {
+        let score = 100;
+        if (queryYear && candidateYear && queryYear.toString() === candidateYear.toString()) {
+          score += 50;
+        }
+        return score;
       }
       
-      return (matches.length / qWords.length) >= 0.5;
+      const qWords = qClean.split(/\s+/).filter(w => w.length > 2);
+      const cWords = cClean.split(/\s+/).filter(w => w.length > 2);
+      
+      if (qWords.length === 0 || cWords.length === 0) return 0;
+      
+      const matches = qWords.filter(w => cWords.includes(w));
+      if (matches.length === 0) return 0;
+      
+      // If query is <= 2 words, all query words must match
+      if (qWords.length <= 2 && matches.length < qWords.length) {
+        return 0;
+      }
+      
+      const unionSize = new Set([...qWords, ...cWords]).size;
+      const jaccard = matches.length / unionSize;
+      
+      let score = jaccard * 50;
+      
+      const isSub = qClean.split(/\s+/).every(qw => cClean.split(/\s+/).includes(qw));
+      if (isSub) {
+        score += 20;
+      }
+
+      if (queryYear && candidateYear && queryYear.toString() === candidateYear.toString()) {
+        score += 30;
+      }
+      
+      return score;
     };
 
     const tituloOriginal = activeItem.titulo;
@@ -635,11 +665,19 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             return [];
           }
 
-          const cleanedQuery = cleanTitle(titleToSearch);
-          let matchedPost = searchData.results.find(p => cleanTitle(p.title).includes(cleanedQuery) || cleanedQuery.includes(cleanTitle(p.title)));
-          if (!matchedPost) {
-            if (searchData.results[0] && isValidMatch(titleToSearch, searchData.results[0].title)) {
-              matchedPost = searchData.results[0];
+          const scoredResults = searchData.results.map(r => {
+            const candidateYear = (r.title.match(/\b((?:19|20)\d{2})\b/) || [])[1];
+            return {
+              item: r,
+              score: getMatchScore(titleToSearch, r.title, activeItem.año, candidateYear)
+            };
+          }).filter(x => x.score > 0);
+
+          let matchedPost = null;
+          if (scoredResults.length > 0) {
+            scoredResults.sort((a, b) => b.score - a.score);
+            if (scoredResults[0].score >= 15) {
+              matchedPost = scoredResults[0].item;
             }
           }
 
@@ -674,12 +712,19 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         }
 
         const posts = searchData.data.posts;
-        const cleanedQuery = cleanTitle(titleToSearch);
-        
-        let matchedPost = posts.find(p => cleanTitle(p.title).includes(cleanedQuery) || cleanedQuery.includes(cleanTitle(p.title)));
-        if (!matchedPost) {
-          if (posts[0] && isValidMatch(titleToSearch, posts[0].title)) {
-            matchedPost = posts[0];
+        const scoredPosts = posts.map(p => {
+          const candidateYear = p.release_date ? p.release_date.split('-')[0] : (p.title.match(/\b((?:19|20)\d{2})\b/) || [])[1];
+          return {
+            post: p,
+            score: getMatchScore(titleToSearch, p.title, activeItem.año, candidateYear)
+          };
+        }).filter(x => x.score > 0);
+
+        let matchedPost = null;
+        if (scoredPosts.length > 0) {
+          scoredPosts.sort((a, b) => b.score - a.score);
+          if (scoredPosts[0].score >= 15) {
+            matchedPost = scoredPosts[0].post;
           }
         }
 
@@ -1663,7 +1708,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox"
                         className="player-iframe"
                       />
                     )}
