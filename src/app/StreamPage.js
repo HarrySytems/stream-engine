@@ -431,18 +431,52 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     }
 
     const mediaType = activeItem.tipo === 'serie' ? 'tv' : 'movie';
-    fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX`)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch TMDB details");
-        return res.json();
-      })
-      .then(data => {
-        setTmdbData(data);
-      })
-      .catch(err => {
-        console.warn("Fallo al obtener detalles de TMDB:", err);
-        setTmdbData(null);
-      });
+
+    const fetchDetails = (idToFetch, isRetry = false) => {
+      fetch(`https://api.themoviedb.org/3/${mediaType}/${idToFetch}?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX`)
+        .then(res => {
+          if (!res.ok) {
+            if (res.status === 404 && !isRetry && (activeItem.titulo || activeItem.nombre)) {
+              throw new Error("404");
+            }
+            throw new Error("Failed to fetch TMDB details");
+          }
+          return res.json();
+        })
+        .then(data => {
+          if (isRetry) {
+            activeItem.tmdbId = idToFetch.toString();
+          }
+          setTmdbData(data);
+        })
+        .catch(err => {
+          if (err.message === "404" && !isRetry) {
+            const queryTitle = activeItem.titulo || activeItem.nombre;
+            console.log(`ID ${idToFetch} no encontrado en TMDB. Intentando buscar por título: "${queryTitle}"`);
+            const searchType = activeItem.tipo === 'serie' ? 'tv' : 'movie';
+            fetch(`https://api.themoviedb.org/3/search/${searchType}?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX&query=${encodeURIComponent(queryTitle)}`)
+              .then(sRes => sRes.json())
+              .then(sData => {
+                if (sData && sData.results && sData.results.length > 0) {
+                  const bestMatch = sData.results[0];
+                  console.log(`Corregido ID en runtime de ${idToFetch} a ${bestMatch.id} para "${queryTitle}"`);
+                  fetchDetails(bestMatch.id, true);
+                } else {
+                  setTmdbData(null);
+                }
+              })
+              .catch(sErr => {
+                console.error("Error al buscar película por título alternativo:", sErr);
+                setTmdbData(null);
+              });
+          } else {
+            console.warn("Fallo al obtener detalles de TMDB:", err);
+            setTmdbData(null);
+          }
+        });
+    };
+
+    fetchDetails(tmdbId);
   }, [activeItem]);
 
   // Obtener elenco (credits) de TMDB para el modal de detalles
