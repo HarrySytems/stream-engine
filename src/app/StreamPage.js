@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 // Deterministic helper to get a language badge
 const getLangBadge = (item) => {
+  if (!item) return 'MULTI';
   if (item.tipo === 'serie') return 'MULTI';
   const tmdbIdInt = item.tmdbId ? parseInt(item.tmdbId) : 0;
   const hash = tmdbIdInt || (item.id ? item.id.charCodeAt(0) + (item.id.charCodeAt(item.id.length - 1) || 0) : 0);
@@ -1177,8 +1178,9 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     if (!searchQuery) return [];
     const q = searchQuery.toLowerCase();
     return peliculas.filter(item => {
-      return item.titulo.toLowerCase().includes(q) ||
-             item.descripcion.toLowerCase().includes(q);
+      const title = (item.titulo || item.nombre || '').toLowerCase();
+      const desc = (item.descripcion || '').toLowerCase();
+      return title.includes(q) || desc.includes(q);
     });
   }, [peliculas, searchQuery]);
 
@@ -1953,7 +1955,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                         <div className="poster-container">
                           <img 
                             src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                            alt={item.titulo} 
+                            alt={item.titulo || item.nombre || 'Sin título'} 
                             className="movie-poster"
                             loading="lazy"
                           />
@@ -1961,13 +1963,13 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                             <div className="play-arrow"></div>
                           </div>
                           <span className="movie-lang-badge">{getLangBadge(item)}</span>
-                          <span className="rating-badge">★ {item.valoracion}</span>
+                          <span className="rating-badge">★ {item.valoracion || 'N/A'}</span>
                         </div>
                         <div className="movie-card-info">
-                          <h3 className="movie-card-title">{item.titulo}</h3>
+                          <h3 className="movie-card-title">{item.titulo || item.nombre || 'Sin título'}</h3>
                           <div className="movie-card-meta">
-                            <span className="movie-card-year">{item.año}</span>
-                            <span className="movie-card-genre">{item.categoria}</span>
+                            <span className="movie-card-year">{item.año || 'N/A'}</span>
+                            <span className="movie-card-genre">{item.categoria || 'Canal'}</span>
                           </div>
                         </div>
                       </div>
