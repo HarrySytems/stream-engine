@@ -693,9 +693,13 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
           const scoredResults = searchData.results.map(r => {
             const candidateYear = (r.title.match(/\b((?:19|20)\d{2})\b/) || [])[1];
+            const score = Math.max(
+              getMatchScore(tituloOriginal, r.title, activeItem.año, candidateYear),
+              originalTitle ? getMatchScore(originalTitle, r.title, activeItem.año, candidateYear) : 0
+            );
             return {
               item: r,
-              score: getMatchScore(titleToSearch, r.title, activeItem.año, candidateYear)
+              score
             };
           }).filter(x => x.score > 0);
 
@@ -740,9 +744,13 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         const posts = searchData.data.posts;
         const scoredPosts = posts.map(p => {
           const candidateYear = p.release_date ? p.release_date.split('-')[0] : (p.title.match(/\b((?:19|20)\d{2})\b/) || [])[1];
+          const score = Math.max(
+            getMatchScore(tituloOriginal, p.title, activeItem.año, candidateYear),
+            originalTitle ? getMatchScore(originalTitle, p.title, activeItem.año, candidateYear) : 0
+          );
           return {
             post: p,
-            score: getMatchScore(titleToSearch, p.title, activeItem.año, candidateYear)
+            score
           };
         }).filter(x => x.score > 0);
 
@@ -795,13 +803,45 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     // Lanzar búsquedas en paralelo para Cuevana y LaMovie, con fallbacks de títulos en inglés y traducciones
     const runSearch = async () => {
       const searchTitles = [];
-      extractTitles(tituloOriginal).forEach(t => {
-        if (!searchTitles.includes(t)) searchTitles.push(t);
-      });
-      if (originalTitle) {
-        extractTitles(originalTitle).forEach(t => {
+      
+      const addSearchQuery = (title) => {
+        if (!title) return;
+        
+        // Añadir título tal cual
+        if (!searchTitles.includes(title)) searchTitles.push(title);
+        
+        // Añadir títulos extraídos (por ejemplo de paréntesis)
+        extractTitles(title).forEach(t => {
           if (!searchTitles.includes(t)) searchTitles.push(t);
         });
+        
+        // Añadir título limpio (sin conectores de puntuación)
+        const clean = title.replace(/[:&|]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (clean && clean !== title && !searchTitles.includes(clean)) {
+          searchTitles.push(clean);
+        }
+        
+        // Separar por " y ", " and " o " & " si existen
+        const splitByY = title.split(/\s+(?:y|and|&)\s+/i);
+        if (splitByY.length > 1) {
+          splitByY.forEach(part => {
+            const pClean = part.trim();
+            if (pClean && pClean.length > 2 && !searchTitles.includes(pClean)) {
+              searchTitles.push(pClean);
+            }
+          });
+        }
+        
+        // Añadir primera palabra si tiene múltiples palabras
+        const words = title.split(/\s+/).filter(w => w.length > 2);
+        if (words.length > 1 && !searchTitles.includes(words[0])) {
+          searchTitles.push(words[0]);
+        }
+      };
+
+      addSearchQuery(tituloOriginal);
+      if (originalTitle) {
+        addSearchQuery(originalTitle);
       }
 
       let cuevanaEmbeds = [];
