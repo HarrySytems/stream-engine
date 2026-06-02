@@ -416,11 +416,11 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
       setFadeOutSplash(true);
-    }, 1800);
+    }, 500);
 
     const removeTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 2300);
+    }, 800);
 
     return () => {
       clearTimeout(fadeTimer);
