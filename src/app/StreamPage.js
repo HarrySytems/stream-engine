@@ -214,6 +214,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
   const [cuevanaServers, setCuevanaServers] = useState([]);
   const [loadingCuevana, setLoadingCuevana] = useState(false);
+  const [useProxyForStream, setUseProxyForStream] = useState(false);
   
   // Pestaña activa ('inicio', 'peliculas', 'series', 'anime', 'documentales', 'youtube', 'tdt', 'free', 'favoritos')
   const [activeTab, setActiveTab] = useState('inicio');
@@ -235,12 +236,16 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [ytLimit, setYtLimit] = useState(32);
   const [antiAds, setAntiAds] = useState(true);
 
-  // Efecto para inicializar el reproductor HLS para canales en vivo
+  // Efecto para inicializar el reproductor HLS para canales en vivo con autodetección de CORS y fallback al proxy
   useEffect(() => {
     let active = true;
+    let cleanupFn = null;
+
     if (activeItem && activeItem.tipo === 'canal' && !isYouTubeUrl(activeItem.url) && videoRef.current) {
       const video = videoRef.current;
-      const streamUrl = `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}`;
+      const streamUrl = useProxyForStream
+        ? `${window.location.origin}/api/proxy?url=${encodeURIComponent(activeItem.url)}`
+        : activeItem.url;
 
       const initHls = async () => {
         try {
@@ -268,7 +273,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               if (data.fatal) {
                 switch (data.type) {
                   case Hls.ErrorTypes.NETWORK_ERROR:
-                    hls.startLoad();
+                    if (!useProxyForStream) {
+                      console.log("Error de red en canal directo. Conmutando a proxy...");
+                      if (active) setUseProxyForStream(true);
+                    } else {
+                      hls.startLoad();
+                    }
                     break;
                   case Hls.ErrorTypes.MEDIA_ERROR:
                     hls.recoverMediaError();
@@ -282,6 +292,18 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = streamUrl;
           }
+
+          // Fallback para el elemento de video nativo en caso de error de carga
+          const handleVideoError = () => {
+            if (!useProxyForStream && active) {
+              console.log("Error en elemento de video nativo. Conmutando a proxy...");
+              setUseProxyForStream(true);
+            }
+          };
+          video.addEventListener('error', handleVideoError);
+          cleanupFn = () => {
+            video.removeEventListener('error', handleVideoError);
+          };
         } catch (err) {
           console.error("Failed to load Hls.js dynamically", err);
         }
@@ -296,8 +318,11 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+      if (cleanupFn) {
+        cleanupFn();
+      }
     };
-  }, [activeItem]);
+  }, [activeItem, useProxyForStream]);
 
   // Cargar Favoritos y Consentimiento de Cookies
   useEffect(() => {
@@ -478,6 +503,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     setCuevanaServers([]);
     setIframeLoading(true);
     setAntiAds(true);
+    setUseProxyForStream(false);
   }, [activeItem]);
 
   // Resetear estado del cargador de iframe cuando cambia el servidor, la temporada o el episodio
