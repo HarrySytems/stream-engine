@@ -31,6 +31,75 @@ const getMangaTitle = (manga) => {
   return titleObj.es || titleObj.en || titleObj['ja-ro'] || titleObj['ko-ro'] || Object.values(titleObj)[0] || 'Sin título';
 };
 
+// Componente autocurativo para logotipos de canales que previene imágenes rotas de imgur.com
+function ChannelLogo({ item, className, style }) {
+  const [usePlaceholder, setUsePlaceholder] = useState(
+    !item.logo || 
+    item.logo.includes('imgur.com') || 
+    item.logo.includes('example.com')
+  );
+
+  if (usePlaceholder) {
+    // Generar un gradiente dinámico según el nombre del canal
+    const hash = item.nombre.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const gradients = [
+      'linear-gradient(135deg, #7f00ff 0%, #ff007f 100%)',
+      'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+      'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+      'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+      'linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%)',
+      'linear-gradient(135deg, #12c2e9 0%, #c471ed 50%, #f64f59 100%)',
+      'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)'
+    ];
+    const gradient = gradients[hash % gradients.length];
+    
+    // Obtener iniciales del canal
+    const initials = item.nombre
+      .replace(/[\(\[].*?[\)\]]/g, '') // Quitar tags como (720p), [Geo-blocked]
+      .split(/\s+/)
+      .filter(w => w.length > 0)
+      .slice(0, 3)
+      .map(w => w[0].toUpperCase())
+      .join('');
+
+    return (
+      <div 
+        className={className} 
+        style={{
+          ...style,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: gradient,
+          color: '#ffffff',
+          fontWeight: '800',
+          fontSize: '20px',
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          letterSpacing: '1px',
+          fontFamily: 'Outfit, Inter, sans-serif'
+        }}
+      >
+        <span>{initials || 'TV'}</span>
+        <span style={{ fontSize: '9px', opacity: 0.85, marginTop: '3px', textTransform: 'uppercase', fontWeight: '500' }}>
+          {item.pais || item.categoria || 'Canal'}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={item.logo} 
+      alt={item.nombre} 
+      className={className} 
+      style={style}
+      loading="lazy"
+      onError={() => setUsePlaceholder(true)}
+    />
+  );
+}
+
 // Helper component for horizontal category carousels
 function CategoryRow({ title, items, onSelect, onPlay }) {
   const rowRef = useRef(null);
@@ -63,13 +132,20 @@ function CategoryRow({ title, items, onSelect, onPlay }) {
                 onDoubleClick={() => !isCanal && onPlay(item)}
               >
                 <div className="carousel-poster-container">
-                  <img 
-                    src={isCanal ? (item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80") : (item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80")} 
-                    alt={item.nombre || item.titulo} 
-                    className="carousel-poster" 
-                    style={isCanal ? { objectFit: 'contain', padding: '16px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' } : {}}
-                    loading="lazy" 
-                  />
+                  {isCanal ? (
+                    <ChannelLogo 
+                      item={item} 
+                      className="carousel-poster" 
+                      style={{ objectFit: 'contain', padding: '16px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
+                    />
+                  ) : (
+                    <img 
+                      src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                      alt={item.titulo} 
+                      className="carousel-poster" 
+                      loading="lazy" 
+                    />
+                  )}
                   {isCanal ? (
                     item.categoria === 'Cine' ? (
                       <span className="channel-fast-badge"><span className="live-dot"></span> FAST TV</span>
@@ -720,7 +796,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             return [];
           }
 
-          const matchedEpisode = epsData.episodes.find(ep => ep.number === episode);
+          const matchedEpisode = epsData.episodes.find(ep => parseInt(ep.number) === episode);
           if (!matchedEpisode) {
             return [];
           }
@@ -780,7 +856,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           }
 
           const matchedEpisode = episodesData.data.find(
-            ep => ep.season_number === season && ep.episode_number === episode
+            ep => parseInt(ep.season_number) === season && parseInt(ep.episode_number) === episode
           );
 
           if (!matchedEpisode) {
@@ -2606,12 +2682,10 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                 onClick={() => handleCardClick(item)}
                               >
                                 <div className="poster-container" style={{ padding: '0' }}>
-                                  <img 
-                                    src={item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                                    alt={item.nombre} 
+                                  <ChannelLogo 
+                                    item={item} 
                                     className="movie-poster" 
                                     style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
-                                    loading="lazy" 
                                   />
                                   <span className="channel-live-badge"><span className="live-dot"></span> EN VIVO</span>
                                   <div className="card-play-overlay">
@@ -2655,12 +2729,10 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                   onClick={() => handleCardClick(item)}
                                 >
                                   <div className="poster-container" style={{ padding: '0' }}>
-                                    <img 
-                                      src={item.logo || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                                      alt={item.nombre} 
+                                    <ChannelLogo 
+                                      item={item} 
                                       className="movie-poster" 
                                       style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
-                                      loading="lazy" 
                                     />
                                     <span className="channel-fast-badge"><span className="live-dot"></span> FAST TV</span>
                                     <div className="card-play-overlay">
