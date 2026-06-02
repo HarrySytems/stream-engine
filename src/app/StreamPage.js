@@ -230,6 +230,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [trailerKey, setTrailerKey] = useState(null);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
   const [loadingTrailer, setLoadingTrailer] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const [animeLimit, setAnimeLimit] = useState(32);
   const [docLimit, setDocLimit] = useState(32);
@@ -1690,6 +1691,39 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             </button>
           ))}
         </nav>
+        <div style={{ marginTop: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+          <button 
+            onClick={() => setShowTermsModal(true)} 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: 'rgba(255, 255, 255, 0.35)', 
+              fontSize: '11px', 
+              textAlign: 'left', 
+              cursor: 'pointer', 
+              padding: '6px 12px',
+              fontFamily: "'Outfit', sans-serif",
+              transition: 'all 0.2s',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#00f5d4';
+              e.currentTarget.style.background = 'rgba(0, 245, 212, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.35)';
+              e.currentTarget.style.background = 'none';
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ minWidth: '12px' }}>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Términos y Privacidad
+          </button>
+        </div>
       </aside>
 
       {/* Background overlay when mobile sidebar is open */}
@@ -3005,7 +3039,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           <div className="cookie-banner">
             <div className="cookie-content">
               <h3>Aviso de Cookies</h3>
-              <p>Este portal elegante utiliza cookies locales para guardar tus canales y películas favoritos, y para recordar tus preferencias de reproducción. Al continuar navegando, aceptas su uso.</p>
+              <p>Este portal elegante utiliza cookies locales para guardar tus canales y películas favoritos, y para recordar tus preferencias de reproducción. Al continuar navegando, aceptas su uso y nuestros <span onClick={() => setShowTermsModal(true)} style={{ color: '#00f5d4', cursor: 'pointer', textDecoration: 'underline' }}>Términos y Políticas de Privacidad</span>.</p>
             </div>
             <button className="cookie-accept-btn" onClick={() => {
               localStorage.setItem('filmtv_cookie_consent', 'accepted');
@@ -3013,6 +3047,59 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             }}>
               Aceptar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE TÉRMINOS Y PRIVACIDAD */}
+      {showTermsModal && (
+        <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={() => setShowTermsModal(false)}>
+          <div className="modal-content-card" style={{ maxWidth: '750px', width: '92%', maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0', background: '#0a0b12', border: '1px solid rgba(0, 245, 212, 0.15)', boxShadow: '0 20px 50px rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '800', background: 'linear-gradient(90deg, #00f5d4 0%, #00b8ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontFamily: "'Outfit', sans-serif" }}>Términos de Servicio y Privacidad</h2>
+              <button onClick={() => setShowTermsModal(false)} style={{ background: 'rgba(255,255,255,0.04)', border: 'none', color: '#ffffff', fontSize: '18px', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>✕</button>
+            </div>
+            
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', color: '#b3b3b3', fontSize: '14px', lineHeight: '1.7', fontFamily: "'Inter', sans-serif" }}>
+              <section style={{ marginBottom: '24px' }}>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>1. Aceptación de los Términos</h3>
+                <p style={{ margin: 0, textAlign: 'justify' }}>Bienvenido a FilmTV. Al acceder, navegar y hacer uso de este portal web, usted acepta expresamente quedar sujeto a los presentes Términos de Servicio y Condiciones de Uso, así como a todas las leyes y regulaciones locales e internacionales aplicables. Si no está de acuerdo con alguno de los términos o condiciones aquí estipulados, le solicitamos de la manera más atenta que se abstenga de utilizar este portal.</p>
+              </section>
+
+              <section style={{ marginBottom: '24px' }}>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>2. Naturaleza Jurídica y Descargo de Responsabilidad (Copyright)</h3>
+                <p style={{ margin: '0 0 12px 0', textAlign: 'justify' }}>FilmTV opera exclusivamente como un motor de búsqueda, indexador y facilitador de enlaces a contenidos de reproducción externos disponibles de manera pública en internet. Ponemos especial énfasis en las siguientes aclaraciones:</p>
+                <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc' }}>
+                  <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>No Alojamiento de Medios:</strong> Este sitio web no hospeda, almacena, sube, transmite ni distribuye ningún archivo de video, película, serie, canal de televisión o audio en sus propios servidores.</li>
+                  <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>Enlaces Externos:</strong> Todos los servidores de video, enlaces de streaming y reproductores incrustados (embeds) proporcionados en el catálogo pertenecen y son operados de forma independiente por terceros. FilmTV no tiene control, afiliación, patrocinio ni injerencia sobre el contenido, la disponibilidad o el funcionamiento de dichos servidores.</li>
+                  <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>Propiedad Intelectual:</strong> Alentamos el uso responsable de internet. La visualización de los contenidos se realiza bajo la entera y exclusiva responsabilidad del usuario. Si usted posee los derechos de propiedad intelectual de algún material enlazado y desea solicitar su remoción, le recomendamos contactar directamente a los proveedores de hosting externos que almacenan dichos archivos para una baja efectiva.</li>
+                </ul>
+              </section>
+
+              <section style={{ marginBottom: '24px' }}>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>3. Política de Privacidad y Tratamiento de Datos</h3>
+                <p style={{ margin: '0 0 12px 0', textAlign: 'justify' }}>En FilmTV nos tomamos muy en serio la confidencialidad de la información y la privacidad de nuestros visitantes:</p>
+                <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc' }}>
+                  <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>Ausencia de Cuentas:</strong> No solicitamos registros ni recopilamos datos personales sensibles como nombres reales, direcciones físicas, contraseñas o correos electrónicos.</li>
+                  <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>Almacenamiento Local (Local Storage):</strong> Usamos cookies técnicas y almacenamiento local de tu navegador para guardar de forma local tu lista de favoritos, tus preferencias de reproducción e historial, y tus ajustes estéticos (como la configuración del bloqueo de publicidad). Estos datos nunca viajan a servidores externos; permanecen guardados localmente en tu propio dispositivo.</li>
+                  <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>Salas de Transmisión (Watch Party):</strong> El chat en tiempo real asigna nombres de usuario temporales o de fantasía que tú elijas. Los mensajes enviados se distribuyen únicamente a los miembros activos conectados a la misma sala de visualización para permitir la interacción y no son guardados ni utilizados con fines comerciales o publicitarios.</li>
+                </ul>
+              </section>
+
+              <section style={{ marginBottom: '24px' }}>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>4. Limitación de Responsabilidad</h3>
+                <p style={{ margin: 0, textAlign: 'justify' }}>FilmTV y sus desarrolladores no asumen responsabilidad alguna ante cualquier inconveniente técnico, pérdida de datos, virus informáticos procedentes de reproductores de terceros, cobros indebidos, caídas del servicio o cualquier daño incidental que pudiera derivarse directa o indirectamente del acceso y uso de este portal o de los enlaces provistos.</p>
+              </section>
+
+              <section>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>5. Modificaciones y Actualizaciones</h3>
+                <p style={{ margin: 0, textAlign: 'justify' }}>Nos reservamos el derecho de modificar los presentes términos y políticas en cualquier momento para adaptarlos a cambios tecnológicos o legales. Te recomendamos revisar esta sección de forma regular.</p>
+              </section>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <button className="cookie-accept-btn" style={{ margin: '0' }} onClick={() => setShowTermsModal(false)}>Aceptar y Cerrar</button>
+            </div>
           </div>
         </div>
       )}
