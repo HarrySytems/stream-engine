@@ -33,15 +33,19 @@ const getMangaTitle = (manga) => {
 
 // Componente autocurativo para logotipos de canales que previene imágenes rotas de imgur.com
 function ChannelLogo({ item, className, style }) {
-  const [usePlaceholder, setUsePlaceholder] = useState(
-    !item.logo || 
-    item.logo.includes('imgur.com') || 
-    item.logo.includes('example.com')
-  );
+  const [usePlaceholder, setUsePlaceholder] = useState(() => {
+    if (!item) return true;
+    const logoUrl = item.logo || '';
+    return !logoUrl || logoUrl.includes('imgur.com') || logoUrl.includes('example.com');
+  });
+
+  if (!item) return null;
+
+  const displayName = item.nombre || item.titulo || 'TV';
 
   if (usePlaceholder) {
     // Generar un gradiente dinámico según el nombre del canal
-    const hash = item.nombre.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = displayName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const gradients = [
       'linear-gradient(135deg, #7f00ff 0%, #ff007f 100%)',
       'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
@@ -53,8 +57,8 @@ function ChannelLogo({ item, className, style }) {
     ];
     const gradient = gradients[hash % gradients.length];
     
-    // Obtener iniciales del canal
-    const initials = item.nombre
+    // Obtener iniciales del canal de forma segura
+    const initials = displayName
       .replace(/[\(\[].*?[\)\]]/g, '') // Quitar tags como (720p), [Geo-blocked]
       .split(/\s+/)
       .filter(w => w.length > 0)
@@ -91,7 +95,7 @@ function ChannelLogo({ item, className, style }) {
   return (
     <img 
       src={item.logo} 
-      alt={item.nombre} 
+      alt={displayName} 
       className={className} 
       style={style}
       loading="lazy"
