@@ -185,7 +185,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [fadeOutSplash, setFadeOutSplash] = useState(false);
 
   // Catálogo de películas y canales
-  const [peliculas] = useState(initialPeliculas || []);
+  const [peliculas, setPeliculas] = useState(initialPeliculas || []);
   const [canales] = useState(initialCanales || []);
 
   // Estados de reproducción y navegación
@@ -426,6 +426,21 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
     };
+  }, []);
+
+  // Cargar el catálogo completo asíncronamente en segundo plano para optimizar el rendimiento de inicio
+  useEffect(() => {
+    fetch('/api/catalog')
+      .then((res) => {
+        if (!res.ok) throw new Error('Error al cargar catálogo');
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPeliculas(data);
+        }
+      })
+      .catch((err) => console.error("Error al cargar el catálogo completo:", err));
   }, []);
 
   // Servidores de reproducción disponibles
