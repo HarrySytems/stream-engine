@@ -1701,6 +1701,17 @@
 
         /* SIDEBAR SYSTEM RESPONSIVE OVERRIDES */
         @media (max-width: 768px) {
+          /* Lock horizontal page movement/overflow */
+          html, body, .app-container, .content-wrapper {
+            overflow-x: hidden !important;
+            max-width: 100vw;
+          }
+
+          /* Force all inputs to 16px to prevent automatic zooming on focus */
+          input, select, textarea {
+            font-size: 16px !important;
+          }
+
           .app-container {
             flex-direction: column;
           }
@@ -1721,8 +1732,32 @@
           .content-wrapper {
             margin-left: 0 !important;
           }
+          
+          /* Mobile-friendly wrapped header layout to prevent content clipping */
+          .main-header {
+            padding: 10px 16px;
+          }
+
+          .header-content {
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: space-between;
+          }
+
           .brand-logo {
             display: block !important;
+            margin: 0 auto !important; /* Centra el logo */
+            transform: translateX(-16px); /* Compensa el espacio del botón de menú */
+          }
+
+          .search-wrapper {
+            flex: 1 0 100% !important;
+            max-width: 100% !important;
+            margin-top: 4px;
+          }
+
+          .search-input {
+            padding: 8px 14px;
           }
         }
 

@@ -5,6 +5,13 @@ export const metadata = {
   description: 'Disfruta de tus películas y series favoritas en alta definición, con múltiples servidores de reproducción, sin costo y con chat en vivo integrado.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
