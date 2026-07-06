@@ -1197,6 +1197,23 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     return peliculas.find(p => p.id === 'movie-157336') || peliculas[0];
   }, [peliculas]);
 
+  const featuredHero = useMemo(() => {
+    const lasEstrellasChannel = canales.find(c => c.nombre && c.nombre.includes('Las Estrellas'));
+    if (lasEstrellasChannel) {
+      return {
+        ...lasEstrellasChannel,
+        isFeaturedLiveEvent: true,
+        titulo: '🇲🇽 México vs Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+        categoria: 'EN VIVO • Las Estrellas (TDT)',
+        año: '2026',
+        valoracion: '10.0',
+        descripcion: '¡Transmisión oficial en vivo del partido México vs Inglaterra! Haz clic en el botón para ver la señal en directo de Las Estrellas sin interrupciones.',
+        poster: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop',
+      };
+    }
+    return featuredMovie;
+  }, [canales, featuredMovie]);
+
   // Memoized FAST TV (FREE) categories
   const freeLatino = useMemo(() => canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('mex') || c.nombre.toLowerCase().includes('cine premium') || c.nombre.toLowerCase().includes('cine familiar'))), [canales]);
   const freeAccion = useMemo(() => canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror') || c.nombre.toLowerCase().includes('suspenso'))), [canales]);
@@ -2073,13 +2090,15 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                   {activeTab === 'inicio' && (
                     <div className="tab-inicio-container">
                       {(() => {
-                        const featured = featuredMovie;
+                        const featured = featuredHero;
                         if (!featured) return null;
                         return (
                           <div className="hero-banner" style={{ backgroundImage: `linear-gradient(to bottom, rgba(5,5,8,0.25) 0%, rgba(5,5,8,0.95) 100%), url(${featured.poster || ''})` }}>
                             <div className="hero-backdrop-glow" style={{ backgroundImage: `url(${featured.poster || ''})` }}></div>
                             <div className="hero-content-box">
-                              <span className="hero-badge">DESTACADA</span>
+                              <span className="hero-badge" style={{ backgroundColor: '#e50914', color: '#ffffff', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                🔴 EN VIVO AHORA
+                              </span>
                               <h1 className="hero-title">{featured.titulo}</h1>
                               <div className="hero-meta">
                                 <span className="hero-rating">★ {featured.valoracion}</span>
@@ -2089,7 +2108,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                               <p className="hero-desc">{featured.descripcion}</p>
                               <div style={{ display: 'flex', gap: '12px' }}>
                                 <button className="hero-play-btn" onClick={() => handleCardClick(featured)}>
-                                  Ver detalles
+                                  ▶ Ver transmisión en vivo
                                 </button>
                                 {featured.tmdbId && (
                                   <button className="hero-trailer-btn" onClick={() => playTrailer(featured)}>
