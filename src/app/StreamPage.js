@@ -1204,10 +1204,10 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         ...lasEstrellasChannel,
         isFeaturedLiveEvent: true,
         titulo: '🇲🇽 México vs Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-        categoria: 'EN VIVO • Las Estrellas (TDT)',
+        categoria: 'COPA MUNDIAL 2026 • Las Estrellas (TDT)',
         año: '2026',
         valoracion: '10.0',
-        descripcion: '¡Transmisión oficial en vivo del partido México vs Inglaterra! Haz clic en el botón para ver la señal en directo de Las Estrellas sin interrupciones.',
+        descripcion: '¡Partido de la Copa Mundial 2026 en vivo! Transmisión oficial en directo por Las Estrellas. Haz clic en el botón para ver la señal sin interrupciones.',
         poster: '/mexico_vs_england.jpg',
       };
     }
