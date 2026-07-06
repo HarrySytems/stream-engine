@@ -1208,7 +1208,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
         año: '2026',
         valoracion: '10.0',
         descripcion: '¡Transmisión oficial en vivo del partido México vs Inglaterra! Haz clic en el botón para ver la señal en directo de Las Estrellas sin interrupciones.',
-        poster: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop',
+        poster: '/mexico_vs_england.jpg',
       };
     }
     return featuredMovie;
