@@ -179,6 +179,132 @@ function CategoryRow({ title, items, onSelect, onPlay }) {
   );
 }
 
+function HeroLiveStream({ channel, onSelectChannel }) {
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const video = videoRef.current;
+    if (!video || !channel || !channel.url) return;
+
+    const streamUrl = channel.url;
+
+    const loadStream = async () => {
+      try {
+        const Hls = (await import('hls.js')).default;
+        if (!active) return;
+
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+        }
+
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            maxBufferSize: 20 * 1024 * 1024,
+            maxBufferLength: 20,
+            liveSyncDurationCount: 3,
+            enableWorker: true,
+            lowLatencyMode: false
+          });
+          hls.loadSource(streamUrl);
+          hls.attachMedia(video);
+          hlsRef.current = hls;
+
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal && active) {
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                hls.startLoad();
+              } else {
+                hls.recoverMediaError();
+              }
+            }
+          });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = streamUrl;
+        }
+      } catch (err) {
+        console.error("Hero stream error:", err);
+      }
+    };
+
+    loadStream();
+
+    return () => {
+      active = false;
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [channel]);
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
+  if (!channel) return null;
+
+  return (
+    <div className="hero-live-container">
+      <div className="hero-live-video-wrapper">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted={isMuted}
+          playsInline
+          loop
+          className="hero-live-video"
+        />
+        <div className="hero-live-overlay"></div>
+      </div>
+
+      <div className="hero-content-box">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <span className="hero-badge" style={{ background: '#ff0055', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+            <span className="live-dot" style={{ width: '8px', height: '8px', backgroundColor: '#fff', borderRadius: '50%', display: 'inline-block' }}></span>
+            EN VIVO 24/7
+          </span>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#00f5d4', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            FAST TV CINE
+          </span>
+        </div>
+
+        <h1 className="hero-title">{channel.nombre || "Cinemax Latino (480p)"}</h1>
+        
+        <div className="hero-meta">
+          <span className="hero-rating" style={{ color: '#00f5d4', backgroundColor: 'rgba(0, 245, 212, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
+            Transmisión en Vivo
+          </span>
+          <span className="hero-year">{channel.pais || 'EE.UU.'}</span>
+          <span className="hero-genre">{channel.categoria || 'Cine'}</span>
+        </div>
+
+        <p className="hero-desc">
+          Transmisión continua de cine y películas en español latino las 24 horas del día. Disfruta de la mejor programación ininterrumpida sin esperas.
+        </p>
+
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="hero-play-btn" onClick={() => onSelectChannel(channel)}>
+            ▶ Ver en Pantalla Completa
+          </button>
+          <button 
+            className="hero-trailer-btn" 
+            onClick={toggleMute}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            {isMuted ? '🔇 Activar Sonido' : '🔊 Silenciar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Estado para la pantalla de presentación (Splash Screen)
   const [showSplash, setShowSplash] = useState(true);
@@ -1219,6 +1345,13 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     return peliculas.find(p => p.id === 'movie-157336') || peliculas[0];
   }, [peliculas]);
 
+  const heroChannel = useMemo(() => {
+    return canales.find(c => c.id === 'canal-cinemax-latino-480p') || 
+           canales.find(c => (c.nombre || '').toLowerCase().includes('cinemax')) ||
+           canales.find(c => c.categoria === 'Cine') || 
+           canales[0];
+  }, [canales]);
+
 
   // Memoized FAST TV (FREE) categories
   const freeLatino = useMemo(() => canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('mex') || c.nombre.toLowerCase().includes('cine premium') || c.nombre.toLowerCase().includes('cine familiar'))), [canales]);
@@ -2071,35 +2204,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                 <>
                   {activeTab === 'inicio' && (
                     <div className="tab-inicio-container">
-                      {(() => {
-                        const featured = featuredMovie;
-                        if (!featured) return null;
-                        return (
-                          <div className="hero-banner" style={{ backgroundImage: `linear-gradient(to bottom, rgba(5,5,8,0.25) 0%, rgba(5,5,8,0.95) 100%), url(${featured.poster || ''})` }}>
-                            <div className="hero-backdrop-glow" style={{ backgroundImage: `url(${featured.poster || ''})` }}></div>
-                            <div className="hero-content-box">
-                              <span className="hero-badge">DESTACADA</span>
-                              <h1 className="hero-title">{featured.titulo}</h1>
-                              <div className="hero-meta">
-                                <span className="hero-rating">★ {featured.valoracion}</span>
-                                <span className="hero-year">{featured.año}</span>
-                                <span className="hero-genre">{featured.categoria}</span>
-                              </div>
-                              <p className="hero-desc">{featured.descripcion}</p>
-                              <div style={{ display: 'flex', gap: '12px' }}>
-                                <button className="hero-play-btn" onClick={() => handleCardClick(featured)}>
-                                  Ver detalles
-                                </button>
-                                {featured.tmdbId && (
-                                  <button className="hero-trailer-btn" onClick={() => playTrailer(featured)}>
-                                    {loadingTrailer ? 'Cargando...' : 'Ver Tráiler'}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
+                      <HeroLiveStream channel={heroChannel} onSelectChannel={handleCardClick} />
 
                       <div className="carruseles-container">
                         <CategoryRow 
