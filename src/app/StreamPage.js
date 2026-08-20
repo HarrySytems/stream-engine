@@ -387,8 +387,9 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       });
   };
 
-  // Letra seleccionada para índices A-Z
+  // Letra seleccionada para índices A-Z y Categoría de Películas
   const [selectedLetter, setSelectedLetter] = useState('Todos');
+  const [selectedMovieCategory, setSelectedMovieCategory] = useState('Todos');
   const [selectedSeriesLetter, setSelectedSeriesLetter] = useState('Todos');
 
   // Límites de paginación
@@ -1151,6 +1152,32 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       const firstChar = item.titulo.charAt(0).toUpperCase();
       const normalized = firstChar.normalize("NFD").replace(/[̀-ͯ]/g, "");
       return normalized === letter;
+    });
+  };
+
+  // Categorías para la sección Películas estilo Pluto TV
+  const movieCategories = [
+    'Todos',
+    'Acción',
+    'Terror',
+    'Comedia',
+    'Ciencia Ficción',
+    'Drama',
+    'Infantil',
+    'Suspenso',
+    'Aventura',
+    'Romance',
+    'Fantasía',
+    'Crimen',
+    'Animación'
+  ];
+
+  const filterMoviesByCategory = (list, category) => {
+    if (!category || category === 'Todos') return list;
+    const catNorm = category.toLowerCase();
+    return list.filter(item => {
+      const itemCat = (item.categoria || '').toLowerCase();
+      return itemCat.includes(catNorm) || (catNorm === 'terror' && itemCat.includes('horror'));
     });
   };
 
@@ -2862,34 +2889,25 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
                   {activeTab === 'peliculas' && (
                     <div className="tab-peliculas-container">
-                      <h2 className="section-title">Películas A-Z</h2>
+                      <h2 className="section-title">
+                        {selectedMovieCategory === 'Todos' ? 'Categorías de Películas' : `Películas de ${selectedMovieCategory}`}
+                      </h2>
                       
-                      <div className="alphabet-bar">
-                        <button 
-                          onClick={() => { setSelectedLetter('Todos'); setMoviesLimit(32); }}
-                          className={`letter-btn ${selectedLetter === 'Todos' ? 'active' : ''}`}
-                        >
-                          Todos
-                        </button>
-                        {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
+                      <div className="alphabet-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+                        {movieCategories.map(cat => (
                           <button 
-                            key={letter}
-                            onClick={() => { setSelectedLetter(letter); setMoviesLimit(32); }}
-                            className={`letter-btn ${selectedLetter === letter ? 'active' : ''}`}
+                            key={cat}
+                            onClick={() => { setSelectedMovieCategory(cat); setMoviesLimit(32); }}
+                            className={`letter-btn ${selectedMovieCategory === cat ? 'active' : ''}`}
+                            style={{ minWidth: 'auto', padding: '8px 16px', fontSize: '13px', fontWeight: 'bold' }}
                           >
-                            {letter}
+                            {cat}
                           </button>
                         ))}
-                        <button 
-                          onClick={() => { setSelectedLetter('#'); setMoviesLimit(32); }}
-                          className={`letter-btn ${selectedLetter === '#' ? 'active' : ''}`}
-                        >
-                          #
-                        </button>
                       </div>
 
                       {(() => {
-                        const filtered = filterByLetter(sortedMovies, selectedLetter);
+                        const filtered = filterMoviesByCategory(sortedMovies, selectedMovieCategory);
                         const visible = filtered.slice(0, moviesLimit);
 
                         return (
@@ -2907,7 +2925,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                                       src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
                                       alt={item.titulo} 
                                       className="movie-poster"
-                                      loading="lazy"
+                                      loading="lazy" 
                                     />
                                     <div className="card-play-overlay">
                                       <div className="play-arrow"></div>
@@ -2927,7 +2945,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
 
                               {filtered.length === 0 && (
                                 <div className="no-results">
-                                  No hay películas que comiencen con la letra seleccionada.
+                                  No hay películas disponibles en la categoría seleccionada.
                                 </div>
                               )}
                             </div>
