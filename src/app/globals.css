@@ -5,7 +5,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700&display=swap');
 
         body {
-          background-color: #050508;
+          background-color: #000000;
           color: #f3f4f6;
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
           margin: 0;
@@ -27,17 +27,16 @@
         }
         .chapters-list-grid::-webkit-scrollbar-thumb {
           background: #27273a;
-          border-radius: 3px;
         }
         .chapters-list-grid::-webkit-scrollbar-thumb:hover {
-          background: #00f5d4;
+          background: #ffe600;
         }
 
         .app-container {
           min-height: 100vh;
           display: flex;
           flex-direction: row;
-          background: radial-gradient(circle at top, #0f101a 0%, #050508 100%);
+          background: #000000;
         }
 
         /* 1. SPLASH SCREEN INTRO ANIMATION */
@@ -47,7 +46,7 @@
           left: 0;
           width: 100vw;
           height: 100vh;
-          background-color: #030305;
+          background-color: #000000;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -83,7 +82,7 @@
         .loader-progress {
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, #00f5d4, #00b8ff);
+          background: linear-gradient(90deg, #ffe600, #ffd000);
           border-radius: 4px;
           animation: loader-slide 0.5s ease-in-out forwards;
           transform-origin: left;
@@ -101,7 +100,7 @@
           75% {
             transform: scale(1);
             opacity: 1;
-            filter: drop-shadow(0 0 20px rgba(0, 245, 212, 0.5));
+            filter: drop-shadow(0 0 20px rgba(255, 230, 0, 0.5));
           }
           100% {
             transform: scale(0.95);
@@ -122,10 +121,10 @@
         .main-sidebar {
           width: 240px;
           min-width: 240px;
-          background: rgba(10, 11, 18, 0.95);
+          background: #000000;
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border-right: 1px solid rgba(0, 245, 212, 0.1);
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           flex-direction: column;
           padding: 24px 0;
@@ -177,21 +176,21 @@
           border-radius: 8px;
           font-size: 14px;
           font-weight: 600;
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           cursor: pointer;
           text-align: left;
           transition: all 0.2s ease;
         }
 
         .sidebar-menu-btn:hover {
-          background-color: rgba(255, 255, 255, 0.03);
+          background-color: rgba(255, 255, 255, 0.05);
           color: #ffffff;
         }
 
         .sidebar-menu-btn.active {
-          background-color: rgba(0, 245, 212, 0.08);
-          border-left: 3px solid #00f5d4;
-          color: #00f5d4;
+          background-color: rgba(255, 230, 0, 0.12);
+          border-left: 3px solid #ffe600;
+          color: #ffe600;
         }
 
         .sidebar-menu-btn svg {
@@ -200,7 +199,7 @@
         }
 
         .sidebar-menu-btn.active svg, .sidebar-menu-btn:hover svg {
-          color: #00f5d4;
+          color: #ffe600;
           transform: scale(1.05);
         }
 
@@ -221,15 +220,15 @@
 
         /* HEADER */
         .main-header {
-          background-color: rgba(5, 5, 8, 0.85);
+          background-color: rgba(0, 0, 0, 0.95);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(0, 245, 212, 0.1);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           position: sticky;
           top: 0;
           z-index: 1000;
           padding: 12px 24px;
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
         }
 
         .header-content {
@@ -262,18 +261,19 @@
           width: 100%;
           padding: 10px 16px;
           border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background-color: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background-color: #121212;
           color: #ffffff;
           font-size: 14px;
+          font-family: 'Inter', sans-serif;
           outline: none;
           transition: all 0.3s ease;
         }
 
         .search-input:focus {
-          border-color: #00f5d4;
-          background-color: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 0 15px rgba(0, 245, 212, 0.2);
+          border-color: #ffe600;
+          background-color: #181818;
+          box-shadow: 0 0 15px rgba(255, 230, 0, 0.2);
         }
 
         /* 3.1 CATALOG VIEW */
@@ -302,8 +302,8 @@
         }
 
         .movie-card {
-          background-color: #0e0f17;
-          border: 1px solid rgba(255, 255, 255, 0.04);
+          background-color: #121212;
+          border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 12px;
           overflow: hidden;
           cursor: pointer;
@@ -313,8 +313,8 @@
 
         .movie-card:hover {
           transform: translateY(-6px) scale(1.06);
-          border-color: #00f5d4;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 245, 212, 0.25);
+          border-color: #ffe600;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 230, 0, 0.2);
         }
 
         .poster-container {
@@ -343,9 +343,9 @@
           position: absolute;
           top: 8px;
           left: 8px;
-          background-color: rgba(7, 7, 12, 0.85);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #00f5d4;
+          background-color: rgba(0, 0, 0, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
           font-size: 10px;
           font-weight: 800;
           padding: 2px 6px;
@@ -362,7 +362,7 @@
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(7, 7, 12, 0.5);
+          background: rgba(0, 0, 0, 0.6);
           display: flex;
           justify-content: center;
           align-items: center;
@@ -379,19 +379,19 @@
           height: 0;
           border-top: 14px solid transparent;
           border-bottom: 14px solid transparent;
-          border-left: 24px solid #00f5d4;
+          border-left: 24px solid #ffe600;
           margin-left: 4px;
-          filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.6));
+          filter: drop-shadow(0 0 8px rgba(255, 230, 0, 0.6));
         }
 
         .rating-badge {
           position: absolute;
           top: 10px;
           right: 10px;
-          background-color: rgba(7, 7, 12, 0.85);
+          background-color: rgba(0, 0, 0, 0.85);
           backdrop-filter: blur(4px);
-          border: 1px solid rgba(0, 245, 212, 0.3);
-          color: #00f5d4;
+          border: 1px solid rgba(255, 230, 0, 0.3);
+          color: #ffe600;
           font-size: 11px;
           font-weight: 700;
           padding: 3px 8px;
@@ -406,7 +406,7 @@
         .movie-card-title {
           font-size: 14px;
           font-weight: 700;
-          color: #f3f4f6;
+          color: #ffffff;
           margin: 0 0 6px 0;
           white-space: nowrap;
           overflow: hidden;
@@ -444,8 +444,8 @@
 
         .back-btn {
           background-color: transparent;
-          border: 1px solid rgba(0, 245, 212, 0.3);
-          color: #00f5d4;
+          border: 1px solid rgba(255, 230, 0, 0.3);
+          color: #ffe600;
           padding: 8px 18px;
           border-radius: 6px;
           font-size: 13px;
@@ -466,7 +466,7 @@
         }
 
         .player-item-title {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 20px;
           font-weight: 700;
           color: #ffffff;
@@ -479,7 +479,7 @@
 
         .player-item-rating {
           font-size: 13px;
-          color: #f59e0b;
+          color: #ffe600;
           font-weight: 700;
         }
 
@@ -511,20 +511,21 @@
           border-radius: 6px;
           font-size: 12px;
           font-weight: 600;
+          font-family: 'Inter', sans-serif;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .server-tab-btn:hover {
-          border-color: rgba(0, 245, 212, 0.3);
+          border-color: rgba(255, 230, 0, 0.4);
           color: #ffffff;
         }
 
         .server-tab-btn.active {
-          background-color: rgba(0, 245, 212, 0.08);
-          border-color: #00f5d4;
-          color: #00f5d4;
-          box-shadow: 0 0 12px rgba(0, 245, 212, 0.15);
+          background-color: rgba(255, 230, 0, 0.12);
+          border-color: #ffe600;
+          color: #ffe600;
+          box-shadow: 0 0 12px rgba(255, 230, 0, 0.2);
         }
 
         .theater-grid {
@@ -546,8 +547,8 @@
           background-color: #000000;
           border-radius: 12px;
           overflow: hidden;
-          border: 1px solid rgba(0, 245, 212, 0.15);
-          box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px rgba(0, 245, 212, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 10px 40px rgba(0,0,0,0.9);
         }
 
         .player-iframe {
@@ -580,15 +581,15 @@
         }
 
         .player-details-card {
-          background-color: #0e0f17;
-          border: 1px solid rgba(255, 255, 255, 0.04);
+          background-color: #121212;
+          border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 12px;
           padding: 20px 24px;
         }
 
         .player-details-card h3 {
           margin: 0 0 8px 0;
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 16px;
           color: #ffffff;
         }
@@ -614,9 +615,9 @@
         }
 
         .category-tag {
-          background-color: rgba(0, 245, 212, 0.08);
-          border: 1px solid rgba(0, 245, 212, 0.2);
-          color: #00f5d4;
+          background-color: rgba(255, 230, 0, 0.1);
+          border: 1px solid rgba(255, 230, 0, 0.3);
+          color: #ffe600;
         }
 
         .type-tag {
@@ -633,7 +634,7 @@
 
         /* 4. FOOTER */
         .main-footer {
-          border-top: 1px solid rgba(255, 255, 255, 0.04);
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
           padding: 24px;
           text-align: center;
           margin-top: 60px;
@@ -642,7 +643,7 @@
         .footer-content p {
           margin: 0;
           font-size: 12px;
-          color: #4b5563;
+          color: #6b7280;
         }
 
         /* HERO BANNER */
@@ -655,9 +656,9 @@
           border-radius: 16px;
           margin-bottom: 40px;
           overflow: hidden;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 30px rgba(0, 245, 212, 0.05);
-          border: 1px solid rgba(0, 245, 212, 0.15);
-          background-color: #07070c;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background-color: #000000;
         }
 
         .hero-live-video-wrapper {
@@ -683,8 +684,8 @@
           left: 0;
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, rgba(7,7,12,0.95) 0%, rgba(7,7,12,0.8) 45%, rgba(7,7,12,0.25) 100%),
-                      linear-gradient(to top, rgba(7,7,12,0.95) 0%, transparent 40%);
+          background: linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 45%, rgba(0,0,0,0.2) 100%),
+                      linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 40%);
           z-index: 2;
           pointer-events: none;
         }
@@ -695,7 +696,7 @@
             min-height: 380px;
           }
           .hero-live-overlay {
-            background: linear-gradient(to top, rgba(7,7,12,0.98) 0%, rgba(7,7,12,0.7) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.7) 100%);
           }
         }
 
@@ -710,8 +711,8 @@
           overflow: hidden;
           background-size: cover;
           background-position: center;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-          border: 1px solid rgba(255,255,255,0.03);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+          border: 1px solid rgba(255,255,255,0.06);
         }
 
         .hero-backdrop-glow {
@@ -735,8 +736,8 @@
         }
 
         .hero-badge {
-          background: linear-gradient(90deg, #00f5d4, #00b8ff);
-          color: #07070c;
+          background: linear-gradient(90deg, #ffe600, #ffd000);
+          color: #000000;
           font-size: 10px;
           font-weight: 800;
           padding: 4px 10px;
@@ -747,7 +748,7 @@
         }
 
         .hero-title {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 42px;
           font-weight: 900;
           margin: 0 0 15px 0;
@@ -766,7 +767,7 @@
         }
 
         .hero-rating {
-          color: #ffb800;
+          color: #ffe600;
         }
 
         .hero-year {
@@ -792,29 +793,30 @@
         }
 
         .hero-play-btn {
-          background-color: #00f5d4;
-          color: #07070c;
+          background-color: #ffe600;
+          color: #000000;
           border: none;
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 15px;
-          font-weight: 700;
+          font-weight: 800;
           padding: 12px 28px;
           border-radius: 8px;
           cursor: pointer;
           transition: all 0.25s ease;
-          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+          box-shadow: 0 4px 15px rgba(255, 230, 0, 0.3);
         }
 
         .hero-play-btn:hover {
+          background-color: #ffd000;
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 245, 212, 0.5);
+          box-shadow: 0 6px 20px rgba(255, 230, 0, 0.5);
         }
 
         .hero-trailer-btn {
           background-color: transparent;
           color: #ffffff;
           border: 1px solid rgba(255,255,255,0.3);
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 15px;
           font-weight: 700;
           padding: 12px 28px;
@@ -824,7 +826,7 @@
         }
 
         .hero-trailer-btn:hover {
-          background-color: rgba(255, 255, 255, 0.05);
+          background-color: rgba(255, 255, 255, 0.08);
           border-color: #ffffff;
         }
 
@@ -844,9 +846,9 @@
         }
 
         .category-row-title {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 20px;
-          font-weight: 700;
+          font-weight: 800;
           color: #ffffff;
           margin: 0;
           padding-left: 4px;
@@ -885,7 +887,7 @@
 
         .carousel-movie-card:hover {
           transform: translateY(-6px) scale(1.06);
-          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 245, 212, 0.3);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 230, 0, 0.2);
         }
 
         .carousel-movie-card:active {
@@ -899,9 +901,9 @@
           width: 100%;
           border-radius: 10px;
           overflow: hidden;
-          background-color: #11131e;
+          background-color: #121212;
           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          border: 1px solid rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
           margin-bottom: 8px;
         }
 
@@ -925,7 +927,7 @@
           left: 0;
           width: 100%;
           height: 100%;
-          background-color: rgba(7, 7, 12, 0.6);
+          background-color: rgba(0, 0, 0, 0.6);
           display: flex;
           justify-content: center;
           align-items: center;
@@ -941,9 +943,9 @@
           position: absolute;
           top: 8px;
           right: 8px;
-          background-color: rgba(7, 7, 12, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #ffb800;
+          background-color: rgba(0, 0, 0, 0.85);
+          border: 1px solid rgba(255, 230, 0, 0.3);
+          color: #ffe600;
           font-size: 11px;
           font-weight: 700;
           padding: 2px 6px;
@@ -974,9 +976,9 @@
           position: absolute;
           top: 8px;
           left: 8px;
-          background-color: rgba(59, 130, 246, 0.95);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #ffffff;
+          background-color: #ffe600;
+          border: 1px solid #ffe600;
+          color: #000000;
           font-size: 10px;
           font-weight: 800;
           padding: 2px 8px;
@@ -993,7 +995,7 @@
         .live-dot {
           width: 6px;
           height: 6px;
-          background-color: #ffffff;
+          background-color: currentColor;
           border-radius: 50%;
           display: inline-block;
           animation: pulse-live 1.2s infinite;
@@ -1024,7 +1026,7 @@
         .carousel-card-title {
           font-size: 13px;
           font-weight: 700;
-          color: #f3f4f6;
+          color: #ffffff;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1042,8 +1044,8 @@
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background-color: rgba(7, 7, 12, 0.85);
-          border: 1px solid rgba(255,255,255,0.08);
+          background-color: rgba(0, 0, 0, 0.85);
+          border: 1px solid rgba(255,255,255,0.1);
           color: #ffffff;
           font-size: 24px;
           font-weight: 300;
@@ -1061,9 +1063,9 @@
         }
 
         .carousel-nav-btn:hover {
-          background-color: #00f5d4;
-          color: #07070c;
-          border-color: #00f5d4;
+          background-color: #ffe600;
+          color: #000000;
+          border-color: #ffe600;
         }
 
         .carousel-nav-btn.prev {
@@ -1079,8 +1081,8 @@
           display: flex;
           flex-wrap: wrap;
           gap: 6px;
-          background-color: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.05);
+          background-color: #121212;
+          border: 1px solid rgba(255,255,255,0.06);
           padding: 12px;
           border-radius: 10px;
           margin-bottom: 30px;
@@ -1092,6 +1094,7 @@
           color: #9ca3af;
           font-size: 13px;
           font-weight: 700;
+          font-family: 'Inter', sans-serif;
           padding: 6px 10px;
           border-radius: 6px;
           cursor: pointer;
@@ -1102,12 +1105,12 @@
 
         .letter-btn:hover {
           color: #ffffff;
-          background-color: rgba(255,255,255,0.06);
+          background-color: rgba(255,255,255,0.08);
         }
 
         .letter-btn.active {
-          background-color: #00f5d4;
-          color: #07070c;
+          background-color: #ffe600;
+          color: #000000;
         }
 
         /* SEASONS & EPISODES PREMIUM GRID PANEL */
@@ -1123,7 +1126,7 @@
         }
 
         .panel-label {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 14px;
           font-weight: 700;
           color: #9ca3af;
@@ -1149,6 +1152,7 @@
           color: #d1d5db;
           font-size: 13px;
           font-weight: 600;
+          font-family: 'Inter', sans-serif;
           padding: 8px 16px;
           border-radius: 6px;
           cursor: pointer;
@@ -1161,9 +1165,9 @@
         }
 
         .season-tab-btn.active {
-          background-color: #00f5d4;
-          border-color: #00f5d4;
-          color: #07070c;
+          background-color: #ffe600;
+          border-color: #ffe600;
+          color: #000000;
           font-weight: 700;
         }
 
@@ -1185,7 +1189,7 @@
 
         .episodes-count-info {
           font-size: 13px;
-          color: #00f5d4;
+          color: #ffe600;
           font-weight: 600;
         }
 
@@ -1201,6 +1205,7 @@
           color: #d1d5db;
           font-size: 12px;
           font-weight: 600;
+          font-family: 'Inter', sans-serif;
           padding: 10px 6px;
           border-radius: 6px;
           cursor: pointer;
@@ -1212,17 +1217,17 @@
         }
 
         .episode-btn:hover {
-          border-color: rgba(0, 245, 212, 0.4);
-          background-color: rgba(0, 245, 212, 0.02);
-          color: #00f5d4;
+          border-color: rgba(255, 230, 0, 0.4);
+          background-color: rgba(255, 230, 0, 0.05);
+          color: #ffe600;
         }
 
         .episode-btn.active {
-          background: linear-gradient(135deg, #00f5d4, #00b8ff);
-          border-color: #00f5d4;
-          color: #07070c;
+          background: #ffe600;
+          border-color: #ffe600;
+          color: #000000;
           font-weight: 700;
-          box-shadow: 0 4px 12px rgba(0, 245, 212, 0.2);
+          box-shadow: 0 4px 12px rgba(255, 230, 0, 0.3);
         }
 
         .loading-text {
@@ -1243,7 +1248,7 @@
           background-color: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.08);
           color: #ffffff;
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 14px;
           font-weight: 700;
           padding: 12px 32px;
@@ -1253,17 +1258,17 @@
         }
 
         .load-more-btn:hover {
-          background-color: #00f5d4;
-          border-color: #00f5d4;
-          color: #07070c;
-          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+          background-color: #ffe600;
+          border-color: #ffe600;
+          color: #000000;
+          box-shadow: 0 4px 15px rgba(255, 230, 0, 0.3);
         }
 
         /* SECTION TITLES */
         .section-title {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 24px;
-          font-weight: 700;
+          font-weight: 800;
           color: #ffffff;
           margin: 0 0 20px 0;
         }
@@ -1306,7 +1311,7 @@
         }
 
         .modal-content-card {
-          background-color: #0b0c10;
+          background-color: #121212;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 16px;
           width: 90%;
@@ -1314,7 +1319,7 @@
           max-height: 85vh;
           overflow-y: auto;
           position: relative;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 245, 212, 0.05);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 230, 0, 0.05);
           animation: modal-scale-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           scrollbar-width: thin;
           scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
@@ -1372,7 +1377,7 @@
           left: 0;
           width: 100%;
           height: 100%;
-          background: linear-gradient(to bottom, rgba(11, 12, 16, 0.1) 0%, rgba(11, 12, 16, 0.95) 100%);
+          background: linear-gradient(to bottom, rgba(18, 18, 18, 0.1) 0%, rgba(18, 18, 18, 0.95) 100%);
           z-index: 1;
         }
 
@@ -1383,7 +1388,7 @@
         }
 
         .modal-hero-title-box h2 {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 32px;
           font-weight: 900;
           margin: 10px 0 15px 0;
@@ -1408,22 +1413,23 @@
         }
 
         .modal-play-action-btn {
-          background-color: #00f5d4;
-          color: #07070c;
+          background-color: #ffe600;
+          color: #000000;
           border: none;
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 14px;
-          font-weight: 700;
+          font-weight: 800;
           padding: 10px 24px;
           border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s ease;
-          box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+          box-shadow: 0 4px 15px rgba(255, 230, 0, 0.3);
         }
 
         .modal-play-action-btn:hover {
+          background-color: #ffd000;
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 245, 212, 0.5);
+          box-shadow: 0 6px 20px rgba(255, 230, 0, 0.5);
         }
 
         .modal-body-desc {
@@ -1435,9 +1441,10 @@
         }
 
         .modal-desc-column h3, .modal-cast-section h3 {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 16px;
-          color: #00f5d4;
+          font-weight: 700;
+          color: #ffe600;
           margin: 0 0 10px 0;
           text-transform: uppercase;
           letter-spacing: 0.5px;
@@ -1501,14 +1508,14 @@
         }
 
         .actor-card:hover .actor-photo {
-          border-color: #00f5d4;
+          border-color: #ffe600;
           transform: scale(1.05);
         }
 
         .actor-name {
           font-size: 10px;
           font-weight: 700;
-          color: #f3f4f6;
+          color: #ffffff;
           display: block;
           max-width: 80px;
           white-space: nowrap;
@@ -1540,10 +1547,10 @@
         }
 
         .modal-recs-section h3 {
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 16px;
           font-weight: 700;
-          color: #00f5d4;
+          color: #ffe600;
           margin: 0 0 14px 0;
           text-transform: uppercase;
           letter-spacing: 0.5px;
@@ -1707,7 +1714,7 @@
         .mobile-menu-toggle {
           background: transparent;
           border: none;
-          color: #00f5d4;
+          color: #ffe600;
           cursor: pointer;
           display: none;
           padding: 8px;
@@ -1847,16 +1854,16 @@
 
         .cookie-banner {
           pointer-events: auto;
-          background-color: rgba(11, 12, 16, 0.96);
+          background-color: rgba(18, 18, 18, 0.96);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(0, 245, 212, 0.2);
+          border: 1px solid rgba(255, 230, 0, 0.2);
           border-radius: 12px;
           padding: 20px;
           display: flex;
           flex-direction: column;
           gap: 16px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 20px rgba(0, 245, 212, 0.05);
+          box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(255, 230, 0, 0.05);
           animation: slide-in-cookie 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
@@ -1867,9 +1874,9 @@
 
         .cookie-content h3 {
           margin: 0 0 6px 0;
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 15px;
-          color: #00f5d4;
+          color: #ffe600;
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
@@ -1882,12 +1889,12 @@
         }
 
         .cookie-accept-btn {
-          background-color: #00f5d4;
+          background-color: #ffe600;
           border: none;
-          color: #07070c;
-          font-family: 'Outfit', sans-serif;
+          color: #000000;
+          font-family: 'Inter', sans-serif;
           font-size: 13px;
-          font-weight: 700;
+          font-weight: 800;
           padding: 8px 20px;
           border-radius: 6px;
           cursor: pointer;
@@ -1895,8 +1902,9 @@
         }
 
         .cookie-accept-btn:hover {
+          background-color: #ffd000;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 245, 212, 0.3);
+          box-shadow: 0 4px 12px rgba(255, 230, 0, 0.3);
         }
 
         /* TRAILER modal box */
@@ -1922,8 +1930,8 @@
           background-color: #000000;
           border-radius: 12px;
           overflow: hidden;
-          border: 1px solid rgba(0, 245, 212, 0.25);
-          box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(0, 245, 212, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.9);
         }
 
         .trailer-close-btn {
@@ -1968,7 +1976,7 @@
           background-color: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.15);
           color: #ffffff;
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 14px;
           font-weight: 700;
           padding: 10px 24px;
@@ -1984,10 +1992,10 @@
         }
 
         .modal-fav-action-btn.is-fav {
-          border-color: #00f5d4;
-          color: #00f5d4;
-          background-color: rgba(0, 245, 212, 0.08);
-          box-shadow: 0 0 10px rgba(0, 245, 212, 0.15);
+          border-color: #ffe600;
+          color: #ffe600;
+          background-color: rgba(255, 230, 0, 0.1);
+          box-shadow: 0 0 10px rgba(255, 230, 0, 0.2);
         }
       
 /* --- Style Block 2 --- */

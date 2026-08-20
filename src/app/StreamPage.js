@@ -82,7 +82,7 @@ function ChannelLogo({ item, className, style }) {
           fontSize: '20px',
           textShadow: '0 2px 4px rgba(0,0,0,0.3)',
           letterSpacing: '1px',
-          fontFamily: 'Outfit, Inter, sans-serif'
+          fontFamily: 'Inter, sans-serif'
         }}
       >
         <span>{initials || 'TV'}</span>
@@ -269,7 +269,7 @@ function HeroLiveStream({ channel, onSelectChannel }) {
             <span className="live-dot" style={{ width: '8px', height: '8px', backgroundColor: '#fff', borderRadius: '50%', display: 'inline-block' }}></span>
             EN VIVO 24/7
           </span>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#00f5d4', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#ffe600', textTransform: 'uppercase', letterSpacing: '1px' }}>
             FAST TV CINE
           </span>
         </div>
@@ -277,7 +277,7 @@ function HeroLiveStream({ channel, onSelectChannel }) {
         <h1 className="hero-title">{channel.nombre || "Cinemax Latino (480p)"}</h1>
         
         <div className="hero-meta">
-          <span className="hero-rating" style={{ color: '#00f5d4', backgroundColor: 'rgba(0, 245, 212, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
+          <span className="hero-rating" style={{ color: '#ffe600', backgroundColor: 'rgba(255, 230, 0, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
             Transmisión en Vivo
           </span>
           <span className="hero-year">{channel.pais || 'EE.UU.'}</span>
@@ -1795,8 +1795,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             <svg width="320" height="100" viewBox="0 0 320 100" className="splash-logo">
               <defs>
                 <linearGradient id="neon-cyan-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f5d4" />
-                  <stop offset="100%" stopColor="#00b8ff" />
+                  <stop offset="0%" stopColor="#ffe600" />
+                  <stop offset="100%" stopColor="#ffd000" />
                 </linearGradient>
                 <filter id="neon-glow-filter" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="8" result="blur" />
@@ -1807,12 +1807,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                 </filter>
               </defs>
               
-              <text x="20" y="68" fill="#ffffff" fontSize="46" fontWeight="900" fontFamily="'Outfit', 'Inter', sans-serif" letterSpacing="3" className="animated-text">
+              <text x="20" y="68" fill="#ffffff" fontSize="46" fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing="3" className="animated-text">
                 FILM
               </text>
               
               <rect x="175" y="20" width="115" height="60" rx="12" fill="url(#neon-cyan-gradient)" filter="url(#neon-glow-filter)" className="animated-badge" />
-              <text x="232" y="62" fill="#07070c" fontSize="34" fontWeight="900" fontFamily="'Outfit', 'Inter', sans-serif" textAnchor="middle">
+              <text x="232" y="62" fill="#000000" fontSize="34" fontWeight="900" fontFamily="'Inter', sans-serif" textAnchor="middle">
                 TV
               </text>
             </svg>
@@ -1831,15 +1831,15 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           <svg width="150" height="46" viewBox="0 0 200 60">
             <defs>
               <linearGradient id="sidebar-cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#00f5d4" />
-                <stop offset="100%" stopColor="#00b8ff" />
+                <stop offset="0%" stopColor="#ffe600" />
+                <stop offset="100%" stopColor="#ffd000" />
               </linearGradient>
             </defs>
-            <text x="10" y="42" fill="#ffffff" fontSize="28" fontWeight="900" fontFamily="'Outfit', sans-serif" letterSpacing="1">
+            <text x="10" y="42" fill="#ffffff" fontSize="28" fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing="1">
               FILM
             </text>
             <rect x="95" y="10" width="75" height="38" rx="8" fill="url(#sidebar-cyan-grad)" />
-            <text x="132" y="38" fill="#07070c" fontSize="22" fontWeight="900" fontFamily="'Outfit', sans-serif" textAnchor="middle">
+            <text x="132" y="38" fill="#000000" fontSize="22" fontWeight="900" fontFamily="'Inter', sans-serif" textAnchor="middle">
               TV
             </text>
           </svg>
@@ -1873,7 +1873,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               textAlign: 'left', 
               cursor: 'pointer', 
               padding: '6px 12px',
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               transition: 'all 0.2s',
               borderRadius: '6px',
               display: 'flex',
@@ -1881,8 +1881,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               gap: '6px'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#00f5d4';
-              e.currentTarget.style.background = 'rgba(0, 245, 212, 0.05)';
+              e.currentTarget.style.color = '#ffe600';
+              e.currentTarget.style.background = 'rgba(255, 230, 0, 0.05)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = 'rgba(255, 255, 255, 0.35)';
@@ -1917,15 +1917,15 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               <svg width="150" height="46" viewBox="0 0 200 60">
                 <defs>
                   <linearGradient id="header-cyan-grad-mobile" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#00f5d4" />
-                    <stop offset="100%" stopColor="#00b8ff" />
+                    <stop offset="0%" stopColor="#ffe600" />
+                    <stop offset="100%" stopColor="#ffd000" />
                   </linearGradient>
                 </defs>
-                <text x="10" y="42" fill="#ffffff" fontSize="28" fontWeight="900" fontFamily="'Outfit', sans-serif" letterSpacing="1">
+                <text x="10" y="42" fill="#ffffff" fontSize="28" fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing="1">
                   FILM
                 </text>
                 <rect x="95" y="10" width="75" height="38" rx="8" fill="url(#header-cyan-grad-mobile)" />
-                <text x="132" y="38" fill="#07070c" fontSize="22" fontWeight="900" fontFamily="'Outfit', sans-serif" textAnchor="middle">
+                <text x="132" y="38" fill="#000000" fontSize="22" fontWeight="900" fontFamily="'Inter', sans-serif" textAnchor="middle">
                   TV
                 </text>
               </svg>
@@ -2059,9 +2059,9 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                       className={`server-tab-btn ${antiAds ? 'active' : ''}`}
                       style={{
                         marginLeft: 'auto',
-                        border: antiAds ? '1px solid #00f5d4' : '1px solid #ff4b4b',
-                        color: antiAds ? '#00f5d4' : '#ff4b4b',
-                        backgroundColor: antiAds ? 'rgba(0, 245, 212, 0.1)' : 'rgba(255, 75, 75, 0.1)',
+                        border: antiAds ? '1px solid #ffe600' : '1px solid #ff4b4b',
+                        color: antiAds ? '#ffe600' : '#ff4b4b',
+                        backgroundColor: antiAds ? 'rgba(255, 230, 0, 0.1)' : 'rgba(255, 75, 75, 0.1)',
                         fontWeight: 'bold'
                       }}
                     >
@@ -2146,8 +2146,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                   <h2 className="section-title">Resultados de búsqueda para: "{searchQuery}"</h2>
 
                   {loadingTmdbSearch && (
-                    <div className="search-loading-bar-container" style={{ width: '100%', height: '4px', backgroundColor: 'rgba(0, 245, 212, 0.1)', overflow: 'hidden', marginBottom: '20px', borderRadius: '2px' }}>
-                      <div className="search-loading-bar" style={{ width: '30%', height: '100%', backgroundColor: '#00f5d4', borderRadius: '2px', animation: 'search-pulse 1.5s infinite ease-in-out' }}></div>
+                    <div className="search-loading-bar-container" style={{ width: '100%', height: '4px', backgroundColor: 'rgba(255, 230, 0, 0.1)', overflow: 'hidden', marginBottom: '20px', borderRadius: '2px' }}>
+                      <div className="search-loading-bar" style={{ width: '30%', height: '100%', backgroundColor: '#ffe600', borderRadius: '2px', animation: 'search-pulse 1.5s infinite ease-in-out' }}></div>
                     </div>
                   )}
 
@@ -3149,7 +3149,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           <div className="cookie-banner">
             <div className="cookie-content">
               <h3>Aviso de Cookies</h3>
-              <p>Este portal elegante utiliza cookies locales para guardar tus canales y películas favoritos, y para recordar tus preferencias de reproducción. Al continuar navegando, aceptas su uso y nuestros <span onClick={() => setShowTermsModal(true)} style={{ color: '#00f5d4', cursor: 'pointer', textDecoration: 'underline' }}>Términos y Políticas de Privacidad</span>.</p>
+              <p>Este portal elegante utiliza cookies locales para guardar tus canales y películas favoritos, y para recordar tus preferencias de reproducción. Al continuar navegando, aceptas su uso y nuestros <span onClick={() => setShowTermsModal(true)} style={{ color: '#ffe600', cursor: 'pointer', textDecoration: 'underline' }}>Términos y Políticas de Privacidad</span>.</p>
             </div>
             <button className="cookie-accept-btn" onClick={() => {
               localStorage.setItem('filmtv_cookie_consent', 'accepted');
@@ -3164,20 +3164,20 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       {/* MODAL DE TÉRMINOS Y PRIVACIDAD */}
       {showTermsModal && (
         <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={() => setShowTermsModal(false)}>
-          <div className="modal-content-card" style={{ maxWidth: '750px', width: '92%', maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0', background: '#0a0b12', border: '1px solid rgba(0, 245, 212, 0.15)', boxShadow: '0 20px 50px rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content-card" style={{ maxWidth: '750px', width: '92%', maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0', background: '#121212', border: '1px solid rgba(255, 230, 0, 0.15)', boxShadow: '0 20px 50px rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '800', background: 'linear-gradient(90deg, #00f5d4 0%, #00b8ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontFamily: "'Outfit', sans-serif" }}>Términos de Servicio y Privacidad</h2>
+              <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '800', background: 'linear-gradient(90deg, #ffe600 0%, #ffd000 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontFamily: "'Inter', sans-serif" }}>Términos de Servicio y Privacidad</h2>
               <button onClick={() => setShowTermsModal(false)} style={{ background: 'rgba(255,255,255,0.04)', border: 'none', color: '#ffffff', fontSize: '18px', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>✕</button>
             </div>
             
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px', color: '#b3b3b3', fontSize: '14px', lineHeight: '1.7', fontFamily: "'Inter', sans-serif" }}>
               <section style={{ marginBottom: '24px' }}>
-                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>1. Aceptación de los Términos</h3>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Inter', sans-serif" }}>1. Aceptación de los Términos</h3>
                 <p style={{ margin: 0, textAlign: 'justify' }}>Bienvenido a FilmTV. Al acceder, navegar y hacer uso de este portal web, usted acepta expresamente quedar sujeto a los presentes Términos de Servicio y Condiciones de Uso, así como a todas las leyes y regulaciones locales e internacionales aplicables. Si no está de acuerdo con alguno de los términos o condiciones aquí estipulados, le solicitamos de la manera más atenta que se abstenga de utilizar este portal.</p>
               </section>
 
               <section style={{ marginBottom: '24px' }}>
-                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>2. Naturaleza Jurídica y Descargo de Responsabilidad (Copyright)</h3>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Inter', sans-serif" }}>2. Naturaleza Jurídica y Descargo de Responsabilidad (Copyright)</h3>
                 <p style={{ margin: '0 0 12px 0', textAlign: 'justify' }}>FilmTV opera exclusivamente como un motor de búsqueda, indexador y facilitador de enlaces a contenidos de reproducción externos disponibles de manera pública en internet. Ponemos especial énfasis en las siguientes aclaraciones:</p>
                 <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc' }}>
                   <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>No Alojamiento de Medios:</strong> Este sitio web no hospeda, almacena, sube, transmite ni distribuye ningún archivo de video, película, serie, canal de televisión o audio en sus propios servidores.</li>
@@ -3187,7 +3187,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               </section>
 
               <section style={{ marginBottom: '24px' }}>
-                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>3. Política de Privacidad y Tratamiento de Datos</h3>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Inter', sans-serif" }}>3. Política de Privacidad y Tratamiento de Datos</h3>
                 <p style={{ margin: '0 0 12px 0', textAlign: 'justify' }}>En FilmTV nos tomamos muy en serio la confidencialidad de la información y la privacidad de nuestros visitantes:</p>
                 <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc' }}>
                   <li style={{ marginBottom: '8px', textAlign: 'justify' }}><strong style={{ color: '#ffffff' }}>Ausencia de Cuentas:</strong> No solicitamos registros ni recopilamos datos personales sensibles como nombres reales, direcciones físicas, contraseñas o correos electrónicos.</li>
@@ -3197,12 +3197,12 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               </section>
 
               <section style={{ marginBottom: '24px' }}>
-                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>4. Limitación de Responsabilidad</h3>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Inter', sans-serif" }}>4. Limitación de Responsabilidad</h3>
                 <p style={{ margin: 0, textAlign: 'justify' }}>FilmTV y sus desarrolladores no asumen responsabilidad alguna ante cualquier inconveniente técnico, pérdida de datos, virus informáticos procedentes de reproductores de terceros, cobros indebidos, caídas del servicio o cualquier daño incidental que pudiera derivarse directa o indirectamente del acceso y uso de este portal o de los enlaces provistos.</p>
               </section>
 
               <section>
-                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>5. Modificaciones y Actualizaciones</h3>
+                <h3 style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700', marginBottom: '8px', fontFamily: "'Inter', sans-serif" }}>5. Modificaciones y Actualizaciones</h3>
                 <p style={{ margin: 0, textAlign: 'justify' }}>Nos reservamos el derecho de modificar los presentes términos y políticas en cualquier momento para adaptarlos a cambios tecnológicos o legales. Te recomendamos revisar esta sección de forma regular.</p>
               </section>
             </div>
