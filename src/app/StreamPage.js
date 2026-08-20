@@ -1155,7 +1155,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     });
   };
 
-  // Categorías para la sección Películas estilo Pluto TV
+  // Categorías reales con contenido en la base de datos
   const movieCategories = [
     'Todos',
     'Acción',
@@ -1164,12 +1164,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
     'Ciencia Ficción',
     'Drama',
     'Infantil',
-    'Suspenso',
-    'Aventura',
-    'Romance',
-    'Fantasía',
-    'Crimen',
-    'Animación'
+    'Documentales'
   ];
 
   const filterMoviesByCategory = (list, category) => {
