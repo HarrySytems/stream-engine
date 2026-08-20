@@ -1938,8 +1938,8 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                 </div>
               )}
 
-              {/* Grid del Reproductor y el Chat */}
-              <div className={`theater-grid ${chatCollapsed ? 'chat-is-collapsed' : ''}`}>
+              {/* Contenedor del Reproductor en Ancho Completo */}
+              <div className="theater-grid">
                 {/* Contenedor del Iframe */}
                 <div className="player-wrapper">
                   <div className="iframe-aspect-ratio">
@@ -1981,30 +1981,6 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                       />
                     )}
                   </div>
-                  
-                  {activeItem.tipo !== 'canal' && (
-                    <div className="playback-optimization-banner" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div>
-                        <span className="banner-icon">Optimización</span>
-                        <span className="banner-text">
-                          Si el reproductor falla o no carga en tu idioma, cambia de <strong>Servidor</strong> en la lista superior. Los servidores <strong>Latino</strong> se cargan dinámicamente.
-                        </span>
-                      </div>
-                      <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '6px', fontSize: '12px', opacity: 0.9 }}>
-                        <strong>Nota sobre Anuncios:</strong> Si el reproductor se congela o abre publicidad, activa la protección <strong>Anti-Publicidad</strong> arriba a la derecha. Si el video muestra el mensaje "Please Disable Sandbox", desactívala temporalmente para que pueda reproducir.
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Contenedor del Chat Watch Party */}
-                <div className={`chat-wrapper ${chatCollapsed ? 'collapsed' : ''}`}>
-                  <ChatBox 
-                    channelId={activeItem.id} 
-                    channelTitle={activeItem.tipo === 'canal' ? activeItem.nombre : activeItem.titulo} 
-                    isCollapsed={chatCollapsed}
-                    onToggleCollapse={() => setChatCollapsed(!chatCollapsed)}
-                  />
                 </div>
               </div>
 
