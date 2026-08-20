@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import StreamPage from './StreamPage';
 
-export const dynamic = 'force-dynamic';
+// Regeneración estática incremental / Caché CDN de Vercel para velocidad instantánea
+export const revalidate = 3600;
 
 export default async function Home() {
   let peliculas = [];
@@ -28,8 +29,8 @@ export default async function Home() {
     console.error("Error reading canales.json:", error);
   }
 
-  // Helper para extraer listas ligeras (evita enviar 10MB de JSON al cliente)
-  const getSlice = (filterFn, limit = 25) => {
+  // Helper para extraer colecciones limpias y ultraligeras (< 50 KB en vez de 10 MB)
+  const getSlice = (filterFn, limit = 24) => {
     const result = [];
     for (const p of peliculas) {
       if (filterFn(p)) {
@@ -52,7 +53,7 @@ export default async function Home() {
     return result;
   };
 
-  // Pre-agrupar categorías en el servidor para velocidad ultra-rápida (60fps)
+  // Pre-agrupación optimizada
   const groupedData = {
     featured: peliculas.find(p => p.id === 'movie-157336') || peliculas[0] || null,
     estrenos: getSlice(p => p.tipo === 'pelicula' && parseInt(p.año) >= 2023, 24),
@@ -67,7 +68,6 @@ export default async function Home() {
     anime: getSlice(p => p.categoria === 'Anime' || p.tipo === 'anime', 30),
   };
 
-  // Limpiar lista de canales ligera
   const cleanCanales = canales.map(c => ({
     id: c.id,
     nombre: c.nombre || c.titulo || 'Canal',

@@ -126,18 +126,20 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
   const [activeTab, setActiveTab] = useState('envivo'); // 'envivo' | 'peliculas' | 'series' | 'anime' | 'manga' | 'favoritos'
   const [liveCategory, setLiveCategory] = useState('Todos');
 
-  // Elemento reproduciéndose activamente por pestaña
+  // Elementos activos por sección
   const [activeLiveChannel, setActiveLiveChannel] = useState(canalesData[0] || null);
   const [activeMovie, setActiveMovie] = useState(groupedData.estrenos?.[0] || groupedData.featured || null);
   const [activeSeries, setActiveSeries] = useState(groupedData.series?.[0] || null);
   const [activeAnime, setActiveAnime] = useState(groupedData.anime?.[0] || null);
   const [activeFavorite, setActiveFavorite] = useState(null);
 
+  // Control de reproducción manual para evitar lag
+  const [isPlayerActive, setIsPlayerActive] = useState(false);
+
   // Estados de reproducción
   const [isMuted, setIsMuted] = useState(true);
   const [activeServer, setActiveServer] = useState(0); // 0: VidSrc, 1: Embed.su, 2: VidLink, 3: VidSrc.cc, 4: Smashy
   const [showSettings, setShowSettings] = useState(false);
-  const [antiAds, setAntiAds] = useState(true);
 
   // Episodios para series y anime
   const [activeSeason, setActiveSeason] = useState(1);
@@ -175,7 +177,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
     { id: 4, name: 'Servidor 5 (SmashyStream)' }
   ];
 
-  // Cargar Favoritos de LocalStorage
+  // Cargar Favoritos
   useEffect(() => {
     try {
       const stored = localStorage.getItem('filmtv_favorites');
@@ -197,7 +199,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
     } catch (e) {}
   };
 
-  // Obtener el elemento activo según la pestaña seleccionada
+  // Elemento actual según pestaña
   const currentActiveItem = useMemo(() => {
     switch (activeTab) {
       case 'envivo': return activeLiveChannel;
@@ -209,7 +211,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
     }
   }, [activeTab, activeLiveChannel, activeMovie, activeSeries, activeAnime, activeFavorite, favorites]);
 
-  // Manejar reproducción de HLS para TV en Vivo
+  // Manejo de HLS para TV en Vivo
   useEffect(() => {
     let isCancelled = false;
 
@@ -272,7 +274,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
     };
   }, [activeTab, activeLiveChannel]);
 
-  // Generar URL del iframe según la pestaña y servidor
+  // URL del embed limpio sin sandbox
   const getEmbedUrl = () => {
     if (!currentActiveItem) return '';
     if (currentActiveItem.tipo === 'canal') {
@@ -356,7 +358,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#08080a', paddingBottom: '70px' }}>
       
-      {/* 1. HEADER / NAVBAR SUPERIOR */}
+      {/* 1. HEADER / NAVBAR */}
       <header className="pluto-header">
         <div className="header-left">
           <div className="pluto-logo" onClick={() => { setActiveTab('envivo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
@@ -367,25 +369,25 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
           <nav className="pluto-nav-tabs">
             <button 
               className={`nav-tab-btn ${activeTab === 'envivo' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('envivo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setActiveTab('envivo'); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               TV en Vivo
             </button>
             <button 
               className={`nav-tab-btn ${activeTab === 'peliculas' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('peliculas'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setActiveTab('peliculas'); setIsPlayerActive(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               Películas
             </button>
             <button 
               className={`nav-tab-btn ${activeTab === 'series' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('series'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setActiveTab('series'); setIsPlayerActive(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               Series
             </button>
             <button 
               className={`nav-tab-btn ${activeTab === 'anime' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('anime'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setActiveTab('anime'); setIsPlayerActive(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               Anime
             </button>
@@ -397,7 +399,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
             </button>
             <button 
               className={`nav-tab-btn ${activeTab === 'favoritos' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('favoritos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setActiveTab('favoritos'); setIsPlayerActive(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               Favoritos {favorites.length > 0 && `(${favorites.length})`}
             </button>
@@ -420,7 +422,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
         </div>
       </header>
 
-      {/* 2. REPRODUCTOR INTEGRADO PARA CADA SECCIÓN */}
+      {/* 2. REPRODUCTOR / HERO BANNER SUPERIOR */}
       {activeTab !== 'manga' && currentActiveItem && (
         <section className="hero-player-section">
           <div className="hero-player-container">
@@ -442,7 +444,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
                 </button>
               )}
 
-              {activeTab !== 'envivo' && (
+              {activeTab !== 'envivo' && isPlayerActive && (
                 <div style={{ position: 'relative' }}>
                   <button 
                     className="control-icon-btn" 
@@ -468,40 +470,49 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
                           {activeServer === srv.id && <span>✓</span>}
                         </button>
                       ))}
-                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px', marginTop: '4px' }}>
-                        <button 
-                          className="server-option-btn"
-                          onClick={() => setAntiAds(!antiAds)}
-                        >
-                          <span>Anti-Publicidad</span>
-                          <span>{antiAds ? 'Activado' : 'Desactivado'}</span>
-                        </button>
-                      </div>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Reproducción: Video HLS para Live TV, Iframe para On Demand */}
-            {activeTab === 'envivo' && !isYouTubeUrl(currentActiveItem?.url) ? (
-              <video 
-                ref={videoRef}
-                className="player-video-element"
-                controls
-                playsInline
-                muted={isMuted}
-                autoPlay
-              />
-            ) : (
+            {/* Vista 1: TV en Vivo con HLS nativo */}
+            {activeTab === 'envivo' ? (
+              !isYouTubeUrl(currentActiveItem?.url) ? (
+                <video 
+                  ref={videoRef}
+                  className="player-video-element"
+                  controls
+                  playsInline
+                  muted={isMuted}
+                  autoPlay
+                />
+              ) : (
+                <iframe 
+                  src={getEmbedUrl()}
+                  className="player-iframe-embed"
+                  allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                />
+              )
+            ) : isPlayerActive ? (
+              /* Vista 2: Iframe limpio sin sandbox para Películas/Series activas */
               <iframe 
                 key={`${currentActiveItem?.id}-${activeServer}-${activeSeason}-${activeEpisode}`}
                 src={getEmbedUrl()}
                 className="player-iframe-embed"
                 allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
                 allowFullScreen
-                sandbox={antiAds ? "allow-forms allow-scripts allow-same-origin allow-presentation" : undefined}
               />
+            ) : (
+              /* Vista 3: Hero Backdrop Cinemático de alta velocidad antes de presionar Play */
+              <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', backgroundColor: '#0c0d14' }}>
+                <img 
+                  src={currentActiveItem.banner || currentActiveItem.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80"}
+                  alt={currentActiveItem.titulo || currentActiveItem.nombre}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.65 }}
+                />
+              </div>
             )}
 
             {/* Información del contenido activo */}
@@ -529,7 +540,10 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
                         key={ep}
                         className={`category-pill-btn ${activeEpisode === ep ? 'active' : ''}`}
                         style={{ padding: '3px 9px', fontSize: '11px' }}
-                        onClick={() => setActiveEpisode(ep)}
+                        onClick={() => {
+                          setActiveEpisode(ep);
+                          setIsPlayerActive(true);
+                        }}
                       >
                         Cap {ep}
                       </button>
@@ -543,6 +557,15 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
               )}
 
               <div className="hero-actions-bar">
+                {activeTab !== 'envivo' && !isPlayerActive && (
+                  <button 
+                    className="btn-primary-play"
+                    onClick={() => setIsPlayerActive(true)}
+                  >
+                    ▶ Reproducir Ahora
+                  </button>
+                )}
+
                 {activeTab !== 'envivo' && (
                   <button 
                     className="btn-secondary-action"
@@ -552,6 +575,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
                     {isDownloading ? 'Generando...' : '⬇️ Descargar'}
                   </button>
                 )}
+                
                 <button 
                   className="btn-secondary-action"
                   onClick={() => toggleFavorite(currentActiveItem)}
@@ -560,7 +584,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
                 </button>
               </div>
 
-              {/* Caja de descarga rápida debajo de los botones */}
+              {/* Caja de descarga rápida */}
               {downloadInfo && (
                 <div className="download-dialog-box" style={{ maxWidth: '500px', pointerEvents: 'auto' }}>
                   <span className="download-box-header">
@@ -590,7 +614,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
         </section>
       )}
 
-      {/* 3. CONTENIDO SEGÚN LA PESTAÑA */}
+      {/* 3. VISTAS SEGÚN LA PESTAÑA */}
 
       {/* VISTA: TV EN VIVO */}
       {activeTab === 'envivo' && (
@@ -664,42 +688,42 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
           <ContentShelf 
             title="Estrenos y Destacados"
             items={groupedData.estrenos}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <ContentShelf 
             title="Acción y Aventura"
             items={groupedData.accion}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <ContentShelf 
             title="Ciencia Ficción"
             items={groupedData.scifi}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <ContentShelf 
             title="Terror y Suspenso"
             items={groupedData.terror}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <ContentShelf 
             title="Comedia"
             items={groupedData.comedia}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <ContentShelf 
             title="Drama"
             items={groupedData.drama}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <ContentShelf 
             title="Infantil y Familiar"
             items={groupedData.infantil}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <ContentShelf 
             title="Clásicos"
             items={groupedData.clasicos}
-            onPlay={(item) => { setActiveMovie(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveMovie(item); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
         </main>
       )}
@@ -710,7 +734,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
           <ContentShelf 
             title="Series Populares y Temporadas Completas"
             items={groupedData.series}
-            onPlay={(item) => { setActiveSeries(item); setActiveEpisode(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveSeries(item); setActiveEpisode(1); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
         </main>
       )}
@@ -721,7 +745,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
           <ContentShelf 
             title="Catálogo Anime HD"
             items={groupedData.anime}
-            onPlay={(item) => { setActiveAnime(item); setActiveEpisode(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onPlay={(item) => { setActiveAnime(item); setActiveEpisode(1); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
         </main>
       )}
@@ -836,6 +860,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
                   className="movie-card-poster"
                   onClick={() => {
                     setActiveFavorite(item);
+                    setIsPlayerActive(true);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
@@ -854,7 +879,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
       <nav className="mobile-bottom-navbar">
         <button 
           className={`mobile-nav-item ${activeTab === 'envivo' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('envivo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onClick={() => { setActiveTab('envivo'); setIsPlayerActive(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         >
           <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
           <span>En Vivo</span>
@@ -862,7 +887,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
 
         <button 
           className={`mobile-nav-item ${activeTab === 'peliculas' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('peliculas'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onClick={() => { setActiveTab('peliculas'); setIsPlayerActive(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         >
           <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
           <span>Películas</span>
@@ -870,7 +895,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
 
         <button 
           className={`mobile-nav-item ${activeTab === 'series' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('series'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onClick={() => { setActiveTab('series'); setIsPlayerActive(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         >
           <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
           <span>Series</span>
@@ -878,7 +903,7 @@ export default function StreamPage({ groupedData = {}, canalesData = [] }) {
 
         <button 
           className={`mobile-nav-item ${activeTab === 'anime' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('anime'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onClick={() => { setActiveTab('anime'); setIsPlayerActive(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         >
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
           <span>Anime</span>
