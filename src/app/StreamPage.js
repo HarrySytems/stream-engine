@@ -1225,10 +1225,10 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const freeAccion = useMemo(() => canales.filter(c => c.categoria === 'Cine' && (c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror') || c.nombre.toLowerCase().includes('suspenso'))), [canales]);
   const freeGeneral = useMemo(() => canales.filter(c => c.categoria === 'Cine' && !(c.nombre.toLowerCase().includes('latino') || c.nombre.toLowerCase().includes('espanol') || c.nombre.toLowerCase().includes('español') || c.nombre.toLowerCase().includes('accion') || c.nombre.toLowerCase().includes('action') || c.nombre.toLowerCase().includes('thriller') || c.nombre.toLowerCase().includes('terror') || c.nombre.toLowerCase().includes('horror'))).slice(0, 20), [canales]);
 
-  // Memoized sorting for A-Z tabs
+  // Memoized sorting for Peliculas and Series tabs
   const sortedMovies = useMemo(() => {
     return peliculas
-      .filter(p => p.tipo === 'pelicula' && p.categoria !== 'Anime' && p.categoria !== 'Documentales' && p.categoria !== 'YouTube')
+      .filter(p => p.tipo === 'pelicula' && p.categoria !== 'Anime' && p.categoria !== 'YouTube')
       .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
   }, [peliculas]);
 
