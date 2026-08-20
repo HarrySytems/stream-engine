@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   let peliculas = [];
-  let initialPeliculas = [];
   let canales = [];
 
   try {
@@ -29,41 +28,60 @@ export default async function Home() {
     console.error("Error reading canales.json:", error);
   }
 
-  // Película destacada
-  const featuredId = 'movie-157336';
-  const featured = peliculas.find(p => p.id === featuredId) || peliculas[0] || null;
-  if (featured) initialPeliculas.push(featured);
-
-  // Helper para agregar contenido seguro por género
-  const addFiltered = (filterFn, limit = 20) => {
-    let count = 0;
+  // Helper para extraer listas ligeras (evita enviar 10MB de JSON al cliente)
+  const getSlice = (filterFn, limit = 25) => {
+    const result = [];
     for (const p of peliculas) {
       if (filterFn(p)) {
-        if (!initialPeliculas.some(x => x.id === p.id)) {
-          initialPeliculas.push(p);
-          count++;
-          if (count >= limit) break;
-        }
+        result.push({
+          id: p.id,
+          titulo: p.titulo || p.nombre || '',
+          nombre: p.nombre || p.titulo || '',
+          poster: p.poster || '',
+          banner: p.banner || p.poster || '',
+          año: p.año || '',
+          categoria: p.categoria || '',
+          tipo: p.tipo || 'pelicula',
+          valoracion: p.valoracion || '7.5',
+          sinopsis: p.sinopsis || '',
+          tmdbId: p.tmdbId || ''
+        });
+        if (result.length >= limit) break;
       }
     }
+    return result;
   };
 
-  // Categorías principales ordenadas al estilo Pluto TV / FAST
-  addFiltered(p => p.tipo === 'pelicula' && (p.categoria === 'Acción' || p.categoria === 'Aventura'), 24);
-  addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Ciencia Ficción', 24);
-  addFiltered(p => p.tipo === 'pelicula' && (p.categoria === 'Terror' || p.categoria === 'Suspenso'), 24);
-  addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Comedia', 24);
-  addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Drama', 24);
-  addFiltered(p => p.tipo === 'pelicula' && (p.categoria === 'Infantil' || p.categoria === 'Animación' || p.categoria === 'Familiar'), 24);
-  addFiltered(p => p.tipo === 'serie' && p.categoria !== 'Anime' && p.categoria !== 'Documentales', 24);
-  addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Anime', 24);
-  addFiltered(p => p.tipo === 'pelicula' && (parseInt(p.año) < 2000 || p.categoria === 'Clásicos'), 20);
+  // Pre-agrupar categorías en el servidor para velocidad ultra-rápida (60fps)
+  const groupedData = {
+    featured: peliculas.find(p => p.id === 'movie-157336') || peliculas[0] || null,
+    estrenos: getSlice(p => p.tipo === 'pelicula' && parseInt(p.año) >= 2023, 24),
+    accion: getSlice(p => p.tipo === 'pelicula' && (p.categoria === 'Acción' || p.categoria === 'Aventura'), 24),
+    scifi: getSlice(p => p.tipo === 'pelicula' && p.categoria === 'Ciencia Ficción', 24),
+    terror: getSlice(p => p.tipo === 'pelicula' && (p.categoria === 'Terror' || p.categoria === 'Suspenso'), 24),
+    comedia: getSlice(p => p.tipo === 'pelicula' && p.categoria === 'Comedia', 24),
+    drama: getSlice(p => p.tipo === 'pelicula' && p.categoria === 'Drama', 24),
+    infantil: getSlice(p => p.tipo === 'pelicula' && (p.categoria === 'Infantil' || p.categoria === 'Animación'), 24),
+    clasicos: getSlice(p => p.tipo === 'pelicula' && parseInt(p.año) < 2005, 24),
+    series: getSlice(p => p.tipo === 'serie' && p.categoria !== 'Anime', 30),
+    anime: getSlice(p => p.categoria === 'Anime' || p.tipo === 'anime', 30),
+  };
+
+  // Limpiar lista de canales ligera
+  const cleanCanales = canales.map(c => ({
+    id: c.id,
+    nombre: c.nombre || c.titulo || 'Canal',
+    url: c.url || '',
+    logo: c.logo || '',
+    categoria: c.categoria || 'General',
+    pais: c.pais || '',
+    tipo: 'canal'
+  }));
 
   return (
     <StreamPage 
-      initialPeliculas={initialPeliculas} 
-      allPeliculas={peliculas}
-      initialCanales={canales} 
+      groupedData={groupedData} 
+      canalesData={cleanCanales} 
     />
   );
 }
