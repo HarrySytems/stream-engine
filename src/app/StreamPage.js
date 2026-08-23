@@ -310,7 +310,8 @@ export default function StreamPage({
   initialPeliculas = [], 
   initialCanales = [], 
   initialActiveItem = null, 
-  initialTab = 'inicio' 
+  initialTab = 'inicio',
+  initialMovieCategory = 'Todos'
 }) {
   // Estado para la pantalla de presentación (Splash Screen)
   const [showSplash, setShowSplash] = useState(true);
@@ -384,9 +385,24 @@ export default function StreamPage({
   const navigateBackToCatalog = () => {
     setActiveItem(null);
     if (typeof window !== 'undefined') {
-      const targetUrl = activeTab === 'inicio' ? '/' : `/${activeTab}`;
+      const slug = (activeTab === 'peliculas' && selectedMovieCategory && selectedMovieCategory !== 'Todos')
+        ? `peliculas/${createSlug(selectedMovieCategory)}`
+        : (activeTab === 'inicio' ? '' : activeTab);
+      const targetUrl = slug ? `/${slug}` : '/';
       if (window.location.pathname !== targetUrl) {
-        window.history.pushState({ tab: activeTab }, '', targetUrl);
+        window.history.pushState({ tab: activeTab, category: selectedMovieCategory }, '', targetUrl);
+      }
+    }
+  };
+
+  const handleSelectMovieCategory = (cat) => {
+    setSelectedMovieCategory(cat);
+    setMoviesLimit(32);
+    if (typeof window !== 'undefined') {
+      const slug = cat === 'Todos' ? '' : createSlug(cat);
+      const targetUrl = slug ? `/peliculas/${slug}` : '/peliculas';
+      if (window.location.pathname !== targetUrl) {
+        window.history.pushState({ tab: 'peliculas', category: cat }, '', targetUrl);
       }
     }
   };
@@ -557,7 +573,7 @@ export default function StreamPage({
 
   // Letra seleccionada para índices A-Z y Categoría de Películas
   const [selectedLetter, setSelectedLetter] = useState('Todos');
-  const [selectedMovieCategory, setSelectedMovieCategory] = useState('Todos');
+  const [selectedMovieCategory, setSelectedMovieCategory] = useState(initialMovieCategory || 'Todos');
   const [selectedSeriesLetter, setSelectedSeriesLetter] = useState('Todos');
 
   // Límites de paginación
@@ -642,6 +658,22 @@ export default function StreamPage({
       const parts = path.split('/');
       const first = parts[0].toLowerCase();
       const second = parts.length > 1 ? parts[1] : null;
+
+      if (first === 'peliculas') {
+        if (!second || second === 'todos') {
+          setActiveItem(null);
+          setActiveTab('peliculas');
+          setSelectedMovieCategory('Todos');
+          return;
+        }
+        const matchedCategory = movieCategories.find(c => createSlug(c) === createSlug(second));
+        if (matchedCategory) {
+          setActiveItem(null);
+          setActiveTab('peliculas');
+          setSelectedMovieCategory(matchedCategory);
+          return;
+        }
+      }
 
       const VALID_TABS = ['inicio', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
       if (VALID_TABS.includes(first) && !second) {
@@ -3070,7 +3102,7 @@ export default function StreamPage({
                         {movieCategories.map(cat => (
                           <button 
                             key={cat}
-                            onClick={() => { setSelectedMovieCategory(cat); setMoviesLimit(32); }}
+                            onClick={() => handleSelectMovieCategory(cat)}
                             className={`letter-btn ${selectedMovieCategory === cat ? 'active' : ''}`}
                             style={{ minWidth: 'auto', padding: '8px 16px', fontSize: '13px', fontWeight: 'bold' }}
                           >

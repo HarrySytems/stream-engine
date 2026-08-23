@@ -7,6 +7,17 @@ export const dynamic = 'force-dynamic';
 
 const VALID_TABS = ['inicio', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
 
+const MOVIE_CATEGORIES = [
+  'Todos',
+  'Acción',
+  'Terror',
+  'Comedia',
+  'Ciencia Ficción',
+  'Drama',
+  'Infantil',
+  'Documentales'
+];
+
 function loadData() {
   let peliculas = [];
   let canales = [];
@@ -37,6 +48,17 @@ export async function generateMetadata({ params }) {
   const { peliculas, canales } = loadData();
   const slugRoute = slug[0].toLowerCase();
   const targetSlug = slug.length > 1 ? slug[1] : slug[0];
+
+  // Caso: Subcategoría de Películas (ej: /peliculas/terror o /peliculas/accion)
+  if (slugRoute === 'peliculas' && slug.length > 1) {
+    const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(targetSlug));
+    if (matchedCategory) {
+      return {
+        title: `Películas de ${matchedCategory} - FilmTV Streaming Gratis`,
+        description: `Explora las mejores películas de ${matchedCategory} online en español latino y subtitulado en FilmTV.`
+      };
+    }
+  }
 
   let foundItem = null;
 
@@ -99,6 +121,7 @@ export default async function SlugPage({ params }) {
 
   let initialActiveItem = null;
   let initialTab = 'inicio';
+  let initialMovieCategory = 'Todos';
 
   if (slug && slug.length > 0) {
     const firstPart = slug[0].toLowerCase();
@@ -107,10 +130,21 @@ export default async function SlugPage({ params }) {
     if (VALID_TABS.includes(firstPart) && !secondPart) {
       initialTab = firstPart;
     } else {
-      // Buscar el elemento solicitado
       const targetSlug = secondPart || firstPart;
 
-      if (firstPart === 'canal') {
+      // Verificar si es una subcategoría de películas (ej: /peliculas/terror)
+      if (firstPart === 'peliculas' && secondPart) {
+        const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(secondPart));
+        if (matchedCategory) {
+          initialTab = 'peliculas';
+          initialMovieCategory = matchedCategory;
+          initialActiveItem = null;
+        } else {
+          // Si no es un nombre de categoría, buscar si es una película
+          initialActiveItem = findItemBySlug(peliculas, targetSlug, 'pelicula');
+          initialTab = 'peliculas';
+        }
+      } else if (firstPart === 'canal') {
         initialActiveItem = findItemBySlug(canales, targetSlug, 'canal');
         initialTab = 'tdt';
       } else if (firstPart === 'pelicula') {
@@ -184,6 +218,7 @@ export default async function SlugPage({ params }) {
       initialCanales={canales} 
       initialActiveItem={initialActiveItem}
       initialTab={initialTab}
+      initialMovieCategory={initialMovieCategory}
     />
   );
 }
