@@ -419,7 +419,6 @@ export default function StreamPage({
   const [animeLimit, setAnimeLimit] = useState(32);
   const [docLimit, setDocLimit] = useState(32);
   const [ytLimit, setYtLimit] = useState(32);
-  const [antiAds, setAntiAds] = useState(true);
 
   // Efecto para inicializar el reproductor HLS para canales en vivo con autodetección de CORS y fallback al proxy
   useEffect(() => {
@@ -814,7 +813,6 @@ export default function StreamPage({
     setEpisode(1);
     setCuevanaServers([]);
     setIframeLoading(true);
-    setAntiAds(true);
     setUseProxyForStream(false);
   }, [activeItem]);
 
@@ -2218,19 +2216,6 @@ export default function StreamPage({
                       </button>
                     ))}
                     {loadingCuevana && <span className="loading-text" style={{ marginLeft: '10px' }}>Buscando fuentes en español Latino...</span>}
-                    <button
-                      onClick={() => setAntiAds(prev => !prev)}
-                      className={`server-tab-btn ${antiAds ? 'active' : ''}`}
-                      style={{
-                        marginLeft: 'auto',
-                        border: antiAds ? '1px solid #ffe600' : '1px solid #ff4b4b',
-                        color: antiAds ? '#ffe600' : '#ff4b4b',
-                        backgroundColor: antiAds ? 'rgba(255, 230, 0, 0.1)' : 'rgba(255, 75, 75, 0.1)',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {antiAds ? 'Anti-Publicidad: ON' : 'Anti-Publicidad: OFF'}
-                    </button>
                   </div>
                 </div>
               )}
@@ -2273,7 +2258,6 @@ export default function StreamPage({
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        sandbox={(isYouTubeUrl(allServers[activeServer]?.url || '') || (allServers[activeServer]?.url || '').includes('vidsrc')) ? undefined : (antiAds ? "allow-scripts allow-same-origin allow-forms allow-presentation allow-top-navigation-by-user-activation allow-popups allow-popups-to-escape-sandbox" : undefined)}
                         className="player-iframe"
                       />
                     )}
