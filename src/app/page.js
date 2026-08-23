@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   let initialPeliculas = [];
   let initialEstrenos = [];
+  let initialTvCable = [];
   let canales = [];
 
   try {
@@ -60,6 +61,16 @@ export default async function Home() {
   }
 
   try {
+    const fileTvCablePath = path.join(process.cwd(), 'tvcable.json');
+    if (fs.existsSync(fileTvCablePath)) {
+      const fileTvCableData = fs.readFileSync(fileTvCablePath, 'utf-8');
+      initialTvCable = JSON.parse(fileTvCableData);
+    }
+  } catch (error) {
+    console.error("Error reading tvcable.json in Home:", error);
+  }
+
+  try {
     const fileCanalesPath = path.join(process.cwd(), 'canales.json');
     const fileCanalesData = fs.readFileSync(fileCanalesPath, 'utf-8');
     canales = JSON.parse(fileCanalesData);
@@ -70,7 +81,8 @@ export default async function Home() {
   return (
     <StreamPage 
       initialPeliculas={initialPeliculas} 
-      initialEstrenos={initialEstrenos} 
+      initialEstrenos={initialEstrenos}
+      initialTvCable={initialTvCable} 
       initialCanales={canales} 
     />
   );

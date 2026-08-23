@@ -309,19 +309,22 @@ function HeroLiveStream({ channel, onSelectChannel }) {
 export default function StreamPage({ 
   initialPeliculas = [], 
   initialEstrenos = [],
+  initialTvCable = [],
   initialCanales = [], 
   initialActiveItem = null, 
   initialTab = 'inicio',
   initialMovieCategory = 'Todos',
-  initialEstrenosCategory = 'Todos'
+  initialEstrenosCategory = 'Todos',
+  initialTvCableCategory = 'Todos'
 }) {
   // Estado para la pantalla de presentación (Splash Screen)
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOutSplash, setFadeOutSplash] = useState(false);
 
-  // Catálogo de películas, estrenos y canales
+  // Catálogo de películas, estrenos, TV Cable y canales
   const [peliculas, setPeliculas] = useState(initialPeliculas || []);
   const [estrenos, setEstrenos] = useState(initialEstrenos || []);
+  const [tvCable, setTvCable] = useState(initialTvCable || []);
   const [canales] = useState(initialCanales || []);
 
   // Estados de reproducción y navegación
@@ -393,6 +396,8 @@ export default function StreamPage({
         slug = `peliculas/${createSlug(selectedMovieCategory)}`;
       } else if (activeTab === 'estrenos' && selectedEstrenosCategory && selectedEstrenosCategory !== 'Todos') {
         slug = `estrenos/${createSlug(selectedEstrenosCategory)}`;
+      } else if (activeTab === 'tvcable' && selectedTvCableCategory && selectedTvCableCategory !== 'Todos') {
+        slug = `tvcable/${createSlug(selectedTvCableCategory)}`;
       }
       const targetUrl = slug ? `/${slug}` : '/';
       if (window.location.pathname !== targetUrl) {
@@ -421,6 +426,18 @@ export default function StreamPage({
       const targetUrl = slug ? `/estrenos/${slug}` : '/estrenos';
       if (window.location.pathname !== targetUrl) {
         window.history.pushState({ tab: 'estrenos', category: cat }, '', targetUrl);
+      }
+    }
+  };
+
+  const handleSelectTvCableCategory = (cat) => {
+    setSelectedTvCableCategory(cat);
+    setTvCableLimit(32);
+    if (typeof window !== 'undefined') {
+      const slug = cat === 'Todos' ? '' : createSlug(cat);
+      const targetUrl = slug ? `/tvcable/${slug}` : '/tvcable';
+      if (window.location.pathname !== targetUrl) {
+        window.history.pushState({ tab: 'tvcable', category: cat }, '', targetUrl);
       }
     }
   };
@@ -592,10 +609,12 @@ export default function StreamPage({
   const [selectedLetter, setSelectedLetter] = useState('Todos');
   const [selectedMovieCategory, setSelectedMovieCategory] = useState(initialMovieCategory || 'Todos');
   const [selectedEstrenosCategory, setSelectedEstrenosCategory] = useState(initialEstrenosCategory || 'Todos');
+  const [selectedTvCableCategory, setSelectedTvCableCategory] = useState(initialTvCableCategory || 'Todos');
   const [selectedSeriesLetter, setSelectedSeriesLetter] = useState('Todos');
 
   // Límites de paginación
   const [estrenosLimit, setEstrenosLimit] = useState(32);
+  const [tvCableLimit, setTvCableLimit] = useState(32);
   const [moviesLimit, setMoviesLimit] = useState(32);
   const [seriesLimit, setSeriesLimit] = useState(32);
   const [searchLimit, setSearchLimit] = useState(32);
@@ -647,6 +666,21 @@ export default function StreamPage({
       .catch((err) => console.error("Error al cargar estrenos:", err));
   }, []);
 
+  // Cargar TV Cable en segundo plano
+  useEffect(() => {
+    fetch('/api/tvcable')
+      .then((res) => {
+        if (!res.ok) throw new Error('Error al cargar TV Cable');
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTvCable(data);
+        }
+      })
+      .catch((err) => console.error("Error al cargar TV Cable:", err));
+  }, []);
+
   // Cargar el catálogo completo asíncronamente en segundo plano para optimizar el rendimiento de inicio
   useEffect(() => {
     fetch('/api/catalog')
@@ -666,7 +700,7 @@ export default function StreamPage({
               const first = parts[0].toLowerCase();
               const second = parts.length > 1 ? parts[1] : null;
               if (second) {
-                const found = findItemBySlug(data, second) || findItemBySlug(estrenos, second) || findItemBySlug(canales, second);
+                const found = findItemBySlug(data, second) || findItemBySlug(estrenos, second) || findItemBySlug(tvCable, second) || findItemBySlug(canales, second);
                 if (found) {
                   setActiveItem(found);
                 }
@@ -676,7 +710,7 @@ export default function StreamPage({
         }
       })
       .catch((err) => console.error("Error al cargar el catálogo completo:", err));
-  }, [canales, estrenos]);
+  }, [canales, estrenos, tvCable]);
 
   // Soporte para botones Atrás / Adelante del navegador (popstate)
   useEffect(() => {
@@ -692,6 +726,22 @@ export default function StreamPage({
       const parts = path.split('/');
       const first = parts[0].toLowerCase();
       const second = parts.length > 1 ? parts[1] : null;
+
+      if (first === 'tvcable') {
+        if (!second || second === 'todos') {
+          setActiveItem(null);
+          setActiveTab('tvcable');
+          setSelectedTvCableCategory('Todos');
+          return;
+        }
+        const matchedCategory = tvCableCategories.find(c => createSlug(c) === createSlug(second));
+        if (matchedCategory) {
+          setActiveItem(null);
+          setActiveTab('tvcable');
+          setSelectedTvCableCategory(matchedCategory);
+          return;
+        }
+      }
 
       if (first === 'estrenos') {
         if (!second || second === 'todos') {
@@ -725,7 +775,7 @@ export default function StreamPage({
         }
       }
 
-      const VALID_TABS = ['inicio', 'estrenos', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
+      const VALID_TABS = ['inicio', 'estrenos', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'tvcable', 'free', 'favoritos'];
       if (VALID_TABS.includes(first) && !second) {
         setActiveItem(null);
         setActiveTab(first);
@@ -735,14 +785,17 @@ export default function StreamPage({
       const targetSlug = second || first;
       let found = null;
       if (first === 'canal' || first === 'tdt') {
-        found = findItemBySlug(canales, targetSlug, 'canal');
+        found = findItemBySlug(canales, targetSlug, 'canal') || findItemBySlug(tvCable, targetSlug, 'canal');
+      } else if (first === 'tvcable') {
+        found = findItemBySlug(tvCable, targetSlug, 'canal');
       } else {
-        found = findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+        found = findItemBySlug(tvCable, targetSlug) || findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
       }
 
       if (found) {
         setActiveItem(found);
-        if (found.tipo === 'canal') setActiveTab('tdt');
+        if (found.pais === 'TV Cable') setActiveTab('tvcable');
+        else if (found.tipo === 'canal') setActiveTab('tdt');
         else if (found.categoria === 'Anime') setActiveTab('anime');
         else if (found.categoria === 'Clásicos') setActiveTab('clasicos');
         else if (found.tipo === 'serie') setActiveTab('series');
@@ -754,7 +807,7 @@ export default function StreamPage({
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [peliculas, estrenos, canales]);
+  }, [peliculas, estrenos, tvCable, canales]);
 
   // Sincronizar el título de la pestaña del navegador (document.title) en tiempo real e inteligente
   useEffect(() => {
@@ -764,6 +817,15 @@ export default function StreamPage({
       const title = activeItem.nombre || activeItem.titulo || 'Reproduciendo';
       const year = activeItem.año ? ` (${activeItem.año})` : '';
       document.title = `${title}${year} - FilmTV`;
+      return;
+    }
+
+    if (activeTab === 'tvcable') {
+      if (selectedTvCableCategory && selectedTvCableCategory !== 'Todos') {
+        document.title = `TV Cable: ${selectedTvCableCategory} - FilmTV`;
+      } else {
+        document.title = '📡 Canales de TV Cable en Vivo - FilmTV';
+      }
       return;
     }
 
@@ -793,12 +855,13 @@ export default function StreamPage({
       manga: 'Manga - FilmTV',
       clasicos: 'Clásicos - FilmTV',
       tdt: 'Canales en Vivo TDT - FilmTV',
+      tvcable: '📡 TV Cable en Vivo - FilmTV',
       free: 'Contenido Gratis - FilmTV',
       favoritos: 'Mis Favoritos - FilmTV'
     };
 
     document.title = tabTitles[activeTab] || 'FilmTV';
-  }, [activeItem, activeTab, selectedMovieCategory]);
+  }, [activeItem, activeTab, selectedMovieCategory, selectedEstrenosCategory, selectedTvCableCategory]);
 
   // Servidores de reproducción disponibles
   const servers = [
@@ -1532,6 +1595,17 @@ export default function StreamPage({
     'Infantil'
   ];
 
+  const tvCableCategories = [
+    'Todos',
+    'Cine y Series',
+    'Documentales',
+    'Infantiles',
+    'Deportes',
+    'Música',
+    'Noticias',
+    'Variedades'
+  ];
+
   const filterMoviesByCategory = (list, category) => {
     if (!category || category === 'Todos') return list;
     const catNorm = category.toLowerCase();
@@ -1550,6 +1624,12 @@ export default function StreamPage({
       const itemCat = (item.categoria || '').toLowerCase();
       return itemCat.includes(catNorm) || (catNorm === 'terror' && itemCat.includes('horror'));
     });
+  };
+
+  const filterTvCableByCategory = (list, category) => {
+    if (!category || category === 'Todos') return list;
+    const catNorm = category.toLowerCase();
+    return list.filter(item => (item.categoria || '').toLowerCase() === catNorm);
   };
 
   // Memoized lists to eliminate CPU/Render Lag
@@ -2031,6 +2111,16 @@ export default function StreamPage({
           <path d="M12 2s-1.5 6-3 6c-1.5 0-3-1.5-3-3s1.5-3 3-3z"></path>
           <path d="M12 2s1.5 6 3 6c1.5 0 3-1.5 3-3s-1.5-3-3-3z"></path>
           <path d="M12 8v3"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'tvcable',
+      label: 'TV Cable',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+          <polyline points="17 2 12 7 7 2"></polyline>
         </svg>
       )
     },
@@ -3198,6 +3288,90 @@ export default function StreamPage({
                               onPlay={handleCardDoubleClick}
                             />
                           </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {activeTab === 'tvcable' && (
+                    <div className="tab-peliculas-container">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                        <span style={{ fontSize: '28px' }}>📡</span>
+                        <h2 className="section-title" style={{ margin: 0 }}>
+                          {selectedTvCableCategory === 'Todos' ? 'Canales de TV Cable en Vivo' : `TV Cable: ${selectedTvCableCategory}`}
+                        </h2>
+                      </div>
+
+                      <div className="alphabet-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+                        {tvCableCategories.map(cat => (
+                          <button 
+                            key={cat}
+                            onClick={() => handleSelectTvCableCategory(cat)}
+                            className={`letter-btn ${selectedTvCableCategory === cat ? 'active' : ''}`}
+                            style={{ minWidth: 'auto', padding: '8px 16px', fontSize: '13px', fontWeight: 'bold' }}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+
+                      {(() => {
+                        const filtered = filterTvCableByCategory(tvCable, selectedTvCableCategory);
+                        const visible = filtered.slice(0, tvCableLimit);
+
+                        if (visible.length === 0) {
+                          return (
+                            <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
+                              <p>Cargando canales de TV Cable disponibles...</p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <>
+                            <div className="cards-grid">
+                              {visible.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card"
+                                  onClick={() => handleCardClick(item)}
+                                  onDoubleClick={() => handleCardDoubleClick(item)}
+                                >
+                                  <div className="poster-container" style={{ padding: '0', backgroundColor: '#0e0f17' }}>
+                                    <ChannelLogo 
+                                      item={item} 
+                                      className="movie-poster" 
+                                      style={{ objectFit: 'contain', padding: '20px', backgroundColor: '#0e0f17', width: '100%', height: '100%', top: '0', left: '0', position: 'absolute' }}
+                                    />
+                                    <span className="channel-live-badge" style={{ backgroundColor: '#7b2cbf', color: '#ffffff', fontWeight: 'bold' }}>
+                                      <span className="live-dot"></span> CABLE
+                                    </span>
+                                    <div className="card-play-overlay">
+                                      <div className="play-arrow"></div>
+                                    </div>
+                                  </div>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.nombre}</h3>
+                                    <div className="movie-card-meta">
+                                      <span className="movie-card-year">TV Cable</span>
+                                      <span className="movie-card-genre">{item.categoria}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {filtered.length > tvCableLimit && (
+                              <div className="load-more-container" style={{ textAlign: 'center', marginTop: '32px' }}>
+                                <button 
+                                  className="load-more-btn"
+                                  onClick={() => setTvCableLimit(prev => prev + 32)}
+                                >
+                                  Cargar más canales
+                                </button>
+                              </div>
+                            )}
+                          </>
                         );
                       })()}
                     </div>

@@ -1,0 +1,32 @@
+name: Actualizar TV Cable
+
+on:
+  schedule:
+    - cron: '0 5 * * *' # Se ejecuta diariamente a las 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Ejecutar scraper de TV Cable
+        run: |
+          pip install requests
+          python python/scraper_tvcable.py
+
+      - name: Guardar cambios
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add tvcable.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m 'TV Cable actualizado automáticamente' && git push)

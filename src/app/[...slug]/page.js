@@ -5,7 +5,7 @@ import { findItemBySlug, createSlug } from '../../utils/slugify';
 
 export const dynamic = 'force-dynamic';
 
-const VALID_TABS = ['inicio', 'estrenos', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
+const VALID_TABS = ['inicio', 'estrenos', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'tvcable', 'free', 'favoritos'];
 
 const MOVIE_CATEGORIES = [
   'Todos',
@@ -30,9 +30,21 @@ const ESTRENOS_CATEGORIES = [
   'Infantil'
 ];
 
+const TVCABLE_CATEGORIES = [
+  'Todos',
+  'Cine y Series',
+  'Documentales',
+  'Infantiles',
+  'Deportes',
+  'Música',
+  'Noticias',
+  'Variedades'
+];
+
 function loadData() {
   let peliculas = [];
   let estrenos = [];
+  let tvcable = [];
   let canales = [];
 
   try {
@@ -54,6 +66,16 @@ function loadData() {
   }
 
   try {
+    const fileTvCablePath = path.join(process.cwd(), 'tvcable.json');
+    if (fs.existsSync(fileTvCablePath)) {
+      const fileTvCableData = fs.readFileSync(fileTvCablePath, 'utf-8');
+      tvcable = JSON.parse(fileTvCableData);
+    }
+  } catch (error) {
+    console.error("Error reading tvcable.json in [...slug]:", error);
+  }
+
+  try {
     const fileCanalesPath = path.join(process.cwd(), 'canales.json');
     const fileCanalesData = fs.readFileSync(fileCanalesPath, 'utf-8');
     canales = JSON.parse(fileCanalesData);
@@ -61,20 +83,29 @@ function loadData() {
     console.error("Error reading canales.json in [...slug]:", error);
   }
 
-  return { peliculas, estrenos, canales };
+  return { peliculas, estrenos, tvcable, canales };
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = params;
   if (!slug || !slug.length) return {};
 
-  const { peliculas, estrenos, canales } = loadData();
+  const { peliculas, estrenos, tvcable, canales } = loadData();
   const slugRoute = slug[0].toLowerCase();
-  
-  // Si tiene 3 partes (ej: /pelicula/terror/nombre-pelicula), el item es la última parte
   const targetSlug = slug[slug.length - 1];
 
-  // Caso: Subcategoría de Estrenos (ej: /estrenos/series o /estrenos/terror)
+  // Caso: Subcategoría de TV Cable
+  if (slugRoute === 'tvcable' && slug.length === 2) {
+    const matchedCategory = TVCABLE_CATEGORIES.find(c => createSlug(c) === createSlug(slug[1]));
+    if (matchedCategory) {
+      return {
+        title: `Canales de TV Cable (${matchedCategory}) - FilmTV`,
+        description: `Disfruta de canales de TV Cable en vivo de ${matchedCategory} en streaming gratis.`
+      };
+    }
+  }
+
+  // Caso: Subcategoría de Estrenos
   if (slugRoute === 'estrenos' && slug.length === 2) {
     const matchedCategory = ESTRENOS_CATEGORIES.find(c => createSlug(c) === createSlug(slug[1]));
     if (matchedCategory) {
@@ -85,7 +116,7 @@ export async function generateMetadata({ params }) {
     }
   }
 
-  // Caso: Subcategoría de Películas (ej: /peliculas/terror)
+  // Caso: Subcategoría de Películas
   if (slugRoute === 'peliculas' && slug.length === 2) {
     const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(slug[1]));
     if (matchedCategory) {
@@ -100,6 +131,8 @@ export async function generateMetadata({ params }) {
 
   if (slugRoute === 'canal' || slugRoute === 'tdt') {
     foundItem = findItemBySlug(canales, targetSlug, 'canal');
+  } else if (slugRoute === 'tvcable') {
+    foundItem = findItemBySlug(tvcable, targetSlug, 'canal');
   } else if (slugRoute === 'estrenos') {
     foundItem = findItemBySlug(estrenos, targetSlug);
   } else if (slugRoute === 'pelicula' || slugRoute === 'peliculas') {
@@ -112,7 +145,7 @@ export async function generateMetadata({ params }) {
     foundItem = findItemBySlug(peliculas, targetSlug, 'Clásicos');
   } else {
     // Buscar en todos
-    foundItem = findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+    foundItem = findItemBySlug(tvcable, targetSlug) || findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
   }
 
   if (foundItem) {
@@ -139,6 +172,13 @@ export async function generateMetadata({ params }) {
     };
   }
 
+  if (slugRoute === 'tvcable') {
+    return {
+      title: '📡 Canales de TV Cable en Vivo - FilmTV Streaming Gratis',
+      description: 'Disfruta de más de 500 canales de televisión por cable en vivo (Cine, Series, Deportes, Infantiles, Documentales).'
+    };
+  }
+
   if (slugRoute === 'estrenos') {
     return {
       title: '🔥 Estrenos 2025 - 2026 - FilmTV Streaming Gratis',
@@ -162,12 +202,13 @@ export async function generateMetadata({ params }) {
 
 export default async function SlugPage({ params }) {
   const { slug } = params;
-  const { peliculas, estrenos, canales } = loadData();
+  const { peliculas, estrenos, tvcable, canales } = loadData();
 
   let initialActiveItem = null;
   let initialTab = 'inicio';
   let initialMovieCategory = 'Todos';
   let initialEstrenosCategory = 'Todos';
+  let initialTvCableCategory = 'Todos';
 
   if (slug && slug.length > 0) {
     const firstPart = slug[0].toLowerCase();
@@ -177,8 +218,20 @@ export default async function SlugPage({ params }) {
     if (VALID_TABS.includes(firstPart) && !secondPart) {
       initialTab = firstPart;
     } else {
-      // 1. Caso: /estrenos/categoria o /estrenos/nombre-estreno
-      if (firstPart === 'estrenos' && secondPart) {
+      // 1. Caso: /tvcable/categoria o /tvcable/nombre-canal
+      if (firstPart === 'tvcable' && secondPart) {
+        const matchedCategory = TVCABLE_CATEGORIES.find(c => createSlug(c) === createSlug(secondPart));
+        if (matchedCategory) {
+          initialTab = 'tvcable';
+          initialTvCableCategory = matchedCategory;
+          initialActiveItem = null;
+        } else {
+          initialActiveItem = findItemBySlug(tvcable, secondPart, 'canal');
+          initialTab = 'tvcable';
+        }
+      }
+      // 2. Caso: /estrenos/categoria o /estrenos/nombre-estreno
+      else if (firstPart === 'estrenos' && secondPart) {
         const matchedCategory = ESTRENOS_CATEGORIES.find(c => createSlug(c) === createSlug(secondPart));
         if (matchedCategory) {
           initialTab = 'estrenos';
@@ -189,7 +242,7 @@ export default async function SlugPage({ params }) {
           initialTab = 'estrenos';
         }
       }
-      // 2. Caso: /pelicula/terror/nombre-pelicula (3 segmentos)
+      // 3. Caso: /pelicula/terror/nombre-pelicula (3 segmentos)
       else if (firstPart === 'pelicula' && thirdPart) {
         initialActiveItem = findItemBySlug(estrenos, thirdPart, 'pelicula') || findItemBySlug(peliculas, thirdPart, 'pelicula');
         initialTab = 'peliculas';
@@ -197,7 +250,7 @@ export default async function SlugPage({ params }) {
           initialMovieCategory = initialActiveItem.categoria;
         }
       } 
-      // 3. Caso: /peliculas/terror (2 segmentos de subcategoría)
+      // 4. Caso: /peliculas/terror (2 segmentos de subcategoría)
       else if (firstPart === 'peliculas' && secondPart) {
         const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(secondPart));
         if (matchedCategory) {
@@ -205,12 +258,11 @@ export default async function SlugPage({ params }) {
           initialMovieCategory = matchedCategory;
           initialActiveItem = null;
         } else {
-          // Si no era nombre de categoría, buscar si es película directa
           initialActiveItem = findItemBySlug(estrenos, secondPart, 'pelicula') || findItemBySlug(peliculas, secondPart, 'pelicula');
           initialTab = 'peliculas';
         }
       } 
-      // 4. Caso: /pelicula/nombre-pelicula (2 segmentos directo)
+      // 5. Caso: /pelicula/nombre-pelicula (2 segmentos directo)
       else if (firstPart === 'pelicula' && secondPart) {
         initialActiveItem = findItemBySlug(estrenos, secondPart, 'pelicula') || findItemBySlug(peliculas, secondPart, 'pelicula');
         initialTab = 'peliculas';
@@ -218,30 +270,30 @@ export default async function SlugPage({ params }) {
           initialMovieCategory = initialActiveItem.categoria;
         }
       } 
-      // 5. Caso: /canal/nombre-canal
+      // 6. Caso: /canal/nombre-canal
       else if (firstPart === 'canal' && secondPart) {
-        initialActiveItem = findItemBySlug(canales, secondPart, 'canal');
+        initialActiveItem = findItemBySlug(canales, secondPart, 'canal') || findItemBySlug(tvcable, secondPart, 'canal');
         initialTab = 'tdt';
       } 
-      // 6. Caso: /serie/nombre-serie
+      // 7. Caso: /serie/nombre-serie
       else if (firstPart === 'serie' && secondPart) {
         initialActiveItem = findItemBySlug(estrenos, secondPart, 'serie') || findItemBySlug(peliculas, secondPart, 'serie');
         initialTab = 'series';
       } 
-      // 7. Caso: /anime/nombre-anime
+      // 8. Caso: /anime/nombre-anime
       else if (firstPart === 'anime' && secondPart) {
         initialActiveItem = findItemBySlug(peliculas, secondPart, 'Anime');
         initialTab = 'anime';
       } 
-      // 8. Caso: /clasicos/nombre-clasico
+      // 9. Caso: /clasicos/nombre-clasico
       else if (firstPart === 'clasicos' && secondPart) {
         initialActiveItem = findItemBySlug(peliculas, secondPart, 'Clásicos');
         initialTab = 'clasicos';
       } 
-      // 9. Búsqueda genérica
+      // 10. Búsqueda genérica
       else {
         const targetSlug = slug[slug.length - 1];
-        initialActiveItem = findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+        initialActiveItem = findItemBySlug(tvcable, targetSlug) || findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
         if (initialActiveItem) {
           if (initialActiveItem.tipo === 'canal') initialTab = 'tdt';
           else if (initialActiveItem.categoria === 'Anime') initialTab = 'anime';
@@ -296,11 +348,13 @@ export default async function SlugPage({ params }) {
     <StreamPage 
       initialPeliculas={initialPeliculas} 
       initialEstrenos={estrenos}
+      initialTvCable={tvcable}
       initialCanales={canales} 
       initialActiveItem={initialActiveItem}
       initialTab={initialTab}
       initialMovieCategory={initialMovieCategory}
       initialEstrenosCategory={initialEstrenosCategory}
+      initialTvCableCategory={initialTvCableCategory}
     />
   );
 }
