@@ -71,11 +71,11 @@ export async function GET(request) {
   const db = loadAnalytics();
   const now = Date.now();
 
-  // 1. Usuarios activos en vivo (últimos 2 minutos)
+  // 1. Usuarios activos en vivo (últimos 35 segundos)
   global._activeSessions = global._activeSessions || new Map();
   const activeList = [];
   for (const [key, session] of global._activeSessions.entries()) {
-    if (now - session.lastSeen <= 120000) {
+    if (now - session.lastSeen <= 35000) {
       activeList.push(session);
     } else {
       global._activeSessions.delete(key);

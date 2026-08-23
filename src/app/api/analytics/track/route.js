@@ -4,8 +4,7 @@ import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
-// Memoria volátil para usuarios activos en tiempo real (últimos 2 minutos)
-// Clave: sessionId, Valor: { timestamp, country, device, currentAction, title }
+// Memoria volátil para usuarios activos en tiempo real (últimos 35 segundos)
 global._activeSessions = global._activeSessions || new Map();
 global._recentEvents = global._recentEvents || [];
 
@@ -59,7 +58,14 @@ function getTodayKey() {
 
 export async function POST(request) {
   try {
-    const body = await request.json().catch(() => ({}));
+    let body = {};
+    const text = await request.text();
+    if (text) {
+      try {
+        body = JSON.parse(text);
+      } catch (e) {}
+    }
+
     const { action = 'pageview', title = '', type = '', sessionId = '', path = '/' } = body;
 
     const userAgent = request.headers.get('user-agent') || '';
@@ -70,7 +76,13 @@ export async function POST(request) {
                     'PE';
 
     const now = Date.now();
-    const sId = sessionId || `${request.headers.get('x-forwarded-for') || 'guest'}-${userAgent.slice(0, 20)}`;
+    const sId = sessionId || `${request.headers.get('x-forwarded-for') || 'guest'}-${userAgent.slice(0, 15)}`;
+
+    // Si el usuario cerró la pestaña o salió, removerlo inmediatamente
+    if (action === 'leave') {
+      global._activeSessions.delete(sId);
+      return NextResponse.json({ ok: true, onlineCount: global._activeSessions.size });
+    }
 
     // 1. Actualizar memoria de usuarios activos en vivo
     global._activeSessions.set(sId, {
@@ -82,9 +94,9 @@ export async function POST(request) {
       type
     });
 
-    // Limpiar sesiones inactivas (más de 2 minutos sin ping)
+    // Limpiar sesiones inactivas (más de 35 segundos sin ping)
     for (const [key, session] of global._activeSessions.entries()) {
-      if (now - session.lastSeen > 120000) {
+      if (now - session.lastSeen > 35000) {
         global._activeSessions.delete(key);
       }
     }

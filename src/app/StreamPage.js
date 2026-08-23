@@ -570,39 +570,74 @@ export default function StreamPage({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    let sId = sessionStorage.getItem('filmtv_sid');
+    if (!sId) {
+      sId = 's_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+      sessionStorage.setItem('filmtv_sid', sId);
+    }
+
     const trackEvent = (action, extra = {}) => {
       try {
         const payload = {
           action,
+          sessionId: sId,
           path: window.location.pathname,
           title: activeItem ? (activeItem.titulo || activeItem.nombre) : '',
           type: activeItem ? activeItem.tipo : '',
           ...extra
         };
 
-        if (navigator.sendBeacon) {
-          const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        const jsonStr = JSON.stringify(payload);
+
+        if (action === 'leave' && navigator.sendBeacon) {
+          const blob = new Blob([jsonStr], { type: 'application/json' });
           navigator.sendBeacon('/api/analytics/track', blob);
-        } else {
-          fetch('/api/analytics/track', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            keepalive: true
-          }).catch(() => {});
+          return;
         }
+
+        fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: jsonStr,
+          keepalive: true
+        }).catch(() => {});
       } catch (e) {}
     };
 
     // 1. Registrar visita al cargar
     trackEvent('pageview');
 
-    // 2. Latido continuo cada 45 segundos para contar usuarios en vivo
+    // 2. Latido continuo cada 15 segundos para contar usuarios en vivo con alta precisión
     const heartbeat = setInterval(() => {
-      trackEvent('heartbeat');
-    }, 45000);
+      if (document.visibilityState === 'visible') {
+        trackEvent('heartbeat');
+      }
+    }, 15000);
 
-    return () => clearInterval(heartbeat);
+    // 3. Detectar cierre inmediato de pestaña o navegación fuera
+    const handleLeave = () => {
+      trackEvent('leave');
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        trackEvent('leave');
+      } else if (document.visibilityState === 'visible') {
+        trackEvent('heartbeat');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleLeave);
+    window.addEventListener('pagehide', handleLeave);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(heartbeat);
+      handleLeave();
+      window.removeEventListener('beforeunload', handleLeave);
+      window.removeEventListener('pagehide', handleLeave);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Registrar reproducción de contenido cuando activeItem cambia
@@ -610,8 +645,10 @@ export default function StreamPage({
     if (!activeItem || typeof window === 'undefined') return;
 
     try {
+      const sId = sessionStorage.getItem('filmtv_sid') || '';
       const payload = {
         action: 'play',
+        sessionId: sId,
         path: window.location.pathname,
         title: activeItem.titulo || activeItem.nombre || '',
         type: activeItem.tipo || 'pelicula'
