@@ -308,6 +308,7 @@ function HeroLiveStream({ channel, onSelectChannel }) {
 
 export default function StreamPage({ 
   initialPeliculas = [], 
+  initialEstrenos = [],
   initialCanales = [], 
   initialActiveItem = null, 
   initialTab = 'inicio',
@@ -317,8 +318,9 @@ export default function StreamPage({
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOutSplash, setFadeOutSplash] = useState(false);
 
-  // Catálogo de películas y canales
+  // Catálogo de películas, estrenos y canales
   const [peliculas, setPeliculas] = useState(initialPeliculas || []);
+  const [estrenos, setEstrenos] = useState(initialEstrenos || []);
   const [canales] = useState(initialCanales || []);
 
   // Estados de reproducción y navegación
@@ -576,6 +578,7 @@ export default function StreamPage({
   const [selectedSeriesLetter, setSelectedSeriesLetter] = useState('Todos');
 
   // Límites de paginación
+  const [estrenosLimit, setEstrenosLimit] = useState(32);
   const [moviesLimit, setMoviesLimit] = useState(32);
   const [seriesLimit, setSeriesLimit] = useState(32);
   const [searchLimit, setSearchLimit] = useState(32);
@@ -612,6 +615,21 @@ export default function StreamPage({
     };
   }, []);
 
+  // Cargar estrenos en segundo plano
+  useEffect(() => {
+    fetch('/api/estrenos')
+      .then((res) => {
+        if (!res.ok) throw new Error('Error al cargar estrenos');
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setEstrenos(data);
+        }
+      })
+      .catch((err) => console.error("Error al cargar estrenos:", err));
+  }, []);
+
   // Cargar el catálogo completo asíncronamente en segundo plano para optimizar el rendimiento de inicio
   useEffect(() => {
     fetch('/api/catalog')
@@ -631,7 +649,7 @@ export default function StreamPage({
               const first = parts[0].toLowerCase();
               const second = parts.length > 1 ? parts[1] : null;
               if (second) {
-                const found = findItemBySlug(data, second) || findItemBySlug(canales, second);
+                const found = findItemBySlug(data, second) || findItemBySlug(estrenos, second) || findItemBySlug(canales, second);
                 if (found) {
                   setActiveItem(found);
                 }
@@ -641,7 +659,7 @@ export default function StreamPage({
         }
       })
       .catch((err) => console.error("Error al cargar el catálogo completo:", err));
-  }, [canales]);
+  }, [canales, estrenos]);
 
   // Soporte para botones Atrás / Adelante del navegador (popstate)
   useEffect(() => {
@@ -674,7 +692,7 @@ export default function StreamPage({
         }
       }
 
-      const VALID_TABS = ['inicio', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
+      const VALID_TABS = ['inicio', 'estrenos', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
       if (VALID_TABS.includes(first) && !second) {
         setActiveItem(null);
         setActiveTab(first);
@@ -686,7 +704,7 @@ export default function StreamPage({
       if (first === 'canal' || first === 'tdt') {
         found = findItemBySlug(canales, targetSlug, 'canal');
       } else {
-        found = findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+        found = findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
       }
 
       if (found) {
@@ -703,9 +721,8 @@ export default function StreamPage({
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [peliculas, canales]);
+  }, [peliculas, estrenos, canales]);
 
-  // Servidores de reproducción disponibles
   // Sincronizar el título de la pestaña del navegador (document.title) en tiempo real e inteligente
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -728,6 +745,7 @@ export default function StreamPage({
 
     const tabTitles = {
       inicio: 'FilmTV - Películas, Series y Canales en Streaming Gratis',
+      estrenos: '🔥 Estrenos 2025 - 2026 - FilmTV',
       series: 'Series - FilmTV',
       anime: 'Anime - FilmTV',
       manga: 'Manga - FilmTV',
@@ -1863,6 +1881,15 @@ export default function StreamPage({
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      )
+    },
+    {
+      id: 'estrenos',
+      label: 'Estrenos',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
         </svg>
       )
     },
@@ -3108,6 +3135,70 @@ export default function StreamPage({
                           </div>
                         );
                       })()}
+                    </div>
+                  )}
+
+                  {activeTab === 'estrenos' && (
+                    <div className="tab-peliculas-container">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                        <span style={{ fontSize: '28px' }}>🔥</span>
+                        <h2 className="section-title" style={{ margin: 0 }}>
+                          Estrenos de Cine y Streaming (2025 - 2026)
+                        </h2>
+                      </div>
+
+                      {estrenos.length === 0 ? (
+                        <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
+                          <p>Cargando los últimos estrenos disponibles...</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="cards-grid">
+                            {estrenos.slice(0, estrenosLimit).map((item) => (
+                              <div 
+                                key={item.id} 
+                                className="movie-card"
+                                onClick={() => handleCardClick(item)}
+                                onDoubleClick={() => handleCardDoubleClick(item)}
+                              >
+                                <div className="poster-container">
+                                  <img 
+                                    src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                    alt={item.titulo} 
+                                    className="movie-poster"
+                                    loading="lazy" 
+                                  />
+                                  <div className="card-play-overlay">
+                                    <div className="play-arrow"></div>
+                                  </div>
+                                  <span className="movie-lang-badge" style={{ backgroundColor: '#ff0055', color: '#ffffff', fontWeight: 'bold' }}>
+                                    🔥 ESTRENO
+                                  </span>
+                                  <span className="rating-badge">★ {item.valoracion}</span>
+                                </div>
+                                <div className="movie-card-info">
+                                  <h3 className="movie-card-title">{item.titulo}</h3>
+                                  <div className="movie-card-meta">
+                                    <span>{item.año}</span>
+                                    <span className="genre-tag">{item.categoria}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {estrenos.length > estrenosLimit && (
+                            <div className="load-more-container" style={{ textAlign: 'center', marginTop: '32px' }}>
+                              <button 
+                                className="load-more-btn"
+                                onClick={() => setEstrenosLimit(prev => prev + 32)}
+                              >
+                                Cargar más estrenos
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   )}
 

@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   let initialPeliculas = [];
+  let initialEstrenos = [];
   let canales = [];
 
   try {
@@ -49,6 +50,16 @@ export default async function Home() {
   }
 
   try {
+    const fileEstrenosPath = path.join(process.cwd(), 'estrenos.json');
+    if (fs.existsSync(fileEstrenosPath)) {
+      const fileEstrenosData = fs.readFileSync(fileEstrenosPath, 'utf-8');
+      initialEstrenos = JSON.parse(fileEstrenosData);
+    }
+  } catch (error) {
+    console.error("Error reading estrenos.json in Home:", error);
+  }
+
+  try {
     const fileCanalesPath = path.join(process.cwd(), 'canales.json');
     const fileCanalesData = fs.readFileSync(fileCanalesPath, 'utf-8');
     canales = JSON.parse(fileCanalesData);
@@ -56,5 +67,11 @@ export default async function Home() {
     console.error("Error reading canales.json:", error);
   }
 
-  return <StreamPage initialPeliculas={initialPeliculas} initialCanales={canales} />;
+  return (
+    <StreamPage 
+      initialPeliculas={initialPeliculas} 
+      initialEstrenos={initialEstrenos} 
+      initialCanales={canales} 
+    />
+  );
 }

@@ -5,7 +5,7 @@ import { findItemBySlug, createSlug } from '../../utils/slugify';
 
 export const dynamic = 'force-dynamic';
 
-const VALID_TABS = ['inicio', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
+const VALID_TABS = ['inicio', 'estrenos', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
 
 const MOVIE_CATEGORIES = [
   'Todos',
@@ -20,6 +20,7 @@ const MOVIE_CATEGORIES = [
 
 function loadData() {
   let peliculas = [];
+  let estrenos = [];
   let canales = [];
 
   try {
@@ -31,6 +32,16 @@ function loadData() {
   }
 
   try {
+    const fileEstrenosPath = path.join(process.cwd(), 'estrenos.json');
+    if (fs.existsSync(fileEstrenosPath)) {
+      const fileEstrenosData = fs.readFileSync(fileEstrenosPath, 'utf-8');
+      estrenos = JSON.parse(fileEstrenosData);
+    }
+  } catch (error) {
+    console.error("Error reading estrenos.json in [...slug]:", error);
+  }
+
+  try {
     const fileCanalesPath = path.join(process.cwd(), 'canales.json');
     const fileCanalesData = fs.readFileSync(fileCanalesPath, 'utf-8');
     canales = JSON.parse(fileCanalesData);
@@ -38,14 +49,14 @@ function loadData() {
     console.error("Error reading canales.json in [...slug]:", error);
   }
 
-  return { peliculas, canales };
+  return { peliculas, estrenos, canales };
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = params;
   if (!slug || !slug.length) return {};
 
-  const { peliculas, canales } = loadData();
+  const { peliculas, estrenos, canales } = loadData();
   const slugRoute = slug[0].toLowerCase();
   
   // Si tiene 3 partes (ej: /pelicula/terror/nombre-pelicula), el item es la última parte
@@ -66,8 +77,10 @@ export async function generateMetadata({ params }) {
 
   if (slugRoute === 'canal' || slugRoute === 'tdt') {
     foundItem = findItemBySlug(canales, targetSlug, 'canal');
+  } else if (slugRoute === 'estrenos') {
+    foundItem = findItemBySlug(estrenos, targetSlug, 'pelicula');
   } else if (slugRoute === 'pelicula' || slugRoute === 'peliculas') {
-    foundItem = findItemBySlug(peliculas, targetSlug, 'pelicula');
+    foundItem = findItemBySlug(estrenos, targetSlug, 'pelicula') || findItemBySlug(peliculas, targetSlug, 'pelicula');
   } else if (slugRoute === 'serie' || slugRoute === 'series') {
     foundItem = findItemBySlug(peliculas, targetSlug, 'serie');
   } else if (slugRoute === 'anime') {
@@ -75,8 +88,8 @@ export async function generateMetadata({ params }) {
   } else if (slugRoute === 'clasicos') {
     foundItem = findItemBySlug(peliculas, targetSlug, 'Clásicos');
   } else {
-    // Buscar en ambos
-    foundItem = findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+    // Buscar en todos
+    foundItem = findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
   }
 
   if (foundItem) {
@@ -103,6 +116,13 @@ export async function generateMetadata({ params }) {
     };
   }
 
+  if (slugRoute === 'estrenos') {
+    return {
+      title: '🔥 Estrenos 2025 - 2026 - FilmTV Streaming Gratis',
+      description: 'Descubre los últimos estrenos de cine y series 2025 y 2026 en FilmTV. En streaming gratis en español latino.'
+    };
+  }
+
   if (VALID_TABS.includes(slugRoute)) {
     const tabName = slugRoute.charAt(0).toUpperCase() + slugRoute.slice(1);
     return {
@@ -119,7 +139,7 @@ export async function generateMetadata({ params }) {
 
 export default async function SlugPage({ params }) {
   const { slug } = params;
-  const { peliculas, canales } = loadData();
+  const { peliculas, estrenos, canales } = loadData();
 
   let initialActiveItem = null;
   let initialTab = 'inicio';
@@ -133,15 +153,20 @@ export default async function SlugPage({ params }) {
     if (VALID_TABS.includes(firstPart) && !secondPart) {
       initialTab = firstPart;
     } else {
-      // 1. Caso: /pelicula/terror/nombre-pelicula (3 segmentos)
-      if (firstPart === 'pelicula' && thirdPart) {
-        initialActiveItem = findItemBySlug(peliculas, thirdPart, 'pelicula');
+      // 1. Caso: /estrenos/nombre-estreno
+      if (firstPart === 'estrenos' && secondPart) {
+        initialActiveItem = findItemBySlug(estrenos, secondPart, 'pelicula') || findItemBySlug(peliculas, secondPart, 'pelicula');
+        initialTab = 'estrenos';
+      }
+      // 2. Caso: /pelicula/terror/nombre-pelicula (3 segmentos)
+      else if (firstPart === 'pelicula' && thirdPart) {
+        initialActiveItem = findItemBySlug(estrenos, thirdPart, 'pelicula') || findItemBySlug(peliculas, thirdPart, 'pelicula');
         initialTab = 'peliculas';
         if (initialActiveItem && initialActiveItem.categoria) {
           initialMovieCategory = initialActiveItem.categoria;
         }
       } 
-      // 2. Caso: /peliculas/terror (2 segmentos de subcategoría)
+      // 3. Caso: /peliculas/terror (2 segmentos de subcategoría)
       else if (firstPart === 'peliculas' && secondPart) {
         const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(secondPart));
         if (matchedCategory) {
@@ -150,42 +175,42 @@ export default async function SlugPage({ params }) {
           initialActiveItem = null;
         } else {
           // Si no era nombre de categoría, buscar si es película directa
-          initialActiveItem = findItemBySlug(peliculas, secondPart, 'pelicula');
+          initialActiveItem = findItemBySlug(estrenos, secondPart, 'pelicula') || findItemBySlug(peliculas, secondPart, 'pelicula');
           initialTab = 'peliculas';
         }
       } 
-      // 3. Caso: /pelicula/nombre-pelicula (2 segmentos directo)
+      // 4. Caso: /pelicula/nombre-pelicula (2 segmentos directo)
       else if (firstPart === 'pelicula' && secondPart) {
-        initialActiveItem = findItemBySlug(peliculas, secondPart, 'pelicula');
+        initialActiveItem = findItemBySlug(estrenos, secondPart, 'pelicula') || findItemBySlug(peliculas, secondPart, 'pelicula');
         initialTab = 'peliculas';
         if (initialActiveItem && initialActiveItem.categoria) {
           initialMovieCategory = initialActiveItem.categoria;
         }
       } 
-      // 4. Caso: /canal/nombre-canal
+      // 5. Caso: /canal/nombre-canal
       else if (firstPart === 'canal' && secondPart) {
         initialActiveItem = findItemBySlug(canales, secondPart, 'canal');
         initialTab = 'tdt';
       } 
-      // 5. Caso: /serie/nombre-serie
+      // 6. Caso: /serie/nombre-serie
       else if (firstPart === 'serie' && secondPart) {
         initialActiveItem = findItemBySlug(peliculas, secondPart, 'serie');
         initialTab = 'series';
       } 
-      // 6. Caso: /anime/nombre-anime
+      // 7. Caso: /anime/nombre-anime
       else if (firstPart === 'anime' && secondPart) {
         initialActiveItem = findItemBySlug(peliculas, secondPart, 'Anime');
         initialTab = 'anime';
       } 
-      // 7. Caso: /clasicos/nombre-clasico
+      // 8. Caso: /clasicos/nombre-clasico
       else if (firstPart === 'clasicos' && secondPart) {
         initialActiveItem = findItemBySlug(peliculas, secondPart, 'Clásicos');
         initialTab = 'clasicos';
       } 
-      // 8. Búsqueda genérica
+      // 9. Búsqueda genérica
       else {
         const targetSlug = slug[slug.length - 1];
-        initialActiveItem = findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+        initialActiveItem = findItemBySlug(estrenos, targetSlug) || findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
         if (initialActiveItem) {
           if (initialActiveItem.tipo === 'canal') initialTab = 'tdt';
           else if (initialActiveItem.categoria === 'Anime') initialTab = 'anime';
@@ -239,6 +264,7 @@ export default async function SlugPage({ params }) {
   return (
     <StreamPage 
       initialPeliculas={initialPeliculas} 
+      initialEstrenos={estrenos}
       initialCanales={canales} 
       initialActiveItem={initialActiveItem}
       initialTab={initialTab}

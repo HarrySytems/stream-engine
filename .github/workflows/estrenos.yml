@@ -1,0 +1,32 @@
+name: Actualizar Estrenos Diarios
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # Se ejecuta diariamente a las 04:00 UTC (medianoche en América Latina)
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Ejecutar scraper de estrenos
+        run: |
+          pip install requests
+          python python/scraper_estrenos.py
+
+      - name: Guardar cambios
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add estrenos.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m 'Estrenos 2025-2026 actualizados automáticamente' && git push)
