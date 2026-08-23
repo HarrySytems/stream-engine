@@ -57,8 +57,8 @@ GUARANTEED_TDT_CHANNELS = [
     },
     {
         "id": "canal-america-tv",
-        "nombre": "América Televisión (720p)",
-        "url": "https://prepublish.f.qaotic.net/a07/americahls-100056/playlist_720p.m3u8",
+        "nombre": "América Televisión (1080p)",
+        "url": "http://190.93.224.42/AMERICA-TV/index.m3u8",
         "categoria": "TDT / General",
         "pais": "Perú",
         "logo": "https://i.imgur.com/T0T9wWb.png",
@@ -66,11 +66,29 @@ GUARANTEED_TDT_CHANNELS = [
     },
     {
         "id": "canal-atv-peru",
-        "nombre": "ATV Perú (720p)",
-        "url": "https://alba-pe-atv-atvmas.stream.mediatiquestream.com/index.m3u8",
+        "nombre": "ATV (1080p)",
+        "url": "http://190.93.224.42/ATV/index.m3u8",
         "categoria": "TDT / General",
         "pais": "Perú",
         "logo": "https://i.imgur.com/uR6o0sN.png",
+        "tipo": "canal"
+    },
+    {
+        "id": "canal-willax-tv",
+        "nombre": "Willax TV (1080p)",
+        "url": "http://190.93.224.42/WILLAX/index.m3u8",
+        "categoria": "TDT / General",
+        "pais": "Perú",
+        "logo": "https://i.imgur.com/e5k0l2f.png",
+        "tipo": "canal"
+    },
+    {
+        "id": "canal-tv-peru-noticias",
+        "nombre": "TV Perú Noticias (1080p)",
+        "url": "http://190.93.224.42/TV-PERU-NOTICIAS/index.m3u8",
+        "categoria": "Noticias",
+        "pais": "Perú",
+        "logo": "https://i.imgur.com/O6L6x2v.png",
         "tipo": "canal"
     },
     {
