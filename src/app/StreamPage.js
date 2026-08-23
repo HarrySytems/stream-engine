@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { createSlug, getItemUrl, findItemBySlug } from '../utils/slugify';
 
 // Deterministic helper to get a language badge
 const getLangBadge = (item) => {
@@ -305,7 +306,12 @@ function HeroLiveStream({ channel, onSelectChannel }) {
   );
 }
 
-export default function StreamPage({ initialPeliculas, initialCanales }) {
+export default function StreamPage({ 
+  initialPeliculas = [], 
+  initialCanales = [], 
+  initialActiveItem = null, 
+  initialTab = 'inicio' 
+}) {
   // Estado para la pantalla de presentación (Splash Screen)
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOutSplash, setFadeOutSplash] = useState(false);
@@ -315,7 +321,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [canales] = useState(initialCanales || []);
 
   // Estados de reproducción y navegación
-  const [activeItem, setActiveItem] = useState(null); // Película o Serie seleccionada
+  const [activeItem, setActiveItem] = useState(initialActiveItem); // Película o Serie seleccionada
   const [activeServer, setActiveServer] = useState(0); // Servidor seleccionado (0 a 3)
   const [searchQuery, setSearchQuery] = useState('');
   const [tmdbSearchResults, setTmdbSearchResults] = useState([]);
@@ -343,11 +349,47 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   const [useProxyForStream, setUseProxyForStream] = useState(false);
   
   // Pestaña activa ('inicio', 'peliculas', 'series', 'anime', 'documentales', 'youtube', 'tdt', 'free', 'favoritos')
-  const [activeTab, setActiveTab] = useState('inicio');
+  const [activeTab, setActiveTab] = useState(initialTab || 'inicio');
   const [tdtFilter, setTdtFilter] = useState('Todos');
 
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+
+  // Funciones de navegación inteligente sincronizadas con la URL del navegador
+  const navigateToItem = (item) => {
+    if (!item) return;
+    setActiveItem(item);
+    setSelectedItemDetails(null);
+    if (typeof window !== 'undefined') {
+      const targetUrl = getItemUrl(item);
+      if (window.location.pathname !== targetUrl) {
+        window.history.pushState({ itemId: item.id }, '', targetUrl);
+      }
+    }
+  };
+
+  const navigateToTab = (tabId) => {
+    setActiveItem(null);
+    setActiveTab(tabId);
+    setSearchQuery('');
+    setMobileMenuOpen(false);
+    if (typeof window !== 'undefined') {
+      const targetUrl = tabId === 'inicio' ? '/' : `/${tabId}`;
+      if (window.location.pathname !== targetUrl) {
+        window.history.pushState({ tab: tabId }, '', targetUrl);
+      }
+    }
+  };
+
+  const navigateBackToCatalog = () => {
+    setActiveItem(null);
+    if (typeof window !== 'undefined') {
+      const targetUrl = activeTab === 'inicio' ? '/' : `/${activeTab}`;
+      if (window.location.pathname !== targetUrl) {
+        window.history.pushState({ tab: activeTab }, '', targetUrl);
+      }
+    }
+  };
 
   // Nuevos estados para favoritos, sidebar responsive, cookies consentimiento y trailers
   const [favorites, setFavorites] = useState([]);
@@ -565,10 +607,72 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setPeliculas(data);
+          
+          // Si entramos directo por URL y aún no se ha cargado el ítem activo
+          if (typeof window !== 'undefined' && !activeItem) {
+            const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+            if (path) {
+              const parts = path.split('/');
+              const first = parts[0].toLowerCase();
+              const second = parts.length > 1 ? parts[1] : null;
+              if (second) {
+                const found = findItemBySlug(data, second) || findItemBySlug(canales, second);
+                if (found) {
+                  setActiveItem(found);
+                }
+              }
+            }
+          }
         }
       })
       .catch((err) => console.error("Error al cargar el catálogo completo:", err));
-  }, []);
+  }, [canales]);
+
+  // Soporte para botones Atrás / Adelante del navegador (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window === 'undefined') return;
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      if (!path) {
+        setActiveItem(null);
+        setActiveTab('inicio');
+        return;
+      }
+
+      const parts = path.split('/');
+      const first = parts[0].toLowerCase();
+      const second = parts.length > 1 ? parts[1] : null;
+
+      const VALID_TABS = ['inicio', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
+      if (VALID_TABS.includes(first) && !second) {
+        setActiveItem(null);
+        setActiveTab(first);
+        return;
+      }
+
+      const targetSlug = second || first;
+      let found = null;
+      if (first === 'canal' || first === 'tdt') {
+        found = findItemBySlug(canales, targetSlug, 'canal');
+      } else {
+        found = findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+      }
+
+      if (found) {
+        setActiveItem(found);
+        if (found.tipo === 'canal') setActiveTab('tdt');
+        else if (found.categoria === 'Anime') setActiveTab('anime');
+        else if (found.categoria === 'Clásicos') setActiveTab('clasicos');
+        else if (found.tipo === 'serie') setActiveTab('series');
+        else setActiveTab('peliculas');
+      } else {
+        setActiveItem(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [peliculas, canales]);
 
   // Servidores de reproducción disponibles
   const servers = [
@@ -597,21 +701,21 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       name: 'Servidor 4 (VidSrc.cc)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.cc/v2/embed/movie/${imdbId || tmdbId}`
-          : `https://vidsrc.cc/v2/embed/tv/${imdbId || tmdbId}/${s}/${e}`
+          ? `https://vidsrc.cc/v2/embed/movie/${tmdbId}`
+          : `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 5 (VidSrc.me / xyz)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? (imdbId ? `https://vidsrc.xyz/embed/movie?imdb=${imdbId}` : `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`)
-          : `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&sea=${s}&epi=${e}`
+          ? `https://vidsrc.xyz/embed/movie/${tmdbId}`
+          : `https://vidsrc.xyz/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 6 (VidSrc.pm)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.pm/embed/movie/${imdbId || tmdbId}`
+          ? `https://vidsrc.pm/embed/movie/${tmdbId}`
           : `https://vidsrc.pm/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
@@ -626,16 +730,14 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
   // Controladores para clicks simples y dobles en tarjetas
   const handleCardClick = (item) => {
     if (item.tipo === 'canal') {
-      setActiveItem(item);
-      setSelectedItemDetails(null);
+      navigateToItem(item);
     } else {
       setSelectedItemDetails(item);
     }
   };
 
   const handleCardDoubleClick = (item) => {
-    setActiveItem(item);
-    setSelectedItemDetails(null);
+    navigateToItem(item);
   };
 
   // Resetear servidor, temporada, episodio y estado del cargador de iframe cuando cambia el elemento activo
@@ -1827,7 +1929,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
       <aside className={`main-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <button className="sidebar-close-btn" onClick={() => setMobileMenuOpen(false)}>✕</button>
         
-        <div className="sidebar-logo" onClick={() => { setActiveItem(null); setActiveTab('inicio'); setSearchQuery(''); setMobileMenuOpen(false); }}>
+        <div className="sidebar-logo" onClick={() => navigateToTab('inicio')}>
           <svg width="150" height="46" viewBox="0 0 200 60">
             <defs>
               <linearGradient id="sidebar-cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1849,12 +1951,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
           {navItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => {
-                setActiveItem(null);
-                setActiveTab(item.id);
-                setSearchQuery('');
-                setMobileMenuOpen(false);
-              }}
+              onClick={() => navigateToTab(item.id)}
               className={`sidebar-menu-btn ${activeTab === item.id && searchQuery === '' ? 'active' : ''}`}
             >
               {item.icon}
@@ -1913,7 +2010,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
               </svg>
             </button>
 
-            <div className="brand-logo" onClick={() => { setActiveItem(null); setSearchQuery(''); setActiveTab('inicio'); }}>
+            <div className="brand-logo" onClick={() => navigateToTab('inicio')}>
               <svg width="150" height="46" viewBox="0 0 200 60">
                 <defs>
                   <linearGradient id="header-cyan-grad-mobile" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1955,7 +2052,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
             <div className="player-view-container">
               {/* Cabecera del reproductor */}
               <div className="player-header">
-                <button className="back-btn" onClick={() => setActiveItem(null)}>
+                <button className="back-btn" onClick={navigateBackToCatalog}>
                   Volver al catálogo
                 </button>
                 <div className="player-meta">
@@ -3250,10 +3347,7 @@ export default function StreamPage({ initialPeliculas, initialCanales }) {
                   <span>{selectedItemDetails.tipo === 'serie' ? 'Serie de TV' : 'Película'}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <button className="modal-play-action-btn" onClick={() => {
-                    setActiveItem(selectedItemDetails);
-                    setSelectedItemDetails(null);
-                  }}>
+                  <button className="modal-play-action-btn" onClick={() => navigateToItem(selectedItemDetails)}>
                     Reproducir Ahora
                   </button>
                   <button 

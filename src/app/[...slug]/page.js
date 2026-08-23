@@ -1,0 +1,189 @@
+import fs from 'fs';
+import path from 'path';
+import StreamPage from '../StreamPage';
+import { findItemBySlug, createSlug } from '../../utils/slugify';
+
+export const dynamic = 'force-dynamic';
+
+const VALID_TABS = ['inicio', 'peliculas', 'series', 'anime', 'manga', 'clasicos', 'tdt', 'free', 'favoritos'];
+
+function loadData() {
+  let peliculas = [];
+  let canales = [];
+
+  try {
+    const filePeliculasPath = path.join(process.cwd(), 'peliculas.json');
+    const filePeliculasData = fs.readFileSync(filePeliculasPath, 'utf-8');
+    peliculas = JSON.parse(filePeliculasData);
+  } catch (error) {
+    console.error("Error reading peliculas.json in [...slug]:", error);
+  }
+
+  try {
+    const fileCanalesPath = path.join(process.cwd(), 'canales.json');
+    const fileCanalesData = fs.readFileSync(fileCanalesPath, 'utf-8');
+    canales = JSON.parse(fileCanalesData);
+  } catch (error) {
+    console.error("Error reading canales.json in [...slug]:", error);
+  }
+
+  return { peliculas, canales };
+}
+
+export async function generateMetadata({ params }) {
+  const { slug } = params;
+  if (!slug || !slug.length) return {};
+
+  const { peliculas, canales } = loadData();
+  const slugRoute = slug[0].toLowerCase();
+  const targetSlug = slug.length > 1 ? slug[1] : slug[0];
+
+  let foundItem = null;
+
+  if (slugRoute === 'canal' || slugRoute === 'tdt') {
+    foundItem = findItemBySlug(canales, targetSlug, 'canal');
+  } else if (slugRoute === 'pelicula' || slugRoute === 'peliculas') {
+    foundItem = findItemBySlug(peliculas, targetSlug, 'pelicula');
+  } else if (slugRoute === 'serie' || slugRoute === 'series') {
+    foundItem = findItemBySlug(peliculas, targetSlug, 'serie');
+  } else if (slugRoute === 'anime') {
+    foundItem = findItemBySlug(peliculas, targetSlug, 'Anime');
+  } else if (slugRoute === 'clasicos') {
+    foundItem = findItemBySlug(peliculas, targetSlug, 'Clásicos');
+  } else {
+    // Buscar en ambos
+    foundItem = findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+  }
+
+  if (foundItem) {
+    const title = foundItem.nombre || foundItem.titulo || 'FilmTV';
+    const year = foundItem.año ? ` (${foundItem.año})` : '';
+    const desc = foundItem.descripcion || `Ver ${title} online en streaming gratis en FilmTV.`;
+    const image = foundItem.poster || foundItem.logo || '/icon.svg';
+
+    return {
+      title: `${title}${year} - FilmTV`,
+      description: desc,
+      openGraph: {
+        title: `${title}${year} - Ver en FilmTV`,
+        description: desc,
+        images: image ? [{ url: image }] : [],
+        type: foundItem.tipo === 'serie' ? 'video.tv_show' : 'video.movie',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${title}${year} - FilmTV`,
+        description: desc,
+        images: image ? [image] : [],
+      }
+    };
+  }
+
+  if (VALID_TABS.includes(slugRoute)) {
+    const tabName = slugRoute.charAt(0).toUpperCase() + slugRoute.slice(1);
+    return {
+      title: `${tabName} - FilmTV Streaming Gratis`,
+      description: `Explora el catálogo de ${tabName} en FilmTV. Películas, series, animes y canales en vivo.`
+    };
+  }
+
+  return {
+    title: 'FilmTV - Películas, Series y Canales en Streaming Gratis',
+    description: 'Disfruta de películas, series, animes y canales de televisión en vivo totalmente gratis.'
+  };
+}
+
+export default async function SlugPage({ params }) {
+  const { slug } = params;
+  const { peliculas, canales } = loadData();
+
+  let initialActiveItem = null;
+  let initialTab = 'inicio';
+
+  if (slug && slug.length > 0) {
+    const firstPart = slug[0].toLowerCase();
+    const secondPart = slug.length > 1 ? slug[1] : null;
+
+    if (VALID_TABS.includes(firstPart) && !secondPart) {
+      initialTab = firstPart;
+    } else {
+      // Buscar el elemento solicitado
+      const targetSlug = secondPart || firstPart;
+
+      if (firstPart === 'canal') {
+        initialActiveItem = findItemBySlug(canales, targetSlug, 'canal');
+        initialTab = 'tdt';
+      } else if (firstPart === 'pelicula') {
+        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'pelicula');
+        initialTab = 'peliculas';
+      } else if (firstPart === 'serie') {
+        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'serie');
+        initialTab = 'series';
+      } else if (firstPart === 'anime') {
+        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'Anime');
+        initialTab = 'anime';
+      } else if (firstPart === 'clasicos') {
+        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'Clásicos');
+        initialTab = 'clasicos';
+      } else {
+        // Búsqueda genérica
+        initialActiveItem = findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
+        if (initialActiveItem) {
+          if (initialActiveItem.tipo === 'canal') initialTab = 'tdt';
+          else if (initialActiveItem.categoria === 'Anime') initialTab = 'anime';
+          else if (initialActiveItem.categoria === 'Clásicos') initialTab = 'clasicos';
+          else if (initialActiveItem.tipo === 'serie') initialTab = 'series';
+          else initialTab = 'peliculas';
+        }
+      }
+    }
+  }
+
+  // Cargar catálogo inicial de películas para alimentar la portada y categorías
+  let initialPeliculas = [];
+  try {
+    if (initialActiveItem && initialActiveItem.tipo !== 'canal') {
+      initialPeliculas.push(initialActiveItem);
+    }
+
+    const featuredId = 'movie-157336';
+    const featured = peliculas.find(p => p.id === featuredId) || peliculas[0];
+    if (featured && !initialPeliculas.some(x => x.id === featured.id)) {
+      initialPeliculas.push(featured);
+    }
+
+    const addFiltered = (filterFn, limit = 15) => {
+      let count = 0;
+      for (const p of peliculas) {
+        if (filterFn(p)) {
+          if (!initialPeliculas.some(x => x.id === p.id)) {
+            initialPeliculas.push(p);
+            count++;
+            if (count >= limit) break;
+          }
+        }
+      }
+    };
+
+    addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Acción');
+    addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Ciencia Ficción');
+    addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Terror');
+    addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Comedia');
+    addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Drama');
+    addFiltered(p => p.tipo === 'pelicula' && p.categoria === 'Infantil');
+    addFiltered(p => p.tipo === 'serie' && p.categoria !== 'Anime' && p.categoria !== 'Documentales');
+    addFiltered(p => p.tipo === 'pelicula' && p.categoria !== 'Anime' && p.categoria !== 'Documentales' && p.categoria !== 'YouTube' && parseInt(p.año) >= 2020);
+    addFiltered(p => p.tipo === 'serie' && p.categoria !== 'Anime' && p.categoria !== 'Documentales' && p.categoria !== 'YouTube' && parseInt(p.año) >= 2020);
+  } catch (err) {
+    console.error("Error creating initialPeliculas array in SlugPage:", err);
+  }
+
+  return (
+    <StreamPage 
+      initialPeliculas={initialPeliculas} 
+      initialCanales={canales} 
+      initialActiveItem={initialActiveItem}
+      initialTab={initialTab}
+    />
+  );
+}
