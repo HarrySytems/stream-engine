@@ -35,6 +35,10 @@ export function getItemUrl(item) {
   if (item.tipo === 'pelicula' || item.tipo === 'movie') {
     if (item.categoria === 'Clásicos') return `/clasicos/${slug}`;
     if (item.categoria === 'Anime') return `/anime/${slug}`;
+    if (item.categoria && item.categoria !== 'Todos') {
+      const catSlug = createSlug(item.categoria);
+      return `/pelicula/${catSlug}/${slug}`;
+    }
     return `/pelicula/${slug}`;
   }
 

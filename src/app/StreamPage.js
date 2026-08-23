@@ -707,27 +707,62 @@ export default function StreamPage({
   }, [peliculas, canales]);
 
   // Servidores de reproducción disponibles
+  // Sincronizar el título de la pestaña del navegador (document.title) en tiempo real e inteligente
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    if (activeItem) {
+      const title = activeItem.nombre || activeItem.titulo || 'Reproduciendo';
+      const year = activeItem.año ? ` (${activeItem.año})` : '';
+      document.title = `${title}${year} - FilmTV`;
+      return;
+    }
+
+    if (activeTab === 'peliculas') {
+      if (selectedMovieCategory && selectedMovieCategory !== 'Todos') {
+        document.title = `Películas de ${selectedMovieCategory} - FilmTV`;
+      } else {
+        document.title = 'Películas - FilmTV';
+      }
+      return;
+    }
+
+    const tabTitles = {
+      inicio: 'FilmTV - Películas, Series y Canales en Streaming Gratis',
+      series: 'Series - FilmTV',
+      anime: 'Anime - FilmTV',
+      manga: 'Manga - FilmTV',
+      clasicos: 'Clásicos - FilmTV',
+      tdt: 'Canales en Vivo TDT - FilmTV',
+      free: 'Contenido Gratis - FilmTV',
+      favoritos: 'Mis Favoritos - FilmTV'
+    };
+
+    document.title = tabTitles[activeTab] || 'FilmTV';
+  }, [activeItem, activeTab, selectedMovieCategory]);
+
+  // Servidores de reproducción disponibles
   const servers = [
     {
-      name: 'Servidor 1 (VidSrc.to - Recomendado / Rápido)',
+      name: 'Servidor 1 (VidLink - Multi-idioma / Recomendado)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.to/embed/movie/${imdbId || tmdbId}`
-          : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
+          ? `https://vidlink.pro/movie/${imdbId || tmdbId}?primaryColor=ffe600`
+          : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=ffe600`
     },
     {
-      name: 'Servidor 2 (Embed.su - Alternativo)',
+      name: 'Servidor 2 (Embed.su - HD)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
           ? `https://embed.su/embed/movie/${imdbId || tmdbId}`
           : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
-      name: 'Servidor 3 (VidLink - Multi-idioma)',
+      name: 'Servidor 3 (VidSrc.to - Rápido)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidlink.pro/movie/${imdbId || tmdbId}?primaryColor=00f5d4`
-          : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=00f5d4`
+          ? `https://vidsrc.to/embed/movie/${imdbId || tmdbId}`
+          : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 4 (VidSrc.cc)',
@@ -2238,7 +2273,7 @@ export default function StreamPage({
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
                         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        sandbox={isYouTubeUrl(allServers[activeServer]?.url || '') ? undefined : (antiAds ? "allow-scripts allow-same-origin allow-forms allow-presentation allow-top-navigation-by-user-activation allow-popups allow-popups-to-escape-sandbox" : undefined)}
+                        sandbox={(isYouTubeUrl(allServers[activeServer]?.url || '') || (allServers[activeServer]?.url || '').includes('vidsrc')) ? undefined : (antiAds ? "allow-scripts allow-same-origin allow-forms allow-presentation allow-top-navigation-by-user-activation allow-popups allow-popups-to-escape-sandbox" : undefined)}
                         className="player-iframe"
                       />
                     )}

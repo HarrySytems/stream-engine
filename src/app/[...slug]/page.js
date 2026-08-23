@@ -47,14 +47,16 @@ export async function generateMetadata({ params }) {
 
   const { peliculas, canales } = loadData();
   const slugRoute = slug[0].toLowerCase();
-  const targetSlug = slug.length > 1 ? slug[1] : slug[0];
+  
+  // Si tiene 3 partes (ej: /pelicula/terror/nombre-pelicula), el item es la última parte
+  const targetSlug = slug[slug.length - 1];
 
-  // Caso: Subcategoría de Películas (ej: /peliculas/terror o /peliculas/accion)
-  if (slugRoute === 'peliculas' && slug.length > 1) {
-    const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(targetSlug));
+  // Caso: Subcategoría de Películas (ej: /peliculas/terror)
+  if (slugRoute === 'peliculas' && slug.length === 2) {
+    const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(slug[1]));
     if (matchedCategory) {
       return {
-        title: `Películas de ${matchedCategory} - FilmTV Streaming Gratis`,
+        title: `Películas de ${matchedCategory} - FilmTV`,
         description: `Explora las mejores películas de ${matchedCategory} online en español latino y subtitulado en FilmTV.`
       };
     }
@@ -126,41 +128,63 @@ export default async function SlugPage({ params }) {
   if (slug && slug.length > 0) {
     const firstPart = slug[0].toLowerCase();
     const secondPart = slug.length > 1 ? slug[1] : null;
+    const thirdPart = slug.length > 2 ? slug[2] : null;
 
     if (VALID_TABS.includes(firstPart) && !secondPart) {
       initialTab = firstPart;
     } else {
-      const targetSlug = secondPart || firstPart;
-
-      // Verificar si es una subcategoría de películas (ej: /peliculas/terror)
-      if (firstPart === 'peliculas' && secondPart) {
+      // 1. Caso: /pelicula/terror/nombre-pelicula (3 segmentos)
+      if (firstPart === 'pelicula' && thirdPart) {
+        initialActiveItem = findItemBySlug(peliculas, thirdPart, 'pelicula');
+        initialTab = 'peliculas';
+        if (initialActiveItem && initialActiveItem.categoria) {
+          initialMovieCategory = initialActiveItem.categoria;
+        }
+      } 
+      // 2. Caso: /peliculas/terror (2 segmentos de subcategoría)
+      else if (firstPart === 'peliculas' && secondPart) {
         const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(secondPart));
         if (matchedCategory) {
           initialTab = 'peliculas';
           initialMovieCategory = matchedCategory;
           initialActiveItem = null;
         } else {
-          // Si no es un nombre de categoría, buscar si es una película
-          initialActiveItem = findItemBySlug(peliculas, targetSlug, 'pelicula');
+          // Si no era nombre de categoría, buscar si es película directa
+          initialActiveItem = findItemBySlug(peliculas, secondPart, 'pelicula');
           initialTab = 'peliculas';
         }
-      } else if (firstPart === 'canal') {
-        initialActiveItem = findItemBySlug(canales, targetSlug, 'canal');
-        initialTab = 'tdt';
-      } else if (firstPart === 'pelicula') {
-        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'pelicula');
+      } 
+      // 3. Caso: /pelicula/nombre-pelicula (2 segmentos directo)
+      else if (firstPart === 'pelicula' && secondPart) {
+        initialActiveItem = findItemBySlug(peliculas, secondPart, 'pelicula');
         initialTab = 'peliculas';
-      } else if (firstPart === 'serie') {
-        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'serie');
+        if (initialActiveItem && initialActiveItem.categoria) {
+          initialMovieCategory = initialActiveItem.categoria;
+        }
+      } 
+      // 4. Caso: /canal/nombre-canal
+      else if (firstPart === 'canal' && secondPart) {
+        initialActiveItem = findItemBySlug(canales, secondPart, 'canal');
+        initialTab = 'tdt';
+      } 
+      // 5. Caso: /serie/nombre-serie
+      else if (firstPart === 'serie' && secondPart) {
+        initialActiveItem = findItemBySlug(peliculas, secondPart, 'serie');
         initialTab = 'series';
-      } else if (firstPart === 'anime') {
-        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'Anime');
+      } 
+      // 6. Caso: /anime/nombre-anime
+      else if (firstPart === 'anime' && secondPart) {
+        initialActiveItem = findItemBySlug(peliculas, secondPart, 'Anime');
         initialTab = 'anime';
-      } else if (firstPart === 'clasicos') {
-        initialActiveItem = findItemBySlug(peliculas, targetSlug, 'Clásicos');
+      } 
+      // 7. Caso: /clasicos/nombre-clasico
+      else if (firstPart === 'clasicos' && secondPart) {
+        initialActiveItem = findItemBySlug(peliculas, secondPart, 'Clásicos');
         initialTab = 'clasicos';
-      } else {
-        // Búsqueda genérica
+      } 
+      // 8. Búsqueda genérica
+      else {
+        const targetSlug = slug[slug.length - 1];
         initialActiveItem = findItemBySlug(peliculas, targetSlug) || findItemBySlug(canales, targetSlug);
         if (initialActiveItem) {
           if (initialActiveItem.tipo === 'canal') initialTab = 'tdt';
