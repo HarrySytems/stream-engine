@@ -312,7 +312,8 @@ export default function StreamPage({
   initialCanales = [], 
   initialActiveItem = null, 
   initialTab = 'inicio',
-  initialMovieCategory = 'Todos'
+  initialMovieCategory = 'Todos',
+  initialEstrenosCategory = 'Todos'
 }) {
   // Estado para la pantalla de presentación (Splash Screen)
   const [showSplash, setShowSplash] = useState(true);
@@ -387,9 +388,12 @@ export default function StreamPage({
   const navigateBackToCatalog = () => {
     setActiveItem(null);
     if (typeof window !== 'undefined') {
-      const slug = (activeTab === 'peliculas' && selectedMovieCategory && selectedMovieCategory !== 'Todos')
-        ? `peliculas/${createSlug(selectedMovieCategory)}`
-        : (activeTab === 'inicio' ? '' : activeTab);
+      let slug = activeTab === 'inicio' ? '' : activeTab;
+      if (activeTab === 'peliculas' && selectedMovieCategory && selectedMovieCategory !== 'Todos') {
+        slug = `peliculas/${createSlug(selectedMovieCategory)}`;
+      } else if (activeTab === 'estrenos' && selectedEstrenosCategory && selectedEstrenosCategory !== 'Todos') {
+        slug = `estrenos/${createSlug(selectedEstrenosCategory)}`;
+      }
       const targetUrl = slug ? `/${slug}` : '/';
       if (window.location.pathname !== targetUrl) {
         window.history.pushState({ tab: activeTab, category: selectedMovieCategory }, '', targetUrl);
@@ -405,6 +409,18 @@ export default function StreamPage({
       const targetUrl = slug ? `/peliculas/${slug}` : '/peliculas';
       if (window.location.pathname !== targetUrl) {
         window.history.pushState({ tab: 'peliculas', category: cat }, '', targetUrl);
+      }
+    }
+  };
+
+  const handleSelectEstrenosCategory = (cat) => {
+    setSelectedEstrenosCategory(cat);
+    setEstrenosLimit(32);
+    if (typeof window !== 'undefined') {
+      const slug = cat === 'Todos' ? '' : createSlug(cat);
+      const targetUrl = slug ? `/estrenos/${slug}` : '/estrenos';
+      if (window.location.pathname !== targetUrl) {
+        window.history.pushState({ tab: 'estrenos', category: cat }, '', targetUrl);
       }
     }
   };
@@ -575,6 +591,7 @@ export default function StreamPage({
   // Letra seleccionada para índices A-Z y Categoría de Películas
   const [selectedLetter, setSelectedLetter] = useState('Todos');
   const [selectedMovieCategory, setSelectedMovieCategory] = useState(initialMovieCategory || 'Todos');
+  const [selectedEstrenosCategory, setSelectedEstrenosCategory] = useState(initialEstrenosCategory || 'Todos');
   const [selectedSeriesLetter, setSelectedSeriesLetter] = useState('Todos');
 
   // Límites de paginación
@@ -676,6 +693,22 @@ export default function StreamPage({
       const first = parts[0].toLowerCase();
       const second = parts.length > 1 ? parts[1] : null;
 
+      if (first === 'estrenos') {
+        if (!second || second === 'todos') {
+          setActiveItem(null);
+          setActiveTab('estrenos');
+          setSelectedEstrenosCategory('Todos');
+          return;
+        }
+        const matchedCategory = estrenosCategories.find(c => createSlug(c) === createSlug(second));
+        if (matchedCategory) {
+          setActiveItem(null);
+          setActiveTab('estrenos');
+          setSelectedEstrenosCategory(matchedCategory);
+          return;
+        }
+      }
+
       if (first === 'peliculas') {
         if (!second || second === 'todos') {
           setActiveItem(null);
@@ -731,6 +764,15 @@ export default function StreamPage({
       const title = activeItem.nombre || activeItem.titulo || 'Reproduciendo';
       const year = activeItem.año ? ` (${activeItem.año})` : '';
       document.title = `${title}${year} - FilmTV`;
+      return;
+    }
+
+    if (activeTab === 'estrenos') {
+      if (selectedEstrenosCategory && selectedEstrenosCategory !== 'Todos') {
+        document.title = `Estrenos de ${selectedEstrenosCategory} - FilmTV`;
+      } else {
+        document.title = '🔥 Estrenos 2025 - 2026 - FilmTV';
+      }
       return;
     }
 
@@ -1478,8 +1520,31 @@ export default function StreamPage({
     'Documentales'
   ];
 
+  const estrenosCategories = [
+    'Todos',
+    'Películas',
+    'Series',
+    'Acción',
+    'Terror',
+    'Comedia',
+    'Ciencia Ficción',
+    'Drama',
+    'Infantil'
+  ];
+
   const filterMoviesByCategory = (list, category) => {
     if (!category || category === 'Todos') return list;
+    const catNorm = category.toLowerCase();
+    return list.filter(item => {
+      const itemCat = (item.categoria || '').toLowerCase();
+      return itemCat.includes(catNorm) || (catNorm === 'terror' && itemCat.includes('horror'));
+    });
+  };
+
+  const filterEstrenosByCategory = (list, category) => {
+    if (!category || category === 'Todos') return list;
+    if (category === 'Películas') return list.filter(item => item.tipo === 'pelicula');
+    if (category === 'Series') return list.filter(item => item.tipo === 'serie');
     const catNorm = category.toLowerCase();
     return list.filter(item => {
       const itemCat = (item.categoria || '').toLowerCase();
@@ -3140,65 +3205,87 @@ export default function StreamPage({
 
                   {activeTab === 'estrenos' && (
                     <div className="tab-peliculas-container">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                         <span style={{ fontSize: '28px' }}>🔥</span>
                         <h2 className="section-title" style={{ margin: 0 }}>
-                          Estrenos de Cine y Streaming (2025 - 2026)
+                          {selectedEstrenosCategory === 'Todos' ? 'Estrenos de Cine y Streaming (2025 - 2026)' : `Estrenos: ${selectedEstrenosCategory}`}
                         </h2>
                       </div>
 
-                      {estrenos.length === 0 ? (
-                        <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
-                          <p>Cargando los últimos estrenos disponibles...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="cards-grid">
-                            {estrenos.slice(0, estrenosLimit).map((item) => (
-                              <div 
-                                key={item.id} 
-                                className="movie-card"
-                                onClick={() => handleCardClick(item)}
-                                onDoubleClick={() => handleCardDoubleClick(item)}
-                              >
-                                <div className="poster-container">
-                                  <img 
-                                    src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
-                                    alt={item.titulo} 
-                                    className="movie-poster"
-                                    loading="lazy" 
-                                  />
-                                  <div className="card-play-overlay">
-                                    <div className="play-arrow"></div>
-                                  </div>
-                                  <span className="movie-lang-badge" style={{ backgroundColor: '#ff0055', color: '#ffffff', fontWeight: 'bold' }}>
-                                    🔥 ESTRENO
-                                  </span>
-                                  <span className="rating-badge">★ {item.valoracion}</span>
-                                </div>
-                                <div className="movie-card-info">
-                                  <h3 className="movie-card-title">{item.titulo}</h3>
-                                  <div className="movie-card-meta">
-                                    <span>{item.año}</span>
-                                    <span className="genre-tag">{item.categoria}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                      <div className="alphabet-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+                        {estrenosCategories.map(cat => (
+                          <button 
+                            key={cat}
+                            onClick={() => handleSelectEstrenosCategory(cat)}
+                            className={`letter-btn ${selectedEstrenosCategory === cat ? 'active' : ''}`}
+                            style={{ minWidth: 'auto', padding: '8px 16px', fontSize: '13px', fontWeight: 'bold' }}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
 
-                          {estrenos.length > estrenosLimit && (
-                            <div className="load-more-container" style={{ textAlign: 'center', marginTop: '32px' }}>
-                              <button 
-                                className="load-more-btn"
-                                onClick={() => setEstrenosLimit(prev => prev + 32)}
-                              >
-                                Cargar más estrenos
-                              </button>
+                      {(() => {
+                        const filtered = filterEstrenosByCategory(estrenos, selectedEstrenosCategory);
+                        const visible = filtered.slice(0, estrenosLimit);
+
+                        if (visible.length === 0) {
+                          return (
+                            <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
+                              <p>No se encontraron estrenos en esta categoría.</p>
                             </div>
-                          )}
-                        </>
-                      )}
+                          );
+                        }
+
+                        return (
+                          <>
+                            <div className="cards-grid">
+                              {visible.map((item) => (
+                                <div 
+                                  key={item.id} 
+                                  className="movie-card"
+                                  onClick={() => handleCardClick(item)}
+                                  onDoubleClick={() => handleCardDoubleClick(item)}
+                                >
+                                  <div className="poster-container">
+                                    <img 
+                                      src={item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80"} 
+                                      alt={item.titulo} 
+                                      className="movie-poster"
+                                      loading="lazy" 
+                                    />
+                                    <div className="card-play-overlay">
+                                      <div className="play-arrow"></div>
+                                    </div>
+                                    <span className="movie-lang-badge" style={{ backgroundColor: item.tipo === 'serie' ? '#00b4d8' : '#ff0055', color: '#ffffff', fontWeight: 'bold' }}>
+                                      {item.tipo === 'serie' ? '📺 SERIE' : '🔥 ESTRENO'}
+                                    </span>
+                                    <span className="rating-badge">★ {item.valoracion}</span>
+                                  </div>
+                                  <div className="movie-card-info">
+                                    <h3 className="movie-card-title">{item.titulo}</h3>
+                                    <div className="movie-card-meta">
+                                      <span>{item.año}</span>
+                                      <span className="genre-tag">{item.categoria}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {filtered.length > estrenosLimit && (
+                              <div className="load-more-container" style={{ textAlign: 'center', marginTop: '32px' }}>
+                                <button 
+                                  className="load-more-btn"
+                                  onClick={() => setEstrenosLimit(prev => prev + 32)}
+                                >
+                                  Cargar más estrenos
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
 

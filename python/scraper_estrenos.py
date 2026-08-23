@@ -25,7 +25,11 @@ GENRE_MAP = {
     10770: "Película de TV",
     53: "Suspense",
     10752: "Bélica",
-    37: "Western"
+    37: "Western",
+    10759: "Acción",
+    10762: "Infantil",
+    10765: "Ciencia Ficción",
+    10768: "Bélica"
 }
 
 def get_genre_name(genre_ids):
@@ -49,17 +53,14 @@ def fetch_json(url, params):
     return None
 
 def scrape_estrenos():
-    print("Iniciando búsqueda de estrenos en TMDB (2025 - 2026)...")
-    raw_movies = []
+    print("Iniciando búsqueda de estrenos de películas y series en TMDB (2025 - 2026)...")
+    raw_items = []
     seen_ids = set()
 
-    endpoints = [
-        # 1. En Cartelera (Now Playing)
+    movie_endpoints = [
         (f"{BASE_URL}/movie/now_playing", {"page": 1, "language": "es-MX", "api_key": TMDB_API_KEY}),
         (f"{BASE_URL}/movie/now_playing", {"page": 2, "language": "es-MX", "api_key": TMDB_API_KEY}),
-        # 2. Tendencias de la Semana (Trending)
         (f"{BASE_URL}/trending/movie/week", {"language": "es-MX", "api_key": TMDB_API_KEY}),
-        # 3. Estrenos 2026 por Popularidad
         (f"{BASE_URL}/discover/movie", {
             "api_key": TMDB_API_KEY,
             "language": "es-MX",
@@ -67,7 +68,6 @@ def scrape_estrenos():
             "primary_release_year": 2026,
             "page": 1
         }),
-        # 4. Estrenos 2025 por Popularidad
         (f"{BASE_URL}/discover/movie", {
             "api_key": TMDB_API_KEY,
             "language": "es-MX",
@@ -84,12 +84,41 @@ def scrape_estrenos():
         })
     ]
 
-    for url, params in endpoints:
+    tv_endpoints = [
+        (f"{BASE_URL}/tv/on_the_air", {"page": 1, "language": "es-MX", "api_key": TMDB_API_KEY}),
+        (f"{BASE_URL}/tv/on_the_air", {"page": 2, "language": "es-MX", "api_key": TMDB_API_KEY}),
+        (f"{BASE_URL}/trending/tv/week", {"language": "es-MX", "api_key": TMDB_API_KEY}),
+        (f"{BASE_URL}/discover/tv", {
+            "api_key": TMDB_API_KEY,
+            "language": "es-MX",
+            "sort_by": "popularity.desc",
+            "first_air_date_year": 2026,
+            "page": 1
+        }),
+        (f"{BASE_URL}/discover/tv", {
+            "api_key": TMDB_API_KEY,
+            "language": "es-MX",
+            "sort_by": "popularity.desc",
+            "first_air_date_year": 2025,
+            "page": 1
+        }),
+        (f"{BASE_URL}/discover/tv", {
+            "api_key": TMDB_API_KEY,
+            "language": "es-MX",
+            "sort_by": "popularity.desc",
+            "first_air_date_year": 2025,
+            "page": 2
+        })
+    ]
+
+    # 1. Películas de estreno
+    for url, params in movie_endpoints:
         data = fetch_json(url, params)
         if data and "results" in data:
             for item in data["results"]:
                 tmdb_id = item.get("id")
-                if not tmdb_id or tmdb_id in seen_ids:
+                dedup_key = f"movie-{tmdb_id}"
+                if not tmdb_id or dedup_key in seen_ids:
                     continue
 
                 poster_path = item.get("poster_path")
@@ -98,17 +127,16 @@ def scrape_estrenos():
                 release_date = item.get("release_date", "")
                 year = release_date.split("-")[0] if release_date else "2025"
 
-                # Filtrar items sin póster o muy antiguos
                 if not poster_path or not title:
                     continue
                 if year not in ["2025", "2026"]:
                     continue
 
-                seen_ids.add(tmdb_id)
+                seen_ids.add(dedup_key)
                 rating = round(item.get("vote_average", 0), 1)
 
                 movie_obj = {
-                    "id": f"movie-{tmdb_id}",
+                    "id": dedup_key,
                     "titulo": title.strip(),
                     "tipo": "pelicula",
                     "tmdbId": tmdb_id,
@@ -121,16 +149,56 @@ def scrape_estrenos():
                     "idioma": "Latino / Sub",
                     "duracion": "N/A"
                 }
-                raw_movies.append(movie_obj)
-        time.sleep(0.3)
+                raw_items.append(movie_obj)
+        time.sleep(0.2)
 
-    print(f"Total de estrenos recolectados: {len(raw_movies)}")
+    # 2. Series de estreno
+    for url, params in tv_endpoints:
+        data = fetch_json(url, params)
+        if data and "results" in data:
+            for item in data["results"]:
+                tmdb_id = item.get("id")
+                dedup_key = f"serie-{tmdb_id}"
+                if not tmdb_id or dedup_key in seen_ids:
+                    continue
 
-    if len(raw_movies) > 0:
-        # Guardar en estrenos.json en la raíz
+                poster_path = item.get("poster_path")
+                title = item.get("name") or item.get("original_name")
+                overview = item.get("overview", "")
+                first_air_date = item.get("first_air_date", "")
+                year = first_air_date.split("-")[0] if first_air_date else "2025"
+
+                if not poster_path or not title:
+                    continue
+                if year not in ["2025", "2026"]:
+                    continue
+
+                seen_ids.add(dedup_key)
+                rating = round(item.get("vote_average", 0), 1)
+
+                tv_obj = {
+                    "id": dedup_key,
+                    "titulo": title.strip(),
+                    "tipo": "serie",
+                    "tmdbId": tmdb_id,
+                    "imdbId": "",
+                    "descripcion": overview.strip() if overview else f"Ver serie {title} online en streaming gratis en FilmTV.",
+                    "categoria": get_genre_name(item.get("genre_ids")),
+                    "poster": f"https://image.tmdb.org/t/p/w500{poster_path}",
+                    "año": year,
+                    "valoracion": rating if rating > 0 else 7.0,
+                    "idioma": "Latino / Sub",
+                    "duracion": "N/A"
+                }
+                raw_items.append(tv_obj)
+        time.sleep(0.2)
+
+    print(f"Total de estrenos recolectados (películas y series): {len(raw_items)}")
+
+    if len(raw_items) > 0:
         target_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "estrenos.json")
         with open(target_path, "w", encoding="utf-8") as f:
-            json.dump(raw_movies, f, ensure_ascii=False, indent=2)
+            json.dump(raw_items, f, ensure_ascii=False, indent=2)
         print(f"Guardado exitosamente en: {target_path}")
     else:
         print("No se encontraron nuevos estrenos para guardar.")

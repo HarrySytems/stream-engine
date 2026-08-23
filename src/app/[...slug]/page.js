@@ -18,6 +18,18 @@ const MOVIE_CATEGORIES = [
   'Documentales'
 ];
 
+const ESTRENOS_CATEGORIES = [
+  'Todos',
+  'Películas',
+  'Series',
+  'Acción',
+  'Terror',
+  'Comedia',
+  'Ciencia Ficción',
+  'Drama',
+  'Infantil'
+];
+
 function loadData() {
   let peliculas = [];
   let estrenos = [];
@@ -62,6 +74,17 @@ export async function generateMetadata({ params }) {
   // Si tiene 3 partes (ej: /pelicula/terror/nombre-pelicula), el item es la última parte
   const targetSlug = slug[slug.length - 1];
 
+  // Caso: Subcategoría de Estrenos (ej: /estrenos/series o /estrenos/terror)
+  if (slugRoute === 'estrenos' && slug.length === 2) {
+    const matchedCategory = ESTRENOS_CATEGORIES.find(c => createSlug(c) === createSlug(slug[1]));
+    if (matchedCategory) {
+      return {
+        title: `Estrenos de ${matchedCategory} (2025 - 2026) - FilmTV`,
+        description: `Descubre los últimos estrenos de ${matchedCategory} online en streaming gratis en FilmTV.`
+      };
+    }
+  }
+
   // Caso: Subcategoría de Películas (ej: /peliculas/terror)
   if (slugRoute === 'peliculas' && slug.length === 2) {
     const matchedCategory = MOVIE_CATEGORIES.find(c => createSlug(c) === createSlug(slug[1]));
@@ -78,11 +101,11 @@ export async function generateMetadata({ params }) {
   if (slugRoute === 'canal' || slugRoute === 'tdt') {
     foundItem = findItemBySlug(canales, targetSlug, 'canal');
   } else if (slugRoute === 'estrenos') {
-    foundItem = findItemBySlug(estrenos, targetSlug, 'pelicula');
+    foundItem = findItemBySlug(estrenos, targetSlug);
   } else if (slugRoute === 'pelicula' || slugRoute === 'peliculas') {
     foundItem = findItemBySlug(estrenos, targetSlug, 'pelicula') || findItemBySlug(peliculas, targetSlug, 'pelicula');
   } else if (slugRoute === 'serie' || slugRoute === 'series') {
-    foundItem = findItemBySlug(peliculas, targetSlug, 'serie');
+    foundItem = findItemBySlug(estrenos, targetSlug, 'serie') || findItemBySlug(peliculas, targetSlug, 'serie');
   } else if (slugRoute === 'anime') {
     foundItem = findItemBySlug(peliculas, targetSlug, 'Anime');
   } else if (slugRoute === 'clasicos') {
@@ -144,6 +167,7 @@ export default async function SlugPage({ params }) {
   let initialActiveItem = null;
   let initialTab = 'inicio';
   let initialMovieCategory = 'Todos';
+  let initialEstrenosCategory = 'Todos';
 
   if (slug && slug.length > 0) {
     const firstPart = slug[0].toLowerCase();
@@ -153,10 +177,17 @@ export default async function SlugPage({ params }) {
     if (VALID_TABS.includes(firstPart) && !secondPart) {
       initialTab = firstPart;
     } else {
-      // 1. Caso: /estrenos/nombre-estreno
+      // 1. Caso: /estrenos/categoria o /estrenos/nombre-estreno
       if (firstPart === 'estrenos' && secondPart) {
-        initialActiveItem = findItemBySlug(estrenos, secondPart, 'pelicula') || findItemBySlug(peliculas, secondPart, 'pelicula');
-        initialTab = 'estrenos';
+        const matchedCategory = ESTRENOS_CATEGORIES.find(c => createSlug(c) === createSlug(secondPart));
+        if (matchedCategory) {
+          initialTab = 'estrenos';
+          initialEstrenosCategory = matchedCategory;
+          initialActiveItem = null;
+        } else {
+          initialActiveItem = findItemBySlug(estrenos, secondPart) || findItemBySlug(peliculas, secondPart);
+          initialTab = 'estrenos';
+        }
       }
       // 2. Caso: /pelicula/terror/nombre-pelicula (3 segmentos)
       else if (firstPart === 'pelicula' && thirdPart) {
@@ -194,7 +225,7 @@ export default async function SlugPage({ params }) {
       } 
       // 6. Caso: /serie/nombre-serie
       else if (firstPart === 'serie' && secondPart) {
-        initialActiveItem = findItemBySlug(peliculas, secondPart, 'serie');
+        initialActiveItem = findItemBySlug(estrenos, secondPart, 'serie') || findItemBySlug(peliculas, secondPart, 'serie');
         initialTab = 'series';
       } 
       // 7. Caso: /anime/nombre-anime
@@ -269,6 +300,7 @@ export default async function SlugPage({ params }) {
       initialActiveItem={initialActiveItem}
       initialTab={initialTab}
       initialMovieCategory={initialMovieCategory}
+      initialEstrenosCategory={initialEstrenosCategory}
     />
   );
 }
