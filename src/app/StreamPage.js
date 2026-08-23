@@ -367,6 +367,13 @@ export default function StreamPage({
     if (!item) return;
     setActiveItem(item);
     setSelectedItemDetails(null);
+    setActiveServer(0);
+    setIframeLoading(true);
+    setTmdbData(null);
+    setCuevanaServers([]);
+    setSeason(1);
+    setEpisode(1);
+    setSeasonsInfo([]);
     if (typeof window !== 'undefined') {
       const targetUrl = getItemUrl(item);
       if (window.location.pathname !== targetUrl) {
@@ -869,21 +876,21 @@ export default function StreamPage({
       name: 'Servidor 1 (VidLink - Multi-idioma / Recomendado)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidlink.pro/movie/${imdbId || tmdbId}?primaryColor=ffe600`
+          ? `https://vidlink.pro/movie/${tmdbId}?primaryColor=ffe600`
           : `https://vidlink.pro/tv/${tmdbId}/${s}/${e}?primaryColor=ffe600`
     },
     {
       name: 'Servidor 2 (Embed.su - HD)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://embed.su/embed/movie/${imdbId || tmdbId}`
+          ? `https://embed.su/embed/movie/${tmdbId}`
           : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
       name: 'Servidor 3 (VidSrc.to - Rápido)',
       url: (tmdbId, imdbId, type, s, e) => 
         type === 'pelicula' 
-          ? `https://vidsrc.to/embed/movie/${imdbId || tmdbId}`
+          ? `https://vidsrc.to/embed/movie/${tmdbId}`
           : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`
     },
     {
@@ -959,6 +966,8 @@ export default function StreamPage({
 
   // Obtener detalles de la película o serie desde TMDB (para obtener el título original en inglés)
   useEffect(() => {
+    let isCancelled = false;
+
     if (!activeItem) {
       setTmdbData(null);
       return;
@@ -969,6 +978,8 @@ export default function StreamPage({
       setTmdbData(null);
       return;
     }
+
+    setTmdbData(null);
 
     const mediaType = activeItem.tipo === 'serie' ? 'tv' : 'movie';
 
@@ -984,40 +995,45 @@ export default function StreamPage({
           return res.json();
         })
         .then(data => {
-          if (isRetry) {
-            activeItem.tmdbId = idToFetch.toString();
+          if (!isCancelled) {
+            if (isRetry) {
+              activeItem.tmdbId = idToFetch.toString();
+            }
+            setTmdbData(data);
           }
-          setTmdbData(data);
         })
         .catch(err => {
+          if (isCancelled) return;
           if (err.message === "404" && !isRetry) {
             const queryTitle = activeItem.titulo || activeItem.nombre;
-            console.log(`ID ${idToFetch} no encontrado en TMDB. Intentando buscar por título: "${queryTitle}"`);
             const searchType = activeItem.tipo === 'serie' ? 'tv' : 'movie';
             fetch(`https://api.themoviedb.org/3/search/${searchType}?api_key=04c35731a5ee918f014970082a0088b1&language=es-MX&query=${encodeURIComponent(queryTitle)}`)
               .then(sRes => sRes.json())
               .then(sData => {
-                if (sData && sData.results && sData.results.length > 0) {
-                  const bestMatch = sData.results[0];
-                  console.log(`Corregido ID en runtime de ${idToFetch} a ${bestMatch.id} para "${queryTitle}"`);
-                  fetchDetails(bestMatch.id, true);
-                } else {
-                  setTmdbData(null);
+                if (!isCancelled) {
+                  if (sData && sData.results && sData.results.length > 0) {
+                    const bestMatch = sData.results[0];
+                    fetchDetails(bestMatch.id, true);
+                  } else {
+                    setTmdbData(null);
+                  }
                 }
               })
-              .catch(sErr => {
-                console.error("Error al buscar película por título alternativo:", sErr);
-                setTmdbData(null);
+              .catch(() => {
+                if (!isCancelled) setTmdbData(null);
               });
           } else {
-            console.warn("Fallo al obtener detalles de TMDB:", err);
             setTmdbData(null);
           }
         });
     };
 
     fetchDetails(tmdbId);
-  }, [activeItem]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeItem?.id]);
 
   // Obtener elenco (credits) de TMDB para el modal de detalles
   useEffect(() => {
@@ -1118,12 +1134,15 @@ export default function StreamPage({
 
   // Obtener servidores Latino desde Cuevana.gs y LaMovie.org a través de nuestro proxy de Next.js
   useEffect(() => {
+    let isCancelled = false;
+
     if (!activeItem || activeItem.tipo === 'canal' || !activeItem.tmdbId) {
       setCuevanaServers([]);
       setLoadingCuevana(false);
       return;
     }
 
+    setCuevanaServers([]);
     setLoadingCuevana(true);
     
     // Helper para extraer el nombre legible del servidor de las urls de embeds
@@ -1432,15 +1451,20 @@ export default function StreamPage({
         }
       }
 
-      if (uniqueCombined.length > 0) {
-        setCuevanaServers(uniqueCombined);
-        setActiveServer(0);
+      if (!isCancelled) {
+        if (uniqueCombined.length > 0) {
+          setCuevanaServers(uniqueCombined);
+        }
+        setLoadingCuevana(false);
       }
-      setLoadingCuevana(false);
     };
 
     runSearch();
-  }, [activeItem, season, episode, tmdbData]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeItem?.id, season, episode]);
 
   // Obtener información real de temporadas y capítulos de TMDB
   useEffect(() => {
@@ -2000,7 +2024,7 @@ export default function StreamPage({
     name: s.name,
     url: s.url(
       activeItem ? activeItem.tmdbId : '', 
-      activeItem ? (activeItem.imdbId || (tmdbData && tmdbData.imdb_id) || '') : '', 
+      activeItem ? (activeItem.imdbId || (tmdbData && String(tmdbData.id) === String(activeItem.tmdbId) ? tmdbData.imdb_id : '') || '') : '', 
       activeItem ? activeItem.tipo : '', 
       season, episode
     )
@@ -2417,6 +2441,7 @@ export default function StreamPage({
                     {activeItem.tipo === 'canal' ? (
                       isYouTubeUrl(activeItem.url) ? (
                         <iframe
+                          key={`canal-yt-${activeItem.id}-${activeItem.url}`}
                           src={activeItem.url.includes('/embed/') ? activeItem.url : `https://www.youtube.com/embed/${getYouTubeId(activeItem.url)}?autoplay=1&rel=0`}
                           onLoad={() => setIframeLoading(false)}
                           allowFullScreen
@@ -2425,6 +2450,7 @@ export default function StreamPage({
                         />
                       ) : (
                         <video
+                          key={`canal-video-${activeItem.id}-${activeItem.url}`}
                           ref={videoRef}
                           controls
                           autoPlay
@@ -2436,6 +2462,7 @@ export default function StreamPage({
                       )
                     ) : (
                       <iframe
+                        key={`player-${activeItem.id}-${activeServer}-${season}-${episode}-${allServers[activeServer]?.url || ''}`}
                         src={allServers[activeServer]?.url || ''}
                         onLoad={() => setIframeLoading(false)}
                         allowFullScreen
