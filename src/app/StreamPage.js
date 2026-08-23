@@ -566,6 +566,66 @@ export default function StreamPage({
     }
   }, []);
 
+  // Sistema de analíticas en tiempo real (ultra ligero y seguro)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const trackEvent = (action, extra = {}) => {
+      try {
+        const payload = {
+          action,
+          path: window.location.pathname,
+          title: activeItem ? (activeItem.titulo || activeItem.nombre) : '',
+          type: activeItem ? activeItem.tipo : '',
+          ...extra
+        };
+
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+          navigator.sendBeacon('/api/analytics/track', blob);
+        } else {
+          fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            keepalive: true
+          }).catch(() => {});
+        }
+      } catch (e) {}
+    };
+
+    // 1. Registrar visita al cargar
+    trackEvent('pageview');
+
+    // 2. Latido continuo cada 45 segundos para contar usuarios en vivo
+    const heartbeat = setInterval(() => {
+      trackEvent('heartbeat');
+    }, 45000);
+
+    return () => clearInterval(heartbeat);
+  }, []);
+
+  // Registrar reproducción de contenido cuando activeItem cambia
+  useEffect(() => {
+    if (!activeItem || typeof window === 'undefined') return;
+
+    try {
+      const payload = {
+        action: 'play',
+        path: window.location.pathname,
+        title: activeItem.titulo || activeItem.nombre || '',
+        type: activeItem.tipo || 'pelicula'
+      };
+
+      fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(() => {});
+    } catch (e) {}
+  }, [activeItem?.id]);
+
   const toggleFavorite = (item) => {
     let updated;
     if (favorites.some(fav => fav.id === item.id)) {
