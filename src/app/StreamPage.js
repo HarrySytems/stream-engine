@@ -190,7 +190,10 @@ function HeroLiveStream({ channel, onSelectChannel }) {
     const video = videoRef.current;
     if (!video || !channel || !channel.url) return;
 
-    const streamUrl = channel.url;
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const streamUrl = (channel.url.startsWith('http://') && isHttps)
+      ? `/api/proxy?url=${encodeURIComponent(channel.url)}`
+      : channel.url;
 
     const loadStream = async () => {
       try {
@@ -271,22 +274,24 @@ function HeroLiveStream({ channel, onSelectChannel }) {
             EN VIVO 24/7
           </span>
           <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#ffe600', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            FAST TV CINE
+            {channel.pais === 'TV Cable' || (channel.nombre && channel.nombre.includes('HD')) ? 'TV CABLE HD' : 'FAST TV CINE'}
           </span>
         </div>
 
-        <h1 className="hero-title">{channel.nombre || "Cinemax Latino (480p)"}</h1>
+        <h1 className="hero-title">{channel.nombre || "HBO FAMILY HD"}</h1>
         
         <div className="hero-meta">
           <span className="hero-rating" style={{ color: '#ffe600', backgroundColor: 'rgba(255, 230, 0, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
-            Transmisión en Vivo
+            Transmisión en Vivo HD
           </span>
-          <span className="hero-year">{channel.pais || 'EE.UU.'}</span>
-          <span className="hero-genre">{channel.categoria || 'Cine'}</span>
+          <span className="hero-year">{channel.pais || 'TV Cable'}</span>
+          <span className="hero-genre">{channel.categoria || 'Cine y Series'}</span>
         </div>
 
         <p className="hero-desc">
-          Transmisión continua de cine y películas en español latino las 24 horas del día. Disfruta de la mejor programación ininterrumpida sin esperas.
+          {channel.nombre && channel.nombre.toUpperCase().includes('HBO')
+            ? 'Transmisión premium en alta definición de cine familiar, películas taquilleras y series exclusivas en español latino las 24 horas del día. Disfruta de la mejor calidad sin cortes.'
+            : (channel.descripcion || 'Transmisión continua de cine y películas en español latino las 24 horas del día. Disfruta de la mejor programación ininterrumpida sin esperas.')}
         </p>
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -1797,11 +1802,12 @@ export default function StreamPage({
   }, [peliculas]);
 
   const heroChannel = useMemo(() => {
-    return canales.find(c => c.id === 'canal-cinemax-latino-480p') || 
-           canales.find(c => (c.nombre || '').toLowerCase().includes('cinemax')) ||
-           canales.find(c => c.categoria === 'Cine') || 
+    return tvCable.find(c => (c.nombre || '').toUpperCase().includes('HBO FAMILY HD')) ||
+           tvCable.find(c => (c.nombre || '').toUpperCase().includes('HBO HD')) ||
+           tvCable.find(c => c.categoria === 'Cine y Series') ||
+           canales.find(c => c.id === 'canal-cinemax-latino-480p') || 
            canales[0];
-  }, [canales]);
+  }, [tvCable, canales]);
 
 
   // Memoized FAST TV (FREE) categories
