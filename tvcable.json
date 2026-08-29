@@ -1,13 +1,13 @@
 [
   {
-    "id": "cable-mundial-0",
-    "nombre": "MUNDIAL",
+    "id": "cable-gta-vi-extended-0",
+    "nombre": "GTA VI Extended",
     "tipo": "canal",
-    "url": "https://am91cm5leq.fubo18.com/dsports/mono.m3u8?token=2f52d04be4fabc548a0563e90f36798086ef5125-2c-1783380665-1783362665",
+    "url": "https://media-rockstargames-com.akamaized.net/VI/downloads/videos/GTAVI_An_Extended_Look/GTAVI_An_Extended_Look.mp4",
     "categoria": "Variedades",
     "pais": "TV Cable",
-    "logo": "https://files.catbox.moe/p1v6rh.webp",
-    "descripcion": "Transmisión en vivo de MUNDIAL por TV Cable."
+    "logo": "https://files.catbox.moe/hjvzo8.jpg",
+    "descripcion": "Transmisión en vivo de GTA VI Extended por TV Cable."
   },
   {
     "id": "cable-tvm25-1",
