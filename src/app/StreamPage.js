@@ -278,7 +278,7 @@ function HeroLiveStream({ channel, onSelectChannel }) {
           </span>
         </div>
 
-        <h1 className="hero-title">{channel.nombre || "HBO FAMILY HD"}</h1>
+        <h1 className="hero-title">{channel.nombre ? (channel.nombre.includes('HD') ? channel.nombre : `${channel.nombre} HD`) : "HBO FAMILY HD"}</h1>
         
         <div className="hero-meta">
           <span className="hero-rating" style={{ color: '#ffe600', backgroundColor: 'rgba(255, 230, 0, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
@@ -1802,7 +1802,9 @@ export default function StreamPage({
   }, [peliculas]);
 
   const heroChannel = useMemo(() => {
-    return tvCable.find(c => (c.nombre || '').toUpperCase().includes('HBO FAMILY HD')) ||
+    return tvCable.find(c => c.id === 'cable-hbo-family-314') ||
+           tvCable.find(c => (c.nombre || '').toUpperCase().includes('HBO') && (c.url || '').includes('200.115.120.1')) ||
+           tvCable.find(c => (c.nombre || '').toUpperCase().includes('HBO FAMILY HD')) ||
            tvCable.find(c => (c.nombre || '').toUpperCase().includes('HBO HD')) ||
            tvCable.find(c => c.categoria === 'Cine y Series') ||
            canales.find(c => c.id === 'canal-cinemax-latino-480p') || 
