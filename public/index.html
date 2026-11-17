@@ -2,7 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>
+    function updateVH() {
+      var vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', vh + 'px');
+    }
+    updateVH();
+    window.addEventListener('resize', updateVH);
+    window.addEventListener('orientationchange', updateVH);
+  </script>
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>FilmTV - Para ti (Reels, Trailers y Canales)</title>
   <link rel="stylesheet" href="css/style.css">
