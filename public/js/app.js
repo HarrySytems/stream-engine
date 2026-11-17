@@ -778,25 +778,8 @@
       if (reel) {
         reel.dataset.paused = 'false';
         reel.dataset.playing = 'true';
+        reel.dataset.unmuted = 'false';
       }
-
-      // Si el usuario YA interactuó con la pantalla previamente, desmutear el video en cuanto esté listo
-      const sendUnmuteIfInteracted = () => {
-        if (hasUserInteracted && !isGlobalMuted && iframe.contentWindow) {
-          try {
-            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
-            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
-            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-          } catch (e) {}
-        }
-      };
-
-      [250, 600, 1200].forEach((delay) => {
-        setTimeout(sendUnmuteIfInteracted, delay);
-      });
-      iframe.addEventListener('load', () => {
-        setTimeout(sendUnmuteIfInteracted, 200);
-      });
     }
   }
 
@@ -915,15 +898,23 @@
       const iframe = container.querySelector('iframe');
       if (iframe && iframe.contentWindow && reel) {
         const isCurrentlyPaused = (reel.dataset.paused === 'true');
-        if (isCurrentlyPaused) {
-          // Si estaba pausado, reanudar, desmutear y ocultar botón de play
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+        const isMuted = (reel.dataset.unmuted !== 'true');
+
+        if (isMuted) {
+          // Primer toque en el video: activar sonido a todo volumen y asegurar reproducción
           iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
           iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
+          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+          reel.dataset.unmuted = 'true';
+          reel.dataset.paused = 'false';
+          if (playIndicator) playIndicator.classList.remove('show');
+        } else if (isCurrentlyPaused) {
+          // Si estaba pausado, reanudar
+          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
           reel.dataset.paused = 'false';
           if (playIndicator) playIndicator.classList.remove('show');
         } else {
-          // Poner pausa: pausar video y mostrar botón de play
+          // Si ya sonaba y estaba reproduciendo, pausar
           iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
           reel.dataset.paused = 'true';
           if (playIndicator) playIndicator.classList.add('show');

@@ -2,39 +2,60 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
   <script>
     (function initMobileViewport() {
+      var lastWidth = window.innerWidth;
       function updateAppHeight() {
         var active = document.activeElement;
         if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
           return;
         }
-        var height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        var height = window.innerHeight;
         document.documentElement.style.setProperty('--app-height', height + 'px');
         document.documentElement.style.setProperty('--vh', (height * 0.01) + 'px');
       }
       updateAppHeight();
-      window.addEventListener('resize', updateAppHeight);
-      window.addEventListener('orientationchange', function() { setTimeout(updateAppHeight, 150); });
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', updateAppHeight);
-      }
-      // Prevenir multi-touch zoom (pinch) sin interferir con gestos de scroll o clics de botones
+      window.addEventListener('orientationchange', function() {
+        setTimeout(updateAppHeight, 200);
+      });
+      window.addEventListener('resize', function() {
+        if (Math.abs(window.innerWidth - lastWidth) > 50) {
+          lastWidth = window.innerWidth;
+          updateAppHeight();
+        }
+      });
+
+      // 1. Bloquear pinch zoom en touchstart antes de que el detector de Chrome se active
+      document.addEventListener('touchstart', function (e) {
+        if (e.touches && e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      // 2. Bloquear pinch zoom en touchmove
       document.addEventListener('touchmove', function (e) {
         if (e.touches && e.touches.length > 1) {
           e.preventDefault();
         }
       }, { passive: false });
-      // Prevenir gestos de zoom en iOS Safari WebKit
-      document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
-      document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
-      document.addEventListener('gestureend', function (e) { e.preventDefault(); });
+
+      // 3. Prevenir gestos de zoom en iOS Safari WebKit
+      document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+      document.addEventListener('gesturechange', function (e) { e.preventDefault(); }, { passive: false });
+      document.addEventListener('gestureend', function (e) { e.preventDefault(); }, { passive: false });
+
+      // 4. Prevenir zoom por rueda con Ctrl
+      document.addEventListener('wheel', function (e) {
+        if (e.ctrlKey) {
+          e.preventDefault();
+        }
+      }, { passive: false });
     })();
   </script>
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>FilmTV - Para ti (Reels, Trailers y Canales)</title>
-  <link rel="stylesheet" href="css/style.css?v=2.2.1">
+  <link rel="stylesheet" href="css/style.css?v=2.3.0">
   <!-- Supabase JS Client v2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- HLS.js CDN para canales en vivo -->
@@ -330,8 +351,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/data.js?v=2.2.1"></script>
-  <script src="js/supabase-client.js?v=2.2.1"></script>
-  <script src="js/app.js?v=2.2.1"></script>
+  <script src="js/data.js?v=2.3.0"></script>
+  <script src="js/supabase-client.js?v=2.3.0"></script>
+  <script src="js/app.js?v=2.3.0"></script>
 </body>
 </html>

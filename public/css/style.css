@@ -1040,14 +1040,34 @@ body:has(.comments-panel.collapsed) .desktop-floating-nav {
    MOBILE RESPONSIVENESS (< 768px - FULLSCREEN TIKTOK APP STYLE)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-  .app-container {
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    height: var(--app-height, 100dvh);
-    max-height: var(--app-height, 100dvh);
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    height: var(--app-height, 100vh) !important;
+    max-height: var(--app-height, 100vh) !important;
     overflow: hidden !important;
-    position: relative;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    touch-action: pan-y !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+
+  .app-container {
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: var(--app-height, 100vh) !important;
+    max-height: var(--app-height, 100vh) !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
   }
 
   .sidebar {
@@ -1137,54 +1157,57 @@ body:has(.comments-panel.collapsed) .desktop-floating-nav {
 
   /* Mobile Fullscreen Reel - Bloqueado rígidamente al viewport visible */
   .feed-container {
-    width: 100vw;
-    height: 100%;
-    height: var(--app-height, 100dvh);
-    max-height: var(--app-height, 100dvh);
-    padding: 0;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    scroll-snap-type: y mandatory;
-    scroll-snap-stop: always;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
-    touch-action: pan-y;
+    width: 100vw !important;
+    height: 100% !important;
+    height: var(--app-height, 100vh) !important;
+    max-height: var(--app-height, 100vh) !important;
+    padding: 0 !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    scroll-snap-type: y mandatory !important;
+    scroll-snap-stop: always !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
+    touch-action: pan-y !important;
   }
 
   .reel-item {
-    width: 100vw;
-    height: 100%;
-    height: var(--app-height, 100dvh);
-    max-height: var(--app-height, 100dvh);
-    flex-shrink: 0;
-    padding: 0;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-    position: relative;
+    width: 100vw !important;
+    height: 100% !important;
+    height: var(--app-height, 100vh) !important;
+    max-height: var(--app-height, 100vh) !important;
+    min-height: var(--app-height, 100vh) !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+    position: relative !important;
     overflow: hidden !important;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
+    touch-action: pan-y !important;
   }
 
   .video-card-wrapper {
-    width: 100vw;
-    height: 100%;
-    height: var(--app-height, 100dvh);
-    max-height: var(--app-height, 100dvh);
+    width: 100vw !important;
+    height: 100% !important;
+    height: var(--app-height, 100vh) !important;
+    max-height: var(--app-height, 100vh) !important;
     gap: 0;
-    position: relative;
+    position: relative !important;
     overflow: hidden !important;
   }
 
   .video-card {
-    width: 100vw;
-    height: 100%;
-    height: var(--app-height, 100dvh);
-    max-width: 100vw;
-    max-height: var(--app-height, 100dvh);
+    width: 100vw !important;
+    height: 100% !important;
+    height: var(--app-height, 100vh) !important;
+    max-width: 100vw !important;
+    max-height: var(--app-height, 100vh) !important;
     border-radius: 0;
     border: none;
     box-shadow: none;
-    position: relative;
+    position: relative !important;
     overflow: hidden !important;
   }
 
@@ -1296,24 +1319,24 @@ body:has(.comments-panel.collapsed) .desktop-floating-nav {
 
   /* Mobile Bottom Sheet Modal for Comments */
   .comments-panel {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100vw;
-    height: 72vh;
-    height: 72dvh;
+    display: none !important;
+  }
+
+  .comments-panel.open-mobile {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    height: 72vh !important;
+    height: 72dvh !important;
     border-radius: 16px 16px 0 0;
     border-left: none;
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.85);
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
-    z-index: 100;
-  }
-
-  .comments-panel.open-mobile {
-    transform: translateY(0);
+    z-index: 100 !important;
+    transform: translateY(0) !important;
   }
 
   .comments-backdrop {
