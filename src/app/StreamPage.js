@@ -322,9 +322,9 @@ export default function StreamPage({
   initialEstrenosCategory = 'Todos',
   initialTvCableCategory = 'Todos'
 }) {
-  // Estado para la pantalla de presentación (Splash Screen)
-  const [showSplash, setShowSplash] = useState(true);
-  const [fadeOutSplash, setFadeOutSplash] = useState(false);
+  // Estado para la pantalla de presentación (Splash Screen) - Desactivado: entra directo sin esperas
+  const [showSplash, setShowSplash] = useState(false);
+  const [fadeOutSplash, setFadeOutSplash] = useState(true);
 
   // Catálogo de películas, estrenos, TV Cable y canales
   const [peliculas, setPeliculas] = useState(initialPeliculas || []);
@@ -744,20 +744,9 @@ export default function StreamPage({
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [chatCollapsed, setChatCollapsed] = useState(false);
 
-  // Efecto para controlar la duración de la animación del Splash Screen
+  // Splash Screen eliminado: entra directo sin esperas ni pantalla de carga
   useEffect(() => {
-    const fadeTimer = setTimeout(() => {
-      setFadeOutSplash(true);
-    }, 500);
-
-    const removeTimer = setTimeout(() => {
-      setShowSplash(false);
-    }, 800);
-
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
-    };
+    setShowSplash(false);
   }, []);
 
   // Cargar estrenos en segundo plano
@@ -2266,40 +2255,7 @@ export default function StreamPage({
 
   return (
     <div className="app-container">
-      {/* 1. ANIMATED INTRO SPLASH SCREEN */}
-      {showSplash && (
-        <div className={`splash-overlay ${fadeOutSplash ? 'fade-out' : ''}`}>
-          <div className="splash-logo-container">
-            <svg width="320" height="100" viewBox="0 0 320 100" className="splash-logo">
-              <defs>
-                <linearGradient id="neon-cyan-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ffe600" />
-                  <stop offset="100%" stopColor="#ffd000" />
-                </linearGradient>
-                <filter id="neon-glow-filter" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="8" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              
-              <text x="20" y="68" fill="#ffffff" fontSize="46" fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing="3" className="animated-text">
-                FILM
-              </text>
-              
-              <rect x="175" y="20" width="115" height="60" rx="12" fill="url(#neon-cyan-gradient)" filter="url(#neon-glow-filter)" className="animated-badge" />
-              <text x="232" y="62" fill="#000000" fontSize="34" fontWeight="900" fontFamily="'Inter', sans-serif" textAnchor="middle">
-                TV
-              </text>
-            </svg>
-            <div className="splash-loader-bar">
-              <div className="loader-progress"></div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 1. ANIMATED INTRO SPLASH SCREEN - Desactivado por completo para entrar directo sin esperas */}
 
       {/* 2. LEFT SIDEBAR (Desktop / Collapsed Mobile) */}
       <aside className={`main-sidebar ${mobileMenuOpen ? 'open' : ''}`}>

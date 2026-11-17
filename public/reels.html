@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>FilmTV - Para ti (Reels, Trailers y Canales)</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- HLS.js CDN para canales en vivo -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div class="toast-notice" id="toastNotice">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toastMsg">¡Enlace copiado!</span>
+  </div>
+
+  <!-- Banner aviso si se abre en file:/// -->
+  <div class="file-protocol-warning" id="fileProtocolWarning">
+    <span>Para reproducir los trailers de YouTube sin bloqueo de Google (Error 153), abre <a href="http://localhost:3000" id="linkLocalhost">http://localhost:3000</a></span>
+    <button class="btn-dismiss-warning" id="btnDismissWarning">✕</button>
+  </div>
+
+  <!-- Mobile Comments Backdrop -->
+  <div class="comments-backdrop" id="commentsBackdrop"></div>
+
+  <!-- Flechas flotantes de navegación rápida en PC (Exactas a TikTok Desktop) -->
+  <div class="desktop-floating-nav" id="desktopFloatingNav">
+    <button class="btn-float-arrow btn-float-up" id="btnFloatUp" aria-label="Video anterior" title="Video anterior">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
+    <button class="btn-float-arrow btn-float-down" id="btnFloatDown" aria-label="Siguiente video" title="Siguiente video">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Main App Container -->
+  <div class="app-container">
+
+    <!-- Mobile Top Bar (Solo visible en pantallas móviles <= 768px) -->
+    <header class="mobile-top-nav">
+      <div class="mobile-brand">
+        <svg width="95" height="26" viewBox="0 0 200 60">
+          <defs>
+            <linearGradient id="yellowGradMobile" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#FFD700" />
+              <stop offset="100%" stop-color="#FFA500" />
+            </linearGradient>
+          </defs>
+          <text x="5" y="42" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" letter-spacing="2">FILM</text>
+          <rect x="115" y="12" width="62" height="36" rx="8" fill="url(#yellowGradMobile)" />
+          <text x="146" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="900" fill="#000000" text-anchor="middle">TV</text>
+        </svg>
+      </div>
+
+      <!-- Pestañas horizontales móviles deslizable -->
+      <nav class="mobile-tabs-scroll" id="mobileTabs">
+        <button class="mobile-tab-btn active" data-seccion="para_ti">Para ti</button>
+        <button class="mobile-tab-btn" data-seccion="peliculas">Películas</button>
+        <button class="mobile-tab-btn" data-seccion="series">Series</button>
+        <button class="mobile-tab-btn" data-seccion="anime">Anime</button>
+        <button class="mobile-tab-btn" data-seccion="tdt">TDT</button>
+        <button class="mobile-tab-btn" data-seccion="free">FREE</button>
+        <button class="mobile-tab-btn" data-seccion="tvcable">TV Cable</button>
+      </nav>
+
+      <button class="mobile-btn-search" id="btnMobileSearch" aria-label="Buscar">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+    </header>
+
+    <!-- 1. Left Navigation Sidebar (Desktop) -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="brand-link" id="brandLogoHome" aria-label="FilmTV">
+          <svg width="126" height="34" viewBox="0 0 200 60">
+            <defs>
+              <linearGradient id="yellowGradDesk" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFD700" />
+                <stop offset="100%" stop-color="#FFA500" />
+              </linearGradient>
+            </defs>
+            <text x="5" y="42" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" letter-spacing="2">FILM</text>
+            <rect x="115" y="12" width="62" height="36" rx="8" fill="url(#yellowGradDesk)" />
+            <text x="146" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="900" fill="#000000" text-anchor="middle">TV</text>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Search Input Bar -->
+      <div class="search-box-container">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Buscar en FilmTV...">
+          <button class="btn-clear-search" id="btnClearSearch" aria-label="Limpiar búsqueda">✕</button>
+        </div>
+      </div>
+
+      <!-- Main Navigation -->
+      <nav class="sidebar-nav" id="sidebarNav">
+        <button class="nav-item active" data-seccion="para_ti">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Para ti</span>
+        </button>
+
+        <button class="nav-item" data-seccion="peliculas">
+          <svg viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+            <line x1="7" y1="2" x2="7" y2="22"></line>
+            <line x1="17" y1="2" x2="17" y2="22"></line>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <line x1="2" y1="7" x2="7" y2="7"></line>
+            <line x1="2" y1="17" x2="7" y2="17"></line>
+            <line x1="17" y1="17" x2="22" y2="17"></line>
+            <line x1="17" y1="7" x2="22" y2="7"></line>
+          </svg>
+          <span>Películas</span>
+        </button>
+
+        <button class="nav-item" data-seccion="series">
+          <svg viewBox="0 0 24 24">
+            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+            <polyline points="17 2 12 7 7 2"></polyline>
+          </svg>
+          <span>Series</span>
+        </button>
+
+        <button class="nav-item" data-seccion="anime">
+          <svg viewBox="0 0 24 24">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>Anime</span>
+        </button>
+
+        <button class="nav-item" data-seccion="tdt">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 11a9 9 0 0 1 9 9"></path>
+            <path d="M4 4a16 16 0 0 1 16 16"></path>
+            <circle cx="5" cy="19" r="1"></circle>
+          </svg>
+          <span>TDT</span>
+        </button>
+
+        <button class="nav-item" data-seccion="free">
+          <svg viewBox="0 0 24 24">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+          </svg>
+          <span>FREE</span>
+        </button>
+
+        <button class="nav-item" data-seccion="tvcable">
+          <svg viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>TV Cable</span>
+        </button>
+
+        <div class="sidebar-divider"></div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p>FilmTV © 2026. Todos los derechos reservados.</p>
+        <p><a href="#">Términos</a> · <a href="#">Privacidad</a> · <a href="#">Contacto</a></p>
+      </div>
+    </aside>
+
+    <!-- 2. Center Feed Column (Vertical Reel Player) -->
+    <main class="feed-container" id="feedContainer">
+      <!-- Reel cards renderizados dinámicamente -->
+    </main>
+
+    <!-- 2.5 Cinema Full Video Player (In-App Widescreen Player) -->
+    <section class="full-player-overlay" id="fullPlayerOverlay" style="display: none;">
+      <!-- Top Header: Back Button, Title, Badges -->
+      <header class="full-player-header">
+        <button class="btn-back-to-feed" id="btnBackToFeed" aria-label="Volver al feed">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span id="btnBackToFeedText">Volver a Para ti</span>
+        </button>
+
+        <div class="full-player-header-info">
+          <span class="full-player-category-pill" id="fullPlayerCategoryPill">Película</span>
+          <h1 class="full-player-header-title" id="fullPlayerHeaderTitle">Título</h1>
+        </div>
+
+        <div class="full-player-header-actions">
+          <button class="btn-full-player-action" id="btnShareFullMovie" title="Compartir enlace">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Cinema Content Area -->
+      <div class="full-player-body">
+        <!-- Server Switcher Tabs (For Movies/Series/Anime) -->
+        <div class="full-player-servers-container" id="fullPlayerServersContainer">
+          <div class="servers-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            <span>Servidores de Reproducción:</span>
+          </div>
+          <div class="servers-pills-list" id="fullPlayerServersList">
+            <!-- Server buttons generated dynamically -->
+          </div>
+        </div>
+
+        <!-- Cinema Screen Box (16:9 widescreen) -->
+        <div class="full-player-screen-wrapper">
+          <div class="full-player-screen-box" id="fullPlayerScreenBox">
+            <div class="full-player-media-host" id="fullPlayerMediaHost">
+              <!-- Iframe or Video mounted here -->
+            </div>
+            <!-- Loading indicator for embeds -->
+            <div class="full-player-loader" id="fullPlayerLoader" style="display:none;">
+              <div class="spinner"></div>
+              <span>Conectando con el servidor de streaming...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Metadata / Synopsis Details Section -->
+        <div class="full-player-details">
+          <div class="full-player-meta-badges">
+            <span class="fp-badge" id="fullPlayerYear">2026</span>
+            <span class="fp-badge" id="fullPlayerGenre">Acción</span>
+            <span class="fp-badge rating" id="fullPlayerRating">★ 8.5</span>
+            <span class="fp-badge quality" id="fullPlayerQuality">1080p Full HD</span>
+          </div>
+
+          <h2 class="full-player-title" id="fullPlayerTitle">Título completo</h2>
+          <p class="full-player-synopsis" id="fullPlayerSynopsis">Sinopsis...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Right Comments Panel (Desktop & Mobile Modal) -->
+    <aside class="comments-panel" id="commentsPanel">
+      <div class="comments-header">
+        <span class="comments-title" id="commentsHeaderCount">Comentarios (0)</span>
+        <button class="btn-close-comments" id="btnCloseComments" aria-label="Cerrar panel de comentarios">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Scrollable Comments -->
+      <div class="comments-list" id="commentsList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Comment Input Area (Siempre anclado al fondo) -->
+      <div class="comment-input-area" id="commentInputArea">
+        <div class="comment-user-badge" id="commentUserBadge">
+          <span>Comentando como:</span>
+          <input type="text" id="commentUserHandle" value="Usuario_FilmTV" placeholder="Tu nombre">
+        </div>
+        <form class="comment-input-row" id="commentForm">
+          <input type="text" id="commentTextInput" placeholder="Añadir comentario..." autocomplete="off">
+          <button type="submit" class="btn-send-comment" id="btnSendComment" aria-label="Publicar comentario" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+            </svg>
+          </button>
+        </form>
+        <div class="comment-live-disabled-notice" id="commentLiveDisabledNotice" style="display:none;">
+          <span>COMENTARIOS DESACTIVADOS PARA EN VIVO</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

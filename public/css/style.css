@@ -1,0 +1,1600 @@
+/* ==========================================================================
+   FilmTV TikTok Clone - Modern Dark Theme Stylesheet
+   Dimensiones exactas de TikTok Desktop y Mobile con identidad FilmTV.
+   Optimizaciones para scroll ultrarrápido y bloqueo total de enlaces externos.
+   ========================================================================== */
+
+:root {
+  --bg-main: #000000;
+  --bg-sidebar: #121212;
+  --bg-card: #181818;
+  --bg-panel: #121212;
+  --bg-input: #2f2f2f;
+  --bg-input-hover: #3a3a3a;
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-light: rgba(255, 255, 255, 0.08);
+  
+  --text-main: #ffffff;
+  --text-muted: #8a8b91;
+  --text-dim: #65676b;
+
+  --accent-red: #fe2c55;
+  --accent-red-hover: #e02447;
+  --accent-yellow: #ffcc00;
+  --accent-yellow-hover: #e6b800;
+
+  --sidebar-width: 240px;
+  --comments-width: 380px;
+
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  max-height: 100vh;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-family);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ==========================================================================
+   FLECHAS FLOTANTES DE NAVEGACIÓN EN PC (EXACTAS A TIKTOK DESKTOP)
+   ========================================================================== */
+.desktop-floating-nav {
+  position: fixed;
+  right: calc(var(--comments-width) + 16px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 60;
+  pointer-events: auto;
+  transition: right 0.25s ease;
+}
+
+body:has(.comments-panel.collapsed) .desktop-floating-nav {
+  right: 20px;
+}
+
+.btn-float-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(36, 36, 36, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.btn-float-arrow:hover {
+  background: rgba(55, 55, 55, 0.95);
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-float-arrow:active {
+  transform: scale(0.95);
+}
+
+.btn-float-arrow:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* En móviles las flechas NUNCA deben aparecer */
+@media (max-width: 768px) {
+  .desktop-floating-nav {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   FILE PROTOCOL BANNER
+   ========================================================================== */
+.file-protocol-warning {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #1e1e24;
+  border-bottom: 2px solid var(--accent-yellow);
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 13px;
+  z-index: 9999;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+}
+
+.file-protocol-warning.show {
+  display: flex;
+}
+
+.file-protocol-warning a {
+  color: var(--accent-yellow);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.btn-dismiss-warning {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ==========================================================================
+   MAIN APP LAYOUT (3 COLUMNS ON DESKTOP)
+   ========================================================================== */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.mobile-top-nav {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. LEFT SIDEBAR (NAVIGATION & SECTIONS)
+   -------------------------------------------------------------------------- */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  max-height: 100vh;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 16px 10px;
+  z-index: 20;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 14px 8px;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Search Bar */
+.search-box-container {
+  padding: 0 4px 14px 4px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border-radius: 999px;
+  padding: 8px 12px;
+  gap: 10px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.search-bar:focus-within {
+  background: #383838;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.search-bar svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.search-bar input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+  width: 100%;
+}
+
+.search-bar input::placeholder {
+  color: var(--text-muted);
+}
+
+.btn-clear-search {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Navigation Buttons */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-item {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  font-family: inherit;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav-item.active {
+  color: var(--accent-red);
+}
+
+.nav-item.active svg {
+  fill: var(--accent-red);
+  stroke: var(--accent-red);
+}
+
+.nav-item svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 10px 4px;
+}
+
+.sidebar-footer {
+  padding: 10px 8px 2px 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.sidebar-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-right: 8px;
+}
+
+.sidebar-footer a:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   2. CENTER FEED COLUMN (OPTIMIZADO PARA SCROLL ULTRA RÁPIDO)
+   -------------------------------------------------------------------------- */
+.feed-container {
+  flex: 1;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--bg-main);
+  position: relative;
+  scrollbar-width: none;
+  will-change: scroll-position;
+}
+
+.feed-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Cada reel ocupa exactamente el 100vh */
+.reel-item {
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  contain: layout style;
+  content-visibility: auto;
+}
+
+/* Wrapper que acopla el video y sus botones */
+.video-card-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  position: relative;
+  height: calc(100vh - 20px);
+  max-height: calc(100vh - 20px);
+}
+
+/* Card del reproductor - Tamaño completo 9:16 inmersivo como TikTok */
+.video-card {
+  height: 100%;
+  aspect-ratio: 9 / 16;
+  max-width: calc((100vh - 20px) * 9 / 16);
+  background-color: #0c0c0c;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ESCUDO PROTECTOR TRANSPARENTE: BLOQUEA CLICS HACIA YOUTUBE */
+.video-shield-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 15;
+  cursor: default !important; /* Nunca muestra manito */
+  pointer-events: auto !important;
+  user-select: none;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Indicador central de reproducción/pausa (Estilo TikTok al tocar) */
+.video-play-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  width: 76px;
+  height: 76px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 16;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.video-play-indicator svg {
+  width: 36px;
+  height: 36px;
+  fill: #ffffff;
+  margin-left: 4px;
+}
+
+.video-play-indicator.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Escudo protector ante errores de video */
+.video-error-fallback {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.video-error-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(18, 18, 18, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 10px 20px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+}
+
+/* Contenedor del reproductor */
+.video-player-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+  overflow: hidden;
+  cursor: default !important;
+  z-index: 1;
+}
+
+/* El iframe NO recibe clics ni interacción de ratón (Cero enlaces a YouTube) */
+/* Se empuja 65px arriba y abajo para recortar completamente la barra superior de YouTube con su logo y título */
+.video-player-container iframe {
+  position: absolute;
+  top: -65px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 130px);
+  object-fit: cover;
+  border: none;
+  pointer-events: none !important; /* BLOQUEO TOTAL DE CLICS A YOUTUBE */
+  user-select: none;
+}
+
+.video-player-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+  pointer-events: none !important;
+}
+
+/* Poster de respaldo */
+.video-poster-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.9;
+  cursor: default;
+}
+
+/* Top Video Controls Overlay (Limpio, con degradado para cubrir títulos de YouTube) */
+.video-top-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 45%, transparent 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.live-indicator {
+  pointer-events: auto;
+  background: rgba(254, 44, 85, 0.92);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.live-indicator.live {
+  background: #e50914;
+}
+
+.live-indicator.live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 50%;
+  animation: pulseLive 1.5s infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.9); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.5; }
+  100% { transform: scale(0.9); opacity: 1; }
+}
+
+/* Bottom Video Info Overlay */
+.video-info-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 26px 16px 16px 16px;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.72) 55%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.video-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge-tag {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.badge-tag.rating {
+  background: rgba(255, 204, 0, 0.25);
+  color: var(--accent-yellow);
+  font-weight: 700;
+}
+
+.video-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+}
+
+.video-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.video-desc.expanded {
+  -webkit-line-clamp: unset;
+}
+
+.btn-more-desc {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: -4px;
+}
+
+.btn-more-desc:hover {
+  color: #fff;
+}
+
+/* BOTÓN DESTACADO: VER PELÍCULA / SERIE / CANAL */
+.btn-watch-movie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #000000;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  margin-top: 6px;
+  box-shadow: 0 4px 14px rgba(255, 165, 0, 0.4);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-watch-movie:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 165, 0, 0.6);
+  background: linear-gradient(135deg, #FFE033 0%, #FFB733 100%);
+}
+
+.btn-watch-movie svg {
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   BARRA LATERAL DE ACCIONES (TIKTOK STYLE)
+   -------------------------------------------------------------------------- */
+.action-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.action-btn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-circle-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #242424;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background-color 0.15s;
+}
+
+.action-circle-btn:hover {
+  background: #333333;
+  transform: scale(1.08);
+}
+
+.action-circle-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: fill 0.2s, transform 0.2s;
+}
+
+.action-circle-btn.liked {
+  color: var(--accent-red);
+}
+
+.action-circle-btn.liked svg {
+  fill: var(--accent-red);
+  transform: scale(1.15);
+}
+
+.action-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* --------------------------------------------------------------------------
+   3. RIGHT COLUMN (COMMENTS PANEL - EXACT TIKTOK DESKTOP)
+   -------------------------------------------------------------------------- */
+.comments-panel {
+  width: var(--comments-width);
+  height: 100vh;
+  max-height: 100vh;
+  background-color: var(--bg-panel);
+  border-left: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 20;
+  overflow: hidden;
+  transition: transform 0.25s ease, width 0.25s ease;
+}
+
+.comments-panel.collapsed {
+  width: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
+.comments-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.comments-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.btn-close-comments {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.btn-close-comments:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Comments Scrollable List */
+.comments-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.comments-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* Single Comment Card */
+.comment-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.comment-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #333;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.comment-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.comment-author {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.comment-text {
+  font-size: 14px;
+  color: #e5e5e7;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.comment-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.comment-btn-reply {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comment-btn-reply:hover {
+  color: #fff;
+}
+
+.comment-like-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.comment-like-btn:hover {
+  color: #fff;
+}
+
+.comment-like-btn.liked {
+  color: var(--accent-red);
+}
+
+.comment-like-btn.liked svg {
+  fill: var(--accent-red);
+}
+
+/* Empty State */
+.comments-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  height: 100%;
+  padding: 40px 20px;
+}
+
+/* Bottom Comment Input Form */
+.comment-input-area {
+  flex-shrink: 0;
+  padding: 12px 18px 16px 18px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 5;
+}
+
+.comment-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.comment-user-badge input {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 12px;
+  outline: none;
+}
+
+.comment-input-row {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border-radius: 999px;
+  padding: 6px 12px 6px 16px;
+  gap: 8px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.comment-input-row:focus-within {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.comment-input-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+}
+
+.comment-input-row input::placeholder {
+  color: var(--text-muted);
+}
+
+.btn-send-comment {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.btn-send-comment:hover {
+  background: var(--accent-red-hover);
+  transform: scale(1.05);
+}
+
+.btn-send-comment:disabled {
+  background: #444;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Aviso de comentarios desactivados en canales en vivo */
+.comment-live-disabled-notice {
+  padding: 12px 14px;
+  background: rgba(254, 44, 85, 0.08);
+  border: 1px dashed rgba(254, 44, 85, 0.35);
+  border-radius: 8px;
+  color: #ff6b8b;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comments-live-disabled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* --------------------------------------------------------------------------
+   TOAST NOTIFICATION
+   -------------------------------------------------------------------------- */
+.toast-notice {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.toast-notice.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   MOBILE RESPONSIVENESS (< 768px - FULLSCREEN TIKTOK APP STYLE)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  /* Barra superior móvil con pestañas horizontales */
+  .mobile-top-nav {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    z-index: 50;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%);
+    gap: 8px;
+  }
+
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .mobile-tabs-scroll {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0 4px;
+    flex: 1;
+  }
+
+  .mobile-tabs-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-tab-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    padding: 6px 4px;
+    position: relative;
+    font-family: inherit;
+  }
+
+  .mobile-tab-btn.active {
+    color: #ffffff;
+  }
+
+  .mobile-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 80%;
+    height: 2.5px;
+    background: #fff;
+    border-radius: 2px;
+  }
+
+  .mobile-btn-search {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 6px;
+  }
+
+  /* Mobile Fullscreen Reel */
+  .feed-container {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+  }
+
+  .reel-item {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+  }
+
+  .video-card-wrapper {
+    width: 100vw;
+    height: 100vh;
+    gap: 0;
+  }
+
+  .video-card {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* Floating Action Bar */
+  .action-bar {
+    position: absolute;
+    right: 12px;
+    bottom: 84px;
+    z-index: 20;
+    gap: 14px;
+  }
+
+  .action-circle-btn {
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  .video-info-overlay {
+    bottom: 0;
+    left: 0;
+    right: 70px;
+    padding: 20px 16px 24px 16px;
+  }
+
+  /* Mobile Bottom Sheet Modal for Comments */
+  .comments-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    height: 72vh;
+    border-radius: 16px 16px 0 0;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.85);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+    z-index: 100;
+  }
+
+  .comments-panel.open-mobile {
+    transform: translateY(0);
+  }
+
+  .comments-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .comments-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ==========================================================================
+   REPRODUCTOR DE CINE INTEGRADO (IN-APP CINEMA FULL PLAYER)
+   Ocupa todo el espacio ancho disponible ocultando comentarios y flechas.
+   ========================================================================== */
+body.full-player-active .feed-container,
+body.full-player-active .comments-panel,
+body.full-player-active .desktop-floating-nav {
+  display: none !important;
+}
+
+body.full-player-active .full-player-overlay {
+  display: flex !important;
+  flex: 1;
+  height: 100vh;
+  max-height: 100vh;
+  background-color: #09090b;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 50;
+  animation: fadeInCinema 0.22s ease-out;
+}
+
+@keyframes fadeInCinema {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.full-player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(18, 18, 20, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(12px);
+  gap: 16px;
+}
+
+.btn-back-to-feed {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.btn-back-to-feed:hover {
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  color: #000000;
+  border-color: #ffd700;
+  transform: translateX(-3px);
+  box-shadow: 0 4px 14px rgba(255, 204, 0, 0.35);
+}
+
+.btn-back-to-feed svg {
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+.full-player-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.full-player-category-pill {
+  background: rgba(254, 44, 85, 0.18);
+  color: var(--accent-red);
+  border: 1px solid rgba(254, 44, 85, 0.35);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.full-player-header-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.full-player-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-full-player-action {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-full-player-action:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--accent-yellow);
+  transform: scale(1.08);
+}
+
+.full-player-body {
+  flex: 1;
+  padding: 20px 28px 48px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 18px;
+}
+
+/* Selector de Servidores */
+.full-player-servers-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(22, 22, 26, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.servers-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+.servers-label svg {
+  color: var(--accent-yellow);
+}
+
+.servers-pills-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.server-pill {
+  padding: 7px 14px;
+  background: #202025;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #ccc;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.server-pill:hover {
+  background: #2e2e36;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.server-pill.active {
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  color: #000000;
+  font-weight: 800;
+  border-color: #ffd700;
+  box-shadow: 0 2px 10px rgba(255, 204, 0, 0.35);
+  transform: scale(1.02);
+}
+
+/* Pantalla de Cine Widescreen 16:9 */
+.full-player-screen-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.full-player-screen-box {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 225px);
+  background: #000000;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.95);
+}
+
+.full-player-media-host {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.cinema-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000000;
+  display: block;
+}
+
+.cinema-hls-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000000;
+  display: block;
+  outline: none;
+}
+
+.full-player-loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(9, 9, 11, 0.9);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--accent-yellow);
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid rgba(255, 204, 0, 0.2);
+  border-top-color: var(--accent-yellow);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Ficha técnica y sinopsis */
+.full-player-details {
+  width: 100%;
+  background: rgba(18, 18, 22, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.full-player-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fp-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.fp-badge.rating {
+  background: rgba(255, 204, 0, 0.18);
+  color: var(--accent-yellow);
+}
+
+.fp-badge.quality {
+  background: rgba(254, 44, 85, 0.18);
+  color: var(--accent-red);
+}
+
+.full-player-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.full-player-synopsis {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #c0c0c5;
+}
+
+/* BADGE: TRÁILER NO DISPONIBLE (EN REELS VERTICALES) */
+.no-trailer-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  background: rgba(14, 14, 16, 0.9);
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  padding: 20px 24px;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  color: #ffffff;
+  z-index: 12;
+  width: 82%;
+  max-width: 290px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+  animation: fadeInCinema 0.3s ease;
+}
+
+.no-trailer-badge span {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent-yellow);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.no-trailer-badge small {
+  font-size: 11px;
+  color: #a0a0a5;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .full-player-body {
+    padding: 14px 12px 36px 12px;
+  }
+  .full-player-header {
+    padding: 10px 14px;
+  }
+  .full-player-header-title {
+    max-width: 170px;
+    font-size: 14px;
+  }
+  .full-player-screen-box {
+    max-height: 55vh;
+  }
+}
+
