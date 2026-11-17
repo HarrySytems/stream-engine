@@ -11,7 +11,8 @@
   let currentSection = 'para_ti';
   let currentFeed = [];
   let currentActiveIndex = 0;
-  let isGlobalMuted = false; // Sonido siempre activo por defecto
+  let isGlobalMuted = true; // Empieza muteado para que Chrome móvil permita autoplay automático sin botón rojo
+  let hasUserInteracted = false; // Pasa a true con el primer toque o deslizamiento del usuario
   let currentHlsInstance = null;
   let scrollDebounceTimer = null;
   let isWheelScrolling = false;
@@ -755,7 +756,7 @@
       return;
     }
 
-    // 2. Trailer de YouTube (Autoplay garantizado sin botón rojo de YouTube y audio continuo)
+    // 2. Trailer de YouTube (Autoplay garantizado sin botón rojo de YouTube)
     if (item.trailerKey) {
       if (container.querySelector('iframe')) return;
 
@@ -764,7 +765,7 @@
         : 'http://localhost:3000';
 
       const iframe = document.createElement('iframe');
-      // Siempre inicializar con mute=1 para que Chrome móvil y Safari permitan autoplay inmediato al 100% sin mostrar el botón rojo gigante
+      // Inicializar SIEMPRE con mute=1 para que Chrome móvil permita el autoplay sin mostrar el botón rojo
       iframe.src = `https://www.youtube.com/embed/${item.trailerKey}?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&disablekb=1&iv_load_policy=3&enablejsapi=1&fs=0&loop=1&playlist=${item.trailerKey}&origin=${encodeURIComponent(originParam)}`;
       iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
@@ -774,8 +775,14 @@
       container.innerHTML = '';
       container.appendChild(iframe);
 
-      const sendUnmute = () => {
-        if (!isGlobalMuted && iframe.contentWindow) {
+      if (reel) {
+        reel.dataset.paused = 'false';
+        reel.dataset.playing = 'true';
+      }
+
+      // Si el usuario YA interactuó con la pantalla previamente, desmutear el video en cuanto esté listo
+      const sendUnmuteIfInteracted = () => {
+        if (hasUserInteracted && !isGlobalMuted && iframe.contentWindow) {
           try {
             iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
             iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
@@ -784,11 +791,11 @@
         }
       };
 
-      [200, 500, 1000, 1800].forEach((delay) => {
-        setTimeout(sendUnmute, delay);
+      [250, 600, 1200].forEach((delay) => {
+        setTimeout(sendUnmuteIfInteracted, delay);
       });
       iframe.addEventListener('load', () => {
-        [150, 450, 900].forEach((delay) => setTimeout(sendUnmute, delay));
+        setTimeout(sendUnmuteIfInteracted, 200);
       });
     }
   }
@@ -842,6 +849,21 @@
           `;
         }
       }
+
+      // Sincronizar estado real del reproductor de YouTube
+      if (data && data.info && typeof data.info.playerState !== 'undefined') {
+        const state = data.info.playerState;
+        const currentReel = document.getElementById(`reel-${currentActiveIndex}`);
+        const playIndicator = document.getElementById(`play-indicator-${currentActiveIndex}`);
+        if (currentReel) {
+          if (state === 1) { // 1 = Reproduciendo
+            currentReel.dataset.paused = 'false';
+            if (playIndicator) playIndicator.classList.remove('show');
+          } else if (state === 2) { // 2 = Pausado
+            currentReel.dataset.paused = 'true';
+          }
+        }
+      }
     } catch (err) {}
   });
 
@@ -859,6 +881,11 @@
     if (!item) return;
 
     markAsWatched(item.id);
+
+    // Primer toque desbloquea audio y marca interacción
+    if (!hasUserInteracted) {
+      ensureAudioUnlocked();
+    }
 
     // 1. Canal en vivo (Video HTML5)
     if (item.streamUrl) {
@@ -889,8 +916,10 @@
       if (iframe && iframe.contentWindow && reel) {
         const isCurrentlyPaused = (reel.dataset.paused === 'true');
         if (isCurrentlyPaused) {
-          // Quitar pausa: reanudar reproducción y ocultar botón de play
+          // Si estaba pausado, reanudar, desmutear y ocultar botón de play
           iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
+          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
           reel.dataset.paused = 'false';
           if (playIndicator) playIndicator.classList.remove('show');
         } else {
@@ -907,6 +936,7 @@
   let audioUnlocked = false;
 
   function ensureAudioUnlocked() {
+    hasUserInteracted = true;
     isGlobalMuted = false;
     audioUnlocked = true;
 
