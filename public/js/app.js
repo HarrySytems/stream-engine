@@ -629,7 +629,7 @@
 
     const observerOptions = {
       root: feedContainer,
-      threshold: 0.60
+      threshold: 0.40
     };
 
     feedObserver = new IntersectionObserver((entries) => {
@@ -649,13 +649,16 @@
 
           if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
 
-          // 140ms tras detenerse el scroll para montar el video sin congelar la pantalla
+          // Montar el video sin congelar la pantalla
           scrollDebounceTimer = setTimeout(() => {
             mountActiveMedia(index);
             loadCommentsForMovie(movieId);
-          }, 140);
+          }, 100);
         } else {
-          unmountMedia(index);
+          // NUNCA desmontar el video activo actual (evita que se ponga negro al abrir comentarios o teclado)
+          if (index !== currentActiveIndex) {
+            unmountMedia(index);
+          }
         }
       });
     }, observerOptions);
@@ -756,9 +759,19 @@
       return;
     }
 
-    // 2. Trailer de YouTube (Autoplay garantizado sin botón rojo de YouTube)
+    // 2. Trailer de YouTube (Autoplay 100% garantizado sin botón rojo de YouTube)
     if (item.trailerKey) {
-      if (container.querySelector('iframe')) return;
+      const existingIframe = container.querySelector('iframe');
+      if (existingIframe) {
+        try {
+          existingIframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+        } catch (e) {}
+        if (reel) {
+          reel.dataset.paused = 'false';
+          reel.dataset.playing = 'true';
+        }
+        return;
+      }
 
       const originParam = (window.location.origin && window.location.origin !== 'null') 
         ? window.location.origin 
@@ -772,7 +785,20 @@
       iframe.setAttribute('allowfullscreen', 'true');
       iframe.id = `iframe-player-${index}`;
 
-      container.innerHTML = '';
+      // Mantener el póster visible debajo mientras el iframe carga para evitar pantalla negra
+      const existingPoster = container.querySelector('.video-poster-fallback');
+      if (!existingPoster && item.poster) {
+        const posterImg = document.createElement('img');
+        posterImg.src = item.poster;
+        posterImg.alt = item.titulo;
+        posterImg.className = 'video-poster-fallback';
+        container.appendChild(posterImg);
+      }
+
+      // Eliminar solo videos HTML5 si hubiera alguno residual
+      const oldVideos = container.querySelectorAll('video');
+      oldVideos.forEach(v => v.remove());
+
       container.appendChild(iframe);
 
       if (reel) {
@@ -784,6 +810,8 @@
   }
 
   function unmountMedia(index) {
+    if (index === currentActiveIndex) return;
+
     const container = document.getElementById(`player-container-${index}`);
     if (!container) return;
 
@@ -793,7 +821,7 @@
     if (playIndicator) playIndicator.classList.remove('show');
 
     // Detener de raíz instancia HLS y trabajadores de stream
-    if (currentHlsInstance) {
+    if (currentHlsInstance && index === currentActiveIndex) {
       try {
         currentHlsInstance.destroy();
       } catch (e) {}
@@ -806,10 +834,16 @@
       video.pause();
       video.removeAttribute('src');
       video.load();
+      video.remove();
+    }
+
+    const iframe = container.querySelector('iframe');
+    if (iframe) {
+      iframe.remove();
     }
 
     const item = currentFeed[index];
-    if (item) {
+    if (item && !container.querySelector('.video-poster-fallback')) {
       container.innerHTML = `<img src="${item.poster}" alt="${item.titulo}" class="video-poster-fallback" loading="lazy">`;
     }
   }
@@ -865,11 +899,6 @@
 
     markAsWatched(item.id);
 
-    // Primer toque desbloquea audio y marca interacción
-    if (!hasUserInteracted) {
-      ensureAudioUnlocked();
-    }
-
     // 1. Canal en vivo (Video HTML5)
     if (item.streamUrl) {
       const video = container.querySelector('video');
@@ -889,6 +918,8 @@
           if (playIndicator) playIndicator.classList.add('show');
           if (reel) reel.dataset.paused = 'true';
         }
+      } else {
+        mountActiveMedia(index);
       }
       return;
     }
@@ -896,26 +927,26 @@
     // 2. Trailer YouTube (vía postMessage seguro de la API iframe)
     if (item.trailerKey) {
       const iframe = container.querySelector('iframe');
-      if (iframe && iframe.contentWindow && reel) {
-        const isCurrentlyPaused = (reel.dataset.paused === 'true');
-        const isMuted = (reel.dataset.unmuted !== 'true');
+      if (!iframe) {
+        mountActiveMedia(index);
+        return;
+      }
 
-        if (isMuted) {
-          // Primer toque en el video: activar sonido a todo volumen y asegurar reproducción
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-          reel.dataset.unmuted = 'true';
-          reel.dataset.paused = 'false';
-          if (playIndicator) playIndicator.classList.remove('show');
-        } else if (isCurrentlyPaused) {
-          // Si estaba pausado, reanudar
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+      if (iframe.contentWindow && reel) {
+        const isCurrentlyPaused = (reel.dataset.paused === 'true');
+
+        if (isCurrentlyPaused) {
+          // Reanudar reproducción
+          try {
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+          } catch (e) {}
           reel.dataset.paused = 'false';
           if (playIndicator) playIndicator.classList.remove('show');
         } else {
-          // Si ya sonaba y estaba reproduciendo, pausar
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
+          // Pausar reproducción
+          try {
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
+          } catch (e) {}
           reel.dataset.paused = 'true';
           if (playIndicator) playIndicator.classList.add('show');
         }
@@ -923,15 +954,11 @@
     }
   }
 
-  // Desbloqueo universal de audio mediante gestos de usuario (touchstart, touchend, pointerup, click, keydown)
-  let audioUnlocked = false;
-
+  // Desbloqueo universal de audio para canales en vivo (TDT / transmisiones HTML5)
   function ensureAudioUnlocked() {
     hasUserInteracted = true;
     isGlobalMuted = false;
-    audioUnlocked = true;
 
-    // Activar contexto de audio del navegador si está suspendido
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
@@ -948,20 +975,8 @@
         video.volume = 1.0;
         video.play().catch(() => {});
       }
-      const iframe = currentContainer.querySelector('iframe');
-      if (iframe && iframe.contentWindow) {
-        try {
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-        } catch (e) {}
-      }
     }
   }
-
-  ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'click', 'keydown'].forEach((evt) => {
-    window.addEventListener(evt, ensureAudioUnlocked, { passive: true });
-  });
 
   // ==========================================================================
   // PANEL DE COMENTARIOS (SUPABASE REAL + CACHÉ ULTRA RÁPIDO 0ms)
@@ -1162,6 +1177,25 @@
       } else {
         commentsPanel.classList.remove('open-mobile');
         commentsBackdrop.classList.remove('show');
+
+        // Al cerrar comentarios en móvil, reanudar de inmediato el video activo si estuviera pausado
+        const currentContainer = document.getElementById(`player-container-${currentActiveIndex}`);
+        const currentReel = document.getElementById(`reel-${currentActiveIndex}`);
+        if (currentContainer) {
+          const iframe = currentContainer.querySelector('iframe');
+          const video = currentContainer.querySelector('video');
+          if (iframe && iframe.contentWindow) {
+            try {
+              iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+            } catch (e) {}
+            if (currentReel) currentReel.dataset.paused = 'false';
+          } else if (video) {
+            video.play().catch(() => {});
+            if (currentReel) currentReel.dataset.paused = 'false';
+          } else {
+            mountActiveMedia(currentActiveIndex);
+          }
+        }
       }
     } else {
       if (open) {
