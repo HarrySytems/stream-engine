@@ -122,6 +122,12 @@
   const searchInput            = document.getElementById('searchInput');
   const btnClearSearch         = document.getElementById('btnClearSearch');
   const btnMobileSearch        = document.getElementById('btnMobileSearch');
+  const mobileNavDefault       = document.getElementById('mobileNavDefault');
+  const mobileNavSearch        = document.getElementById('mobileNavSearch');
+  const mobileSearchInput      = document.getElementById('mobileSearchInput');
+  const btnMobileSearchClear   = document.getElementById('btnMobileSearchClear');
+  const btnMobileSearchBack    = document.getElementById('btnMobileSearchBack');
+  const btnMobileSearchCancel  = document.getElementById('btnMobileSearchCancel');
   const toastNotice            = document.getElementById('toastNotice');
   const toastMsg               = document.getElementById('toastMsg');
   const fileProtocolWarning    = document.getElementById('fileProtocolWarning');
@@ -1456,28 +1462,80 @@
   let activeSearchQueryId  = 0;
 
   function setupSearch() {
-    searchInput.addEventListener('input', () => {
-      const q = searchInput.value;
-      btnClearSearch.style.display = q.trim() ? 'flex' : 'none';
+    function handleSearchInput(q) {
+      if (btnClearSearch) btnClearSearch.style.display = q.trim() ? 'flex' : 'none';
+      if (btnMobileSearchClear) btnMobileSearchClear.style.display = q.trim() ? 'flex' : 'none';
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => performGlobalSearch(q), 260);
-    });
+    }
 
-    btnClearSearch.addEventListener('click', () => {
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value;
+        if (mobileSearchInput && mobileSearchInput.value !== q) mobileSearchInput.value = q;
+        handleSearchInput(q);
+      });
+    }
+
+    if (mobileSearchInput) {
+      mobileSearchInput.addEventListener('input', () => {
+        const q = mobileSearchInput.value;
+        if (searchInput && searchInput.value !== q) searchInput.value = q;
+        handleSearchInput(q);
+      });
+    }
+
+    function clearAllSearch() {
       clearTimeout(searchDebounceTimer);
-      searchInput.value = '';
-      btnClearSearch.style.display = 'none';
+      if (searchInput) searchInput.value = '';
+      if (mobileSearchInput) mobileSearchInput.value = '';
+      if (btnClearSearch) btnClearSearch.style.display = 'none';
+      if (btnMobileSearchClear) btnMobileSearchClear.style.display = 'none';
       switchSection(currentSection);
-    });
+    }
+
+    if (btnClearSearch) {
+      btnClearSearch.addEventListener('click', clearAllSearch);
+    }
+
+    if (btnMobileSearchClear) {
+      btnMobileSearchClear.addEventListener('click', () => {
+        clearAllSearch();
+        if (mobileSearchInput) mobileSearchInput.focus();
+      });
+    }
+
+    function openMobileSearch() {
+      if (mobileNavDefault) mobileNavDefault.style.display = 'none';
+      if (mobileNavSearch) mobileNavSearch.style.display = 'flex';
+      if (mobileSearchInput) {
+        if (searchInput && searchInput.value) {
+          mobileSearchInput.value = searchInput.value;
+          if (btnMobileSearchClear) btnMobileSearchClear.style.display = 'flex';
+        }
+        setTimeout(() => mobileSearchInput.focus(), 60);
+      }
+    }
+
+    function closeMobileSearch() {
+      if (mobileNavSearch) mobileNavSearch.style.display = 'none';
+      if (mobileNavDefault) mobileNavDefault.style.display = 'flex';
+      const hadQuery = (mobileSearchInput && mobileSearchInput.value.trim()) || (searchInput && searchInput.value.trim());
+      if (hadQuery) {
+        clearAllSearch();
+      }
+    }
 
     if (btnMobileSearch) {
-      btnMobileSearch.addEventListener('click', () => {
-        const q = prompt('Buscar película, serie, anime o canal de TV:');
-        if (q) {
-          searchInput.value = q;
-          searchInput.dispatchEvent(new Event('input'));
-        }
-      });
+      btnMobileSearch.addEventListener('click', openMobileSearch);
+    }
+
+    if (btnMobileSearchBack) {
+      btnMobileSearchBack.addEventListener('click', closeMobileSearch);
+    }
+
+    if (btnMobileSearchCancel) {
+      btnMobileSearchCancel.addEventListener('click', closeMobileSearch);
     }
   }
 
@@ -1597,8 +1655,12 @@
             const btnBack = document.getElementById('btnEmptySearchBack');
             if (btnBack) {
               btnBack.addEventListener('click', () => {
-                searchInput.value = '';
-                btnClearSearch.style.display = 'none';
+                if (searchInput) searchInput.value = '';
+                if (mobileSearchInput) mobileSearchInput.value = '';
+                if (btnClearSearch) btnClearSearch.style.display = 'none';
+                if (btnMobileSearchClear) btnMobileSearchClear.style.display = 'none';
+                if (mobileNavSearch) mobileNavSearch.style.display = 'none';
+                if (mobileNavDefault) mobileNavDefault.style.display = 'flex';
                 switchSection('para_ti');
               });
             }

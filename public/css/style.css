@@ -1176,6 +1176,100 @@ body:has(.comments-panel.collapsed) .desktop-floating-nav {
     padding: 6px;
   }
 
+  /* Barra de búsqueda interactiva móvil (Estilo TikTok) */
+  .mobile-nav-default {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .mobile-nav-search {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    animation: fadeInSearch 0.18s ease-out;
+  }
+
+  @keyframes fadeInSearch {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .mobile-search-back-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .mobile-search-input-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 20px;
+    padding: 0 12px;
+    height: 36px;
+    gap: 8px;
+  }
+
+  .mobile-search-input-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-size: 14px;
+    font-family: inherit;
+    min-width: 0;
+  }
+
+  .mobile-search-input-box input::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 13px;
+  }
+
+  .mobile-search-clear-btn {
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    color: #ffffff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .mobile-search-cancel-btn {
+    background: none;
+    border: none;
+    color: #FFD700;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
   /* Mobile Fullscreen Reel - Bloqueado rígidamente al viewport visible */
   .feed-container {
     width: 100vw !important;
