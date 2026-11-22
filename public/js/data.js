@@ -1,4 +1,4 @@
-// FilmTV Data Catalog v2.6.2 - Auto-curated & Verified Signal Streams
+// FilmTV Data Catalog v2.6.4 - Auto-curated & Verified Signal Streams
 // Total Sections: 7
 // Verified Live Channels: 54 (TDT: 18, FREE: 18, TVCABLE: 18)
 // All live streams are verified HTTPS, Status 200, and Access-Control-Allow-Origin: * for browser HLS.js
@@ -3637,17 +3637,17 @@ window.CATALOG = {
       "sharesCount": 0
     },
     {
-      "id": "canal-3cat-plats-bruts-1080p",
+      "id": "canal-al-cielo-con-ella-rtve-720p",
       "seccion": "free",
       "tipo": "canal",
-      "titulo": "3Cat Plats Bruts HD (1080p)",
-      "descripcion": "La legendaria comedia de situación que batió todos los récords de audiencia, emitida las 24 horas.",
-      "categoria": "Comedia de Culto",
+      "titulo": "Al cielo con ella (RTVE) (720p)",
+      "descripcion": "El late night y programa de humor y entrevistas presentado por Henar Álvarez con las mejores cómicas e invitados.",
+      "categoria": "Humor & Entretenimiento",
       "año": "2026",
-      "valoracion": "9.4",
-      "poster": "https://estaticos-cdn.sport.es/clip/2f8b5417-6ff8-490b-b5cb-bf7bb35c3619_alta-libre-aspect-ratio_default_0.jpg",
-      "streamUrl": "https://fast-tailor.3catdirectes.cat/v1/channel/ccma-channel2/hls.m3u8",
-      "urlDestino": "https://filtv.bytelog.lat/canal/3cat-plats-bruts-1080p",
+      "valoracion": "9.2",
+      "poster": "https://img.rtve.es/v/16301297?w=1600&preview=1731671952834.jpg",
+      "streamUrl": "https://rtvelivestream.rtve.es/eventual/gofast/playm26_main.m3u8",
+      "urlDestino": "https://filtv.bytelog.lat/canal/al-cielo-con-ella-rtve-720p",
       "btnTexto": "Ver Canal en Vivo",
       "likesCount": 0,
       "savesCount": 0,
@@ -3869,7 +3869,7 @@ window.CATALOG = {
       "año": "2026",
       "valoracion": "9.4",
       "poster": "https://negocios.es/wp-content/uploads/2021/04/negocios-tv-logo.jpg",
-      "streamUrl": "https://negociostv-negociostv-samsunges.amagi.tv/hls/amagi_hls_data_negociost-negociostv-samsunges/CDN/playlist.m3u8",
+      "streamUrl": "https://negociostv-negociostv-samsunges.amagi.tv/ts-us-e2-n2/playlist/negociost-negociostv-samsunges/playlist.m3u8",
       "urlDestino": "https://filtv.bytelog.lat/canal/negocios-tv-1080p",
       "btnTexto": "Ver Canal en Vivo",
       "likesCount": 0,

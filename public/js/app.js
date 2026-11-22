@@ -33,6 +33,26 @@
   // Cola de timers para desmutear de forma fiable y segura
   let activeUnmuteTimers = [];
 
+  // Configuración HLS de alto rendimiento y ultra-baja latencia para arranque instantáneo de canales en vivo
+  const HLS_FAST_CONFIG = {
+    enableWorker: true,
+    lowLatencyMode: true,
+    backBufferLength: 10,
+    maxBufferLength: 6,
+    maxMaxBufferLength: 10,
+    liveSyncDurationCount: 2,
+    liveMaxLatencyDurationCount: 4,
+    maxBufferSize: 12 * 1024 * 1024,
+    maxBufferHole: 0.5,
+    highBufferWatchdogPeriod: 1,
+    startFragPrefetch: true,
+    progressive: true,
+    capLevelToPlayerSize: true,
+    fragLoadingTimeOut: 12000,
+    manifestLoadingTimeOut: 10000,
+    levelLoadingTimeOut: 10000
+  };
+
   function clearAllUnmuteTimers() {
     activeUnmuteTimers.forEach(t => clearTimeout(t));
     activeUnmuteTimers = [];
@@ -791,7 +811,7 @@
       video.addEventListener('pause',   () => { if (playIndicator) playIndicator.classList.add('show');    if (reel) reel.dataset.paused = 'true';  });
 
       if (window.Hls && Hls.isSupported() && item.streamUrl.includes('.m3u8')) {
-        currentHlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
+        currentHlsInstance = new Hls(HLS_FAST_CONFIG);
         currentHlsInstance.loadSource(item.streamUrl);
         currentHlsInstance.attachMedia(video);
         currentHlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -805,9 +825,20 @@
         });
         currentHlsInstance.on(Hls.Events.ERROR, (_, data) => {
           if (data.fatal) {
-            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) currentHlsInstance.startLoad();
-            else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) currentHlsInstance.recoverMediaError();
-            else currentHlsInstance.destroy();
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.warn('[HLS Feed] Network error, reloading...', data.details);
+                currentHlsInstance.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.warn('[HLS Feed] Media error, recovering...', data.details);
+                currentHlsInstance.recoverMediaError();
+                break;
+              default:
+                console.error('[HLS Feed] Fatal error, destroying instance:', data.details);
+                try { currentHlsInstance.destroy(); } catch (e) {}
+                break;
+            }
           }
         });
       } else {
@@ -1343,6 +1374,10 @@
     }
   }
 
+  // Exponer a nivel de ventana para depuración y accesibilidad
+  window.openFullPlayer = openFullPlayer;
+  window.closeFullPlayer = closeFullPlayer;
+
   function mountCinemaLiveStream(item) {
     if (!fullPlayerMediaHost) return;
     fullPlayerMediaHost.innerHTML = '';
@@ -1361,31 +1396,73 @@
       return;
     }
 
+    // Mostrar loader elegante mientras conecta la señal en vivo
+    if (fullPlayerLoader) {
+      fullPlayerLoader.style.display = 'flex';
+      const loaderSpan = fullPlayerLoader.querySelector('span');
+      if (loaderSpan) loaderSpan.textContent = 'Conectando con la señal en vivo...';
+    }
+
     const video = document.createElement('video');
-    video.className  = 'cinema-hls-video';
-    video.controls   = true;
-    video.autoplay   = true;
+    video.className   = 'cinema-hls-video';
+    video.controls    = true;
+    video.autoplay    = true;
     video.playsInline = true;
-    video.poster     = item.poster || '';
+    video.poster      = item.poster || '';
     fullPlayerMediaHost.appendChild(video);
 
+    const hideCinemaLoader = () => {
+      if (fullPlayerLoader) fullPlayerLoader.style.display = 'none';
+    };
+
+    video.addEventListener('playing', hideCinemaLoader);
+    video.addEventListener('loadeddata', hideCinemaLoader);
+    video.addEventListener('canplay', hideCinemaLoader);
+    video.addEventListener('timeupdate', () => {
+      if (video.currentTime > 0) hideCinemaLoader();
+    });
+
     if (window.Hls && Hls.isSupported() && streamUrl.includes('.m3u8')) {
-      currentCinemaHls = new Hls({ enableWorker: true, lowLatencyMode: true });
+      currentCinemaHls = new Hls(HLS_FAST_CONFIG);
       currentCinemaHls.loadSource(streamUrl);
       currentCinemaHls.attachMedia(video);
       currentCinemaHls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
+        const p = video.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+        }
       });
       currentCinemaHls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) {
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) currentCinemaHls.startLoad();
-          else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) currentCinemaHls.recoverMediaError();
-          else currentCinemaHls.destroy();
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.warn('[Cinema HLS] Network error, reloading...', data.details);
+              currentCinemaHls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.warn('[Cinema HLS] Media error, recovering...', data.details);
+              currentCinemaHls.recoverMediaError();
+              break;
+            default:
+              console.error('[Cinema HLS] Fatal error, stopping:', data.details);
+              hideCinemaLoader();
+              try { currentCinemaHls.destroy(); } catch (e) {}
+              break;
+          }
         }
       });
     } else {
       video.src = streamUrl;
-      video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
+      const p = video.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
+        });
+      }
     }
   }
 
